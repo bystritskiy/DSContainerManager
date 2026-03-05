@@ -7,6 +7,27 @@ struct SystemUtilization: Codable, Sendable, Equatable {
     let memory: MemoryInfo
     let network: [NetworkInfo]
     let disk: DiskOverview?
+
+    init(cpu: CPUInfo, memory: MemoryInfo, network: [NetworkInfo], disk: DiskOverview?) {
+        self.cpu = cpu
+        self.memory = memory
+        self.network = network
+        self.disk = disk
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        cpu = (try? container.decode(CPUInfo.self, forKey: .cpu))
+            ?? CPUInfo(userLoad: 0, systemLoad: 0, otherLoad: 0, oneMinLoad: 0, fiveMinLoad: 0, fifteenMinLoad: 0)
+        memory = (try? container.decode(MemoryInfo.self, forKey: .memory))
+            ?? MemoryInfo(memorySize: 0, totalReal: 0, availReal: 0, totalSwap: 0, availSwap: 0, realUsage: 0, swapUsage: 0, cached: 0, buffer: 0)
+        network = (try? container.decode([NetworkInfo].self, forKey: .network)) ?? []
+        disk = try? container.decode(DiskOverview.self, forKey: .disk)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case cpu, memory, network, disk
+    }
 }
 
 // MARK: - CPU Info
@@ -21,6 +42,25 @@ struct CPUInfo: Codable, Sendable, Equatable {
 
     var totalLoad: Int { userLoad + systemLoad + otherLoad }
     var totalPercent: Double { min(Double(totalLoad), 100.0) }
+
+    init(userLoad: Int, systemLoad: Int, otherLoad: Int, oneMinLoad: Int, fiveMinLoad: Int, fifteenMinLoad: Int) {
+        self.userLoad = userLoad
+        self.systemLoad = systemLoad
+        self.otherLoad = otherLoad
+        self.oneMinLoad = oneMinLoad
+        self.fiveMinLoad = fiveMinLoad
+        self.fifteenMinLoad = fifteenMinLoad
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        userLoad = (try? container.decode(Int.self, forKey: .userLoad)) ?? 0
+        systemLoad = (try? container.decode(Int.self, forKey: .systemLoad)) ?? 0
+        otherLoad = (try? container.decode(Int.self, forKey: .otherLoad)) ?? 0
+        oneMinLoad = (try? container.decode(Int.self, forKey: .oneMinLoad)) ?? 0
+        fiveMinLoad = (try? container.decode(Int.self, forKey: .fiveMinLoad)) ?? 0
+        fifteenMinLoad = (try? container.decode(Int.self, forKey: .fifteenMinLoad)) ?? 0
+    }
 
     enum CodingKeys: String, CodingKey {
         case userLoad = "user_load"
@@ -48,6 +88,31 @@ struct MemoryInfo: Codable, Sendable, Equatable {
     var usedReal: Int { totalReal - availReal }
     var usagePercent: Double { Double(realUsage) }
 
+    init(memorySize: Int, totalReal: Int, availReal: Int, totalSwap: Int, availSwap: Int, realUsage: Int, swapUsage: Int, cached: Int, buffer: Int) {
+        self.memorySize = memorySize
+        self.totalReal = totalReal
+        self.availReal = availReal
+        self.totalSwap = totalSwap
+        self.availSwap = availSwap
+        self.realUsage = realUsage
+        self.swapUsage = swapUsage
+        self.cached = cached
+        self.buffer = buffer
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        memorySize = (try? container.decode(Int.self, forKey: .memorySize)) ?? 0
+        totalReal = (try? container.decode(Int.self, forKey: .totalReal)) ?? 0
+        availReal = (try? container.decode(Int.self, forKey: .availReal)) ?? 0
+        totalSwap = (try? container.decode(Int.self, forKey: .totalSwap)) ?? 0
+        availSwap = (try? container.decode(Int.self, forKey: .availSwap)) ?? 0
+        realUsage = (try? container.decode(Int.self, forKey: .realUsage)) ?? 0
+        swapUsage = (try? container.decode(Int.self, forKey: .swapUsage)) ?? 0
+        cached = (try? container.decode(Int.self, forKey: .cached)) ?? 0
+        buffer = (try? container.decode(Int.self, forKey: .buffer)) ?? 0
+    }
+
     enum CodingKeys: String, CodingKey {
         case memorySize = "memory_size"
         case totalReal = "total_real"
@@ -68,6 +133,23 @@ struct NetworkInfo: Codable, Sendable, Equatable, Identifiable {
     let device: String
     let rx: Int
     let tx: Int
+
+    init(device: String, rx: Int, tx: Int) {
+        self.device = device
+        self.rx = rx
+        self.tx = tx
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        device = (try? container.decode(String.self, forKey: .device)) ?? "unknown"
+        rx = (try? container.decode(Int.self, forKey: .rx)) ?? 0
+        tx = (try? container.decode(Int.self, forKey: .tx)) ?? 0
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case device, rx, tx
+    }
 }
 
 // MARK: - Disk Overview
@@ -75,6 +157,21 @@ struct NetworkInfo: Codable, Sendable, Equatable, Identifiable {
 struct DiskOverview: Codable, Sendable, Equatable {
     let disk: [DiskInfo]
     let total: DiskTotal?
+
+    init(disk: [DiskInfo], total: DiskTotal?) {
+        self.disk = disk
+        self.total = total
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        disk = (try? container.decode([DiskInfo].self, forKey: .disk)) ?? []
+        total = try? container.decode(DiskTotal.self, forKey: .total)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case disk, total
+    }
 }
 
 struct DiskInfo: Codable, Sendable, Equatable, Identifiable {
@@ -84,6 +181,23 @@ struct DiskInfo: Codable, Sendable, Equatable, Identifiable {
     let readByte: Int
     let writeByte: Int
     let utilization: Int
+
+    init(device: String, displayName: String, readByte: Int, writeByte: Int, utilization: Int) {
+        self.device = device
+        self.displayName = displayName
+        self.readByte = readByte
+        self.writeByte = writeByte
+        self.utilization = utilization
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        device = (try? container.decode(String.self, forKey: .device)) ?? "unknown"
+        displayName = (try? container.decode(String.self, forKey: .displayName)) ?? ""
+        readByte = (try? container.decode(Int.self, forKey: .readByte)) ?? 0
+        writeByte = (try? container.decode(Int.self, forKey: .writeByte)) ?? 0
+        utilization = (try? container.decode(Int.self, forKey: .utilization)) ?? 0
+    }
 
     enum CodingKeys: String, CodingKey {
         case device
@@ -99,6 +213,19 @@ struct DiskTotal: Codable, Sendable, Equatable {
     let writeByte: Int
     let utilization: Int
 
+    init(readByte: Int, writeByte: Int, utilization: Int) {
+        self.readByte = readByte
+        self.writeByte = writeByte
+        self.utilization = utilization
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        readByte = (try? container.decode(Int.self, forKey: .readByte)) ?? 0
+        writeByte = (try? container.decode(Int.self, forKey: .writeByte)) ?? 0
+        utilization = (try? container.decode(Int.self, forKey: .utilization)) ?? 0
+    }
+
     enum CodingKeys: String, CodingKey {
         case readByte = "read_byte"
         case writeByte = "write_byte"
@@ -110,9 +237,43 @@ struct DiskTotal: Codable, Sendable, Equatable {
 
 struct StorageInfo: Codable, Sendable, Equatable {
     let volumes: [VolumeInfo]
+
+    init(volumes: [VolumeInfo]) {
+        self.volumes = volumes
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        volumes = (try? container.decode([VolumeInfo].self, forKey: .volumes)) ?? []
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case volumes
+    }
 }
 
-struct VolumeInfo: Codable, Sendable, Equatable, Identifiable {
+struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
+    init(id: String, path: String, status: String, totalSize: Int64, usedSize: Int64, temperature: Int? = nil, driveType: String? = nil) {
+        self.id = id
+        self.path = path
+        self.status = status
+        self.totalSize = totalSize
+        self.usedSize = usedSize
+        self.temperature = temperature
+        self.driveType = driveType
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(path, forKey: .path)
+        try container.encode(status, forKey: .status)
+        try container.encode(totalSize, forKey: .totalSize)
+        try container.encode(usedSize, forKey: .usedSize)
+        try container.encodeIfPresent(temperature, forKey: .temperature)
+        try container.encodeIfPresent(driveType, forKey: .driveType)
+    }
+
     let id: String
     let path: String
     let status: String
@@ -121,9 +282,37 @@ struct VolumeInfo: Codable, Sendable, Equatable, Identifiable {
     let temperature: Int?
     let driveType: String?
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = (try? container.decode(String.self, forKey: .id)) ?? UUID().uuidString
+        path = (try? container.decode(String.self, forKey: .path))
+            ?? (try? container.decode(String.self, forKey: .pathAlt))
+            ?? ""
+        status = (try? container.decode(String.self, forKey: .status)) ?? "unknown"
+
+        // totalSize: try String first (Synology sometimes returns size as string), then Int64
+        if let sizeStr = try? container.decode(String.self, forKey: .totalSize),
+           let size = Int64(sizeStr) {
+            totalSize = size
+        } else {
+            totalSize = (try? container.decode(Int64.self, forKey: .totalSize)) ?? 0
+        }
+
+        if let sizeStr = try? container.decode(String.self, forKey: .usedSize),
+           let size = Int64(sizeStr) {
+            usedSize = size
+        } else {
+            usedSize = (try? container.decode(Int64.self, forKey: .usedSize)) ?? 0
+        }
+
+        temperature = try? container.decode(Int.self, forKey: .temperature)
+        driveType = try? container.decode(String.self, forKey: .driveType)
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case path = "vol_path"
+        case pathAlt = "path"
         case status
         case totalSize = "size_total_byte"
         case usedSize = "size_used_byte"

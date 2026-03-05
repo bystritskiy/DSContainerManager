@@ -301,8 +301,8 @@ private func decodeResponse<T: Decodable>(_ type: T.Type, from data: Data) throw
     // Debug: print raw JSON for troubleshooting
     #if DEBUG
     if let jsonString = String(data: data, encoding: .utf8) {
-        let preview = jsonString.prefix(500)
-        print("[SynologyAPI] Response for \(T.self): \(preview)")
+        let preview = jsonString.prefix(2000)
+        print("[SynologyAPI] Response for \(T.self) (\(data.count) bytes): \(preview)")
     }
     #endif
 
