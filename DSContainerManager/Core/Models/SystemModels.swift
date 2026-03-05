@@ -266,10 +266,10 @@ struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
-        try container.encode(path, forKey: .path)
+        try container.encode(path, forKey: .volumePath)
         try container.encode(status, forKey: .status)
         try container.encode(totalSize, forKey: .totalSize)
-        try container.encode(usedSize, forKey: .usedSize)
+        try container.encode(totalSize - usedSize, forKey: .freeSize)
         try container.encodeIfPresent(temperature, forKey: .temperature)
         try container.encodeIfPresent(driveType, forKey: .driveType)
     }
@@ -284,13 +284,25 @@ struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = (try? container.decode(String.self, forKey: .id)) ?? UUID().uuidString
-        path = (try? container.decode(String.self, forKey: .path))
+
+        // id: try string "id", or volume_id as int, or fallback
+        if let idStr = try? container.decode(String.self, forKey: .id) {
+            id = idStr
+        } else if let volumeId = try? container.decode(Int.self, forKey: .volumeId) {
+            id = "volume_\(volumeId)"
+        } else {
+            id = UUID().uuidString
+        }
+
+        // path: try vol_path, volume_path, or path
+        path = (try? container.decode(String.self, forKey: .volPath))
+            ?? (try? container.decode(String.self, forKey: .volumePath))
             ?? (try? container.decode(String.self, forKey: .pathAlt))
             ?? ""
+
         status = (try? container.decode(String.self, forKey: .status)) ?? "unknown"
 
-        // totalSize: try String first (Synology sometimes returns size as string), then Int64
+        // totalSize: Synology returns size as string (e.g. "7676309151744"), try String then Int64
         if let sizeStr = try? container.decode(String.self, forKey: .totalSize),
            let size = Int64(sizeStr) {
             totalSize = size
@@ -298,26 +310,39 @@ struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
             totalSize = (try? container.decode(Int64.self, forKey: .totalSize)) ?? 0
         }
 
-        if let sizeStr = try? container.decode(String.self, forKey: .usedSize),
-           let size = Int64(sizeStr) {
+        // usedSize: Synology provides size_free_byte (not size_used_byte), compute used = total - free
+        if let freeStr = try? container.decode(String.self, forKey: .freeSize),
+           let free = Int64(freeStr) {
+            usedSize = totalSize - free
+        } else if let free = try? container.decode(Int64.self, forKey: .freeSize) {
+            usedSize = totalSize - free
+        } else if let sizeStr = try? container.decode(String.self, forKey: .usedSize),
+                  let size = Int64(sizeStr) {
             usedSize = size
         } else {
             usedSize = (try? container.decode(Int64.self, forKey: .usedSize)) ?? 0
         }
 
         temperature = try? container.decode(Int.self, forKey: .temperature)
-        driveType = try? container.decode(String.self, forKey: .driveType)
+        driveType = (try? container.decode(String.self, forKey: .driveType))
+            ?? (try? container.decode(String.self, forKey: .raidType))
+            ?? (try? container.decode(String.self, forKey: .fsType))
     }
 
     enum CodingKeys: String, CodingKey {
         case id
-        case path = "vol_path"
+        case volumeId = "volume_id"
+        case volPath = "vol_path"
+        case volumePath = "volume_path"
         case pathAlt = "path"
         case status
         case totalSize = "size_total_byte"
+        case freeSize = "size_free_byte"
         case usedSize = "size_used_byte"
         case temperature = "temp"
         case driveType = "drive_type"
+        case raidType = "raid_type"
+        case fsType = "fs_type"
     }
 
     var freeSize: Int64 { totalSize - usedSize }

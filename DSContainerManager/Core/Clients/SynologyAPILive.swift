@@ -234,9 +234,12 @@ extension SynologyAPIClient: DependencyKey {
                     delegateQueue: nil
                 )
                 let params = authenticatedParams(authSession, api: [
-                    "api": "SYNO.Storage.CGI.Storage",
+                    "api": "SYNO.Core.Storage.Volume",
                     "version": "1",
-                    "method": "load_info"
+                    "method": "list",
+                    "limit": "-1",
+                    "offset": "0",
+                    "location": "internal"
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
