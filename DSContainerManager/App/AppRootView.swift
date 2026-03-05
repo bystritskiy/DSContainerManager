@@ -23,6 +23,9 @@ struct AppRootView: View {
                 )
             }
         }
+        .onAppear {
+            store.send(.onAppear)
+        }
     }
 }
 

@@ -123,3 +123,33 @@ extension KeychainClient {
         try delete("connection-password-\(id.uuidString)")
     }
 }
+
+// MARK: - Session Persistence
+
+/// Stores the active session so the user doesn't have to re-enter 2FA on every app launch.
+/// The session is saved per-connection using the connection UUID as part of the key.
+extension KeychainClient {
+    private static let sessionKey = "active-session"
+    private static let sessionConnectionKey = "active-session-connection-id"
+
+    /// Persisted session data: AuthSession + the connection UUID it belongs to
+    struct SavedSession: Codable, Sendable {
+        let connectionId: UUID
+        let session: AuthSession
+    }
+
+    func saveSession(_ session: AuthSession, forConnection id: UUID) throws {
+        let saved = SavedSession(connectionId: id, session: session)
+        let data = try JSONEncoder().encode(saved)
+        try save(data, Self.sessionKey)
+    }
+
+    func loadSavedSession() throws -> SavedSession? {
+        guard let data = try load(Self.sessionKey) else { return nil }
+        return try? JSONDecoder().decode(SavedSession.self, from: data)
+    }
+
+    func deleteSavedSession() throws {
+        try delete(Self.sessionKey)
+    }
+}

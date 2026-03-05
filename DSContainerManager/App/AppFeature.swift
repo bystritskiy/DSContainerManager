@@ -15,6 +15,7 @@ struct AppFeature {
         var projectList = ProjectListFeature.State()
         var systemMonitor = SystemMonitorFeature.State()
         var showingConnectionSheet = false
+        var hasAttemptedSessionRestore = false
 
         var isConnected: Bool { activeConnection != nil && authSession != nil }
 
@@ -60,9 +61,14 @@ struct AppFeature {
         case showConnectionSheet
         case hideConnectionSheet
         case disconnect
+        case sessionRestored(ConnectionProfile, AuthSession)
+        case sessionValidationFailed
     }
 
     @Dependency(\.backgroundMonitor) var backgroundMonitor
+    @Dependency(\.keychainClient) var keychain
+    @Dependency(\.synologyClient) var api
+    @Dependency(\.connectionStore) var connectionStore
 
     nonisolated var body: some ReducerOf<Self> {
         Scope(state: \.connectionList, action: \.connectionList) {
@@ -84,7 +90,21 @@ struct AppFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.connectionList(.loadConnections))
+                guard !state.hasAttemptedSessionRestore else { return .none }
+                state.hasAttemptedSessionRestore = true
+                return .merge(
+                    .send(.connectionList(.loadConnections)),
+                    restoreSavedSession()
+                )
+
+            case .sessionRestored(let profile, let session):
+                return applyConnection(state: &state, profile: profile, session: session)
+
+            case .sessionValidationFailed:
+                // Saved session was invalid/expired, clear it and show login
+                return .run { _ in
+                    try? keychain.deleteSavedSession()
+                }
 
             case .tabSelected(let tab):
                 state.selectedTab = tab
@@ -106,32 +126,18 @@ struct AppFeature {
                 state.projectList = ProjectListFeature.State()
                 state.systemMonitor = SystemMonitorFeature.State()
                 backgroundMonitor.cancelHealthCheck()
-                return .none
+                // Clear saved session from Keychain
+                return .run { _ in
+                    try? keychain.deleteSavedSession()
+                }
 
             case .connectionList(.delegate(.connectionEstablished(let profile, let session))):
-                state.activeConnection = profile
-                state.authSession = session
-                state.showingConnectionSheet = false
-                state.selectedTab = .dashboard
-
-                // Pass connection credentials to all child features
-                let baseURL = profile.baseURL
-                state.dashboard.baseURL = baseURL
-                state.dashboard.authSession = session
-                state.containerList.baseURL = baseURL
-                state.containerList.authSession = session
-                state.projectList.baseURL = baseURL
-                state.projectList.authSession = session
-                state.systemMonitor.baseURL = baseURL
-                state.systemMonitor.authSession = session
-
+                // Save session to Keychain for next launch
+                let connectionId = profile.id
                 return .merge(
-                    .send(.dashboard(.onAppear)),
-                    .send(.containerList(.onAppear)),
-                    .send(.projectList(.onAppear)),
+                    applyConnection(state: &state, profile: profile, session: session),
                     .run { _ in
-                        _ = await backgroundMonitor.requestNotificationPermission()
-                        backgroundMonitor.scheduleHealthCheck()
+                        try? keychain.saveSession(session, forConnection: connectionId)
                     }
                 )
 
@@ -149,6 +155,82 @@ struct AppFeature {
 
             case .systemMonitor:
                 return .none
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
+    /// Applies a connection + session to all child features and starts loading data
+    private func applyConnection(state: inout State, profile: ConnectionProfile, session: AuthSession) -> Effect<Action> {
+        state.activeConnection = profile
+        state.authSession = session
+        state.showingConnectionSheet = false
+        state.selectedTab = .dashboard
+
+        let baseURL = profile.baseURL
+        state.dashboard.baseURL = baseURL
+        state.dashboard.authSession = session
+        state.containerList.baseURL = baseURL
+        state.containerList.authSession = session
+        state.projectList.baseURL = baseURL
+        state.projectList.authSession = session
+        state.systemMonitor.baseURL = baseURL
+        state.systemMonitor.authSession = session
+
+        return .merge(
+            .send(.dashboard(.onAppear)),
+            .send(.containerList(.onAppear)),
+            .send(.projectList(.onAppear)),
+            .run { _ in
+                _ = await backgroundMonitor.requestNotificationPermission()
+                backgroundMonitor.scheduleHealthCheck()
+            }
+        )
+    }
+
+    /// Tries to restore a previously saved session from Keychain.
+    /// Validates the session is still alive by making a lightweight API call.
+    private func restoreSavedSession() -> Effect<Action> {
+        .run { send in
+            #if DEBUG
+            print("[AppFeature] Attempting to restore saved session...")
+            #endif
+
+            guard let saved = try? keychain.loadSavedSession() else {
+                #if DEBUG
+                print("[AppFeature] No saved session found in Keychain")
+                #endif
+                return
+            }
+
+            #if DEBUG
+            print("[AppFeature] Found saved session for connection: \(saved.connectionId)")
+            #endif
+
+            // Find the matching connection profile
+            let connections = try await connectionStore.fetchAll()
+            guard let profile = connections.first(where: { $0.id == saved.connectionId }),
+                  let baseURL = profile.baseURL else {
+                #if DEBUG
+                print("[AppFeature] Connection profile not found for saved session")
+                #endif
+                await send(.sessionValidationFailed)
+                return
+            }
+
+            // Validate session with a lightweight API call
+            do {
+                _ = try await api.getSystemUtilization(baseURL, saved.session)
+                #if DEBUG
+                print("[AppFeature] Session is valid, restoring connection to \(profile.name)")
+                #endif
+                await send(.sessionRestored(profile, saved.session))
+            } catch {
+                #if DEBUG
+                print("[AppFeature] Saved session expired or invalid: \(error)")
+                #endif
+                await send(.sessionValidationFailed)
             }
         }
     }
