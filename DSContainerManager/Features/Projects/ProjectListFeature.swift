@@ -47,7 +47,7 @@ struct ProjectListFeature {
 
             case .projectsLoaded(.success(let projects)):
                 state.isLoading = false
-                state.projects = projects
+                state.projects = projects.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
                 state.error = nil
                 return .none
 

@@ -91,7 +91,7 @@ struct ContainerListFeature {
 
             case .containersLoaded(.success(let containers)):
                 state.isLoading = false
-                state.containers = containers
+                state.containers = containers.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
                 state.error = nil
                 return .none
 
