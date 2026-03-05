@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		844321532F5865FE0053598C /* Tagged in Frameworks */ = {isa = PBXBuildFile; productRef = 844321522F5865FE0053598C /* Tagged */; };
+		844321552F5865FE0053598C /* TaggedMoney in Frameworks */ = {isa = PBXBuildFile; productRef = 844321542F5865FE0053598C /* TaggedMoney */; };
+		844321572F5865FE0053598C /* TaggedTime in Frameworks */ = {isa = PBXBuildFile; productRef = 844321562F5865FE0053598C /* TaggedTime */; };
+		8443215A2F58662A0053598C /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 844321592F58662A0053598C /* ComposableArchitecture */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		844321432F5861A30053598C /* DSContainerManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DSContainerManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +30,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				844321532F5865FE0053598C /* Tagged in Frameworks */,
+				844321552F5865FE0053598C /* TaggedMoney in Frameworks */,
+				8443215A2F58662A0053598C /* ComposableArchitecture in Frameworks */,
+				844321572F5865FE0053598C /* TaggedTime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +76,10 @@
 			);
 			name = DSContainerManager;
 			packageProductDependencies = (
+				844321522F5865FE0053598C /* Tagged */,
+				844321542F5865FE0053598C /* TaggedMoney */,
+				844321562F5865FE0053598C /* TaggedTime */,
+				844321592F58662A0053598C /* ComposableArchitecture */,
 			);
 			productName = DSContainerManager;
 			productReference = 844321432F5861A30053598C /* DSContainerManager.app */;
@@ -94,6 +109,10 @@
 			);
 			mainGroup = 8443213A2F5861A30053598C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */,
+				844321582F58662A0053598C /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 844321442F5861A30053598C /* Products */;
 			projectDirPath = "";
@@ -272,7 +291,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -314,7 +333,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -345,6 +364,48 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-tagged";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.0;
+			};
+		};
+		844321582F58662A0053598C /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.24.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		844321522F5865FE0053598C /* Tagged */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */;
+			productName = Tagged;
+		};
+		844321542F5865FE0053598C /* TaggedMoney */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */;
+			productName = TaggedMoney;
+		};
+		844321562F5865FE0053598C /* TaggedTime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */;
+			productName = TaggedTime;
+		};
+		844321592F58662A0053598C /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 844321582F58662A0053598C /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8443213B2F5861A30053598C /* Project object */;
 }

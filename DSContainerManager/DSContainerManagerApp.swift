@@ -1,17 +1,22 @@
-//
-//  DSContainerManagerApp.swift
-//  DSContainerManager
-//
-//  Created by Admin on 04/03/2026.
-//
-
+import ComposableArchitecture
+import Dependencies
 import SwiftUI
 
 @main
 struct DSContainerManagerApp: App {
+    static let store = Store(initialState: AppFeature.State()) {
+        AppFeature()
+    }
+
+    init() {
+        @Dependency(\.backgroundMonitor) var backgroundMonitor
+        backgroundMonitor.registerTasks()
+        setupNotificationCategories()
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRootView(store: DSContainerManagerApp.store)
         }
     }
 }
