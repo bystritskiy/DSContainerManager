@@ -25,6 +25,9 @@ struct DashboardView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .onDisappear {
+                store.send(.stopPolling)
+            }
         }
     }
 

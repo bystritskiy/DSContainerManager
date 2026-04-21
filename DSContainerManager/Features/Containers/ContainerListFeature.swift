@@ -9,6 +9,7 @@ struct ContainerListFeature {
         var baseURL: URL?
         var authSession: AuthSession?
         var containers: [DockerContainer] = []
+        var pendingActionIDs: Set<String> = []
         var searchText: String = ""
         var statusFilter: ContainerStatus?
         var sortOrder: SortOrder = .name
@@ -49,16 +50,17 @@ struct ContainerListFeature {
         case binding(BindingAction<State>)
         case onAppear
         case refresh
+        case stopPolling
         case containersLoaded(Result<[DockerContainer], Error>)
         case containerTapped(DockerContainer)
         case swipeAction(DockerContainer, ContainerAction)
-        case actionResult(Result<Void, Error>)
+        case actionResult(String, Result<Void, Error>)
         case detail(PresentationAction<ContainerDetailFeature.Action>)
         case statusFilterChanged(ContainerStatus?)
         case sortOrderChanged(State.SortOrder)
     }
 
-    private enum CancelID { case polling }
+    enum CancelID: Hashable { case load, polling, action(String) }
 
     @Dependency(\.synologyClient) var api
     @Dependency(\.continuousClock) var clock
@@ -89,6 +91,9 @@ struct ContainerListFeature {
                 }
                 return fetchContainers(baseURL: baseURL, session: session)
 
+            case .stopPolling:
+                return .cancel(id: CancelID.polling)
+
             case .containersLoaded(.success(let containers)):
                 state.isLoading = false
                 state.containers = containers.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -111,20 +116,30 @@ struct ContainerListFeature {
                 guard let baseURL = state.baseURL, let session = state.authSession else {
                     return .none
                 }
+                let actionID = container.id.rawValue
+                state.pendingActionIDs.insert(actionID)
                 return .run { send in
                     try await api.performContainerAction(baseURL, session, container.name, action)
                     // Refresh the list after action
                     try await Task.sleep(for: .seconds(1))
                     await send(.refresh)
+                    await send(.actionResult(actionID, .success(())))
                 } catch: { error, send in
-                    await send(.actionResult(.failure(error)))
+                    await send(.actionResult(actionID, .failure(error)))
                 }
+                .cancellable(id: CancelID.action(actionID), cancelInFlight: true)
 
-            case .actionResult(.failure(let error)):
+            case .actionResult(let actionID, .failure(let error)):
+                state.pendingActionIDs.remove(actionID)
                 state.error = error.localizedDescription
                 return .none
 
-            case .actionResult(.success):
+            case .actionResult(let actionID, .success):
+                state.pendingActionIDs.remove(actionID)
+                return .none
+
+            case .detail(.presented(.delegate(.containerUpdated(let container)))):
+                state.containers = state.containers.map { $0.id == container.id ? container : $0 }
                 return .none
 
             case .detail:
@@ -151,6 +166,7 @@ struct ContainerListFeature {
         } catch: { error, send in
             await send(.containersLoaded(.failure(error)))
         }
+        .cancellable(id: CancelID.load, cancelInFlight: true)
     }
 
     private func startPolling() -> Effect<Action> {

@@ -14,7 +14,7 @@ struct ContainerDetailFeature {
     @ObservableState
     struct State: Equatable, Identifiable {
         let id: String
-        let container: DockerContainer
+        var container: DockerContainer
         var baseURL: URL?
         var authSession: AuthSession?
 
@@ -42,6 +42,7 @@ struct ContainerDetailFeature {
     enum Action: BindableAction {
         case binding(BindingAction<State>)
         case onAppear
+        case refreshDetail
         case tabSelected(ContainerDetailTab)
         case detailLoaded(Result<ContainerDetail, Error>)
         case logsLoaded(Result<[ContainerLog], Error>)
@@ -52,9 +53,14 @@ struct ContainerDetailFeature {
         case stopResourcePolling
         case resourcePollTick
         case loadMoreLogs
+        case delegate(Delegate)
     }
 
-    private enum CancelID { case resourcePolling }
+    enum Delegate: Equatable {
+        case containerUpdated(DockerContainer)
+    }
+
+    enum CancelID { case detail, logs, resources, action, resourcePolling }
 
     @Dependency(\.synologyClient) var api
     @Dependency(\.continuousClock) var clock
@@ -74,20 +80,16 @@ struct ContainerDetailFeature {
                 state.isLoading = true
                 let name = state.container.name
                 return .merge(
-                    .run { [baseURL, session] send in
-                        let detail = try await api.getContainerDetail(baseURL, session, name)
-                        await send(.detailLoaded(.success(detail)))
-                    } catch: { error, send in
-                        await send(.detailLoaded(.failure(error)))
-                    },
-                    .run { [baseURL, session] send in
-                        let logs = try await api.getContainerLogs(baseURL, session, name, 0, 100)
-                        await send(.logsLoaded(.success(logs)))
-                    } catch: { error, send in
-                        await send(.logsLoaded(.failure(error)))
-                    },
+                    fetchDetail(baseURL: baseURL, session: session, name: name),
+                    fetchLogs(baseURL: baseURL, session: session, name: name),
                     .send(.startResourcePolling)
                 )
+
+            case .refreshDetail:
+                guard let baseURL = state.baseURL, let session = state.authSession else {
+                    return .none
+                }
+                return fetchDetail(baseURL: baseURL, session: session, name: state.container.name)
 
             case .tabSelected(let tab):
                 state.selectedTab = tab
@@ -95,12 +97,16 @@ struct ContainerDetailFeature {
 
             case .detailLoaded(.success(let detail)):
                 state.detail = detail
+                let container = updatedContainer(from: detail, keeping: state.container)
+                state.container = container
                 state.isLoading = false
-                return .none
+                state.isPerformingAction = false
+                return .send(.delegate(.containerUpdated(container)))
 
             case .detailLoaded(.failure(let error)):
                 state.error = error.localizedDescription
                 state.isLoading = false
+                state.isPerformingAction = false
                 return .none
 
             case .logsLoaded(.success(let logs)):
@@ -139,10 +145,11 @@ struct ContainerDetailFeature {
                 let name = state.container.name
                 return .run { [baseURL, session] send in
                     try await api.performContainerAction(baseURL, session, name, action)
-                    await send(.actionResult(.success(())))
+                    await send(.refreshDetail)
                 } catch: { error, send in
                     await send(.actionResult(.failure(error)))
                 }
+                .cancellable(id: CancelID.action, cancelInFlight: true)
 
             case .actionResult(.success):
                 state.isPerformingAction = false
@@ -168,16 +175,57 @@ struct ContainerDetailFeature {
                 guard let baseURL = state.baseURL, let session = state.authSession else {
                     return .none
                 }
-                return .run { [baseURL, session] send in
-                    let resources = try await api.getContainerResources(baseURL, session)
-                    await send(.resourcesLoaded(.success(resources)))
-                } catch: { error, send in
-                    await send(.resourcesLoaded(.failure(error)))
-                }
+                return fetchResources(baseURL: baseURL, session: session)
 
             case .loadMoreLogs:
                 return .none
+
+            case .delegate:
+                return .none
             }
         }
+    }
+
+    private func fetchDetail(baseURL: URL, session: AuthSession, name: String) -> Effect<Action> {
+        .run { send in
+            let detail = try await api.getContainerDetail(baseURL, session, name)
+            await send(.detailLoaded(.success(detail)))
+        } catch: { error, send in
+            await send(.detailLoaded(.failure(error)))
+        }
+        .cancellable(id: CancelID.detail, cancelInFlight: true)
+    }
+
+    private func fetchLogs(baseURL: URL, session: AuthSession, name: String) -> Effect<Action> {
+        .run { send in
+            let logs = try await api.getContainerLogs(baseURL, session, name, 0, 100)
+            await send(.logsLoaded(.success(logs)))
+        } catch: { error, send in
+            await send(.logsLoaded(.failure(error)))
+        }
+        .cancellable(id: CancelID.logs, cancelInFlight: true)
+    }
+
+    private func fetchResources(baseURL: URL, session: AuthSession) -> Effect<Action> {
+        .run { send in
+            let resources = try await api.getContainerResources(baseURL, session)
+            await send(.resourcesLoaded(.success(resources)))
+        } catch: { error, send in
+            await send(.resourcesLoaded(.failure(error)))
+        }
+        .cancellable(id: CancelID.resources, cancelInFlight: true)
+    }
+
+    private func updatedContainer(from detail: ContainerDetail, keeping container: DockerContainer) -> DockerContainer {
+        DockerContainer(
+            id: container.id,
+            name: detail.name,
+            image: detail.image,
+            status: detail.status,
+            state: detail.status.rawValue,
+            created: detail.created,
+            ports: detail.ports,
+            isPackage: container.isPackage
+        )
     }
 }

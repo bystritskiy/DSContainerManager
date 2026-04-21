@@ -32,7 +32,7 @@ struct SystemMonitorFeature {
         case storageLoaded(Result<StorageInfo, Error>)
     }
 
-    private enum CancelID { case polling }
+    enum CancelID { case utilizationLoad, storageLoad, polling }
 
     @Dependency(\.synologyClient) var api
     @Dependency(\.continuousClock) var clock
@@ -133,6 +133,7 @@ struct SystemMonitorFeature {
         } catch: { error, send in
             await send(.utilizationLoaded(.failure(error)))
         }
+        .cancellable(id: CancelID.utilizationLoad, cancelInFlight: true)
     }
 
     private func fetchStorage(baseURL: URL, session: AuthSession) -> Effect<Action> {
@@ -142,5 +143,6 @@ struct SystemMonitorFeature {
         } catch: { error, send in
             await send(.storageLoaded(.failure(error)))
         }
+        .cancellable(id: CancelID.storageLoad, cancelInFlight: true)
     }
 }

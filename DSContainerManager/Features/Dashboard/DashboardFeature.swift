@@ -36,7 +36,7 @@ struct DashboardFeature {
         var storage: StorageInfo?
     }
 
-    private enum CancelID { case polling }
+    enum CancelID { case load, polling }
 
     @Dependency(\.synologyClient) var api
     @Dependency(\.continuousClock) var clock
@@ -125,5 +125,6 @@ struct DashboardFeature {
 
             await send(.dataLoaded(.success(dashData)))
         }
+        .cancellable(id: CancelID.load, cancelInFlight: true)
     }
 }

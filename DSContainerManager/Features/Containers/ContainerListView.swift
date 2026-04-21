@@ -42,6 +42,9 @@ struct ContainerListView: View {
             .onAppear {
                 store.send(.onAppear)
             }
+            .onDisappear {
+                store.send(.stopPolling)
+            }
             .navigationDestination(item: $store.scope(state: \.detail, action: \.detail)) { detailStore in
                 ContainerDetailView(store: detailStore)
             }

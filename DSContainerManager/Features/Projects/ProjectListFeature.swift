@@ -9,6 +9,7 @@ struct ProjectListFeature {
         var baseURL: URL?
         var authSession: AuthSession?
         var projects: [ComposeProject] = []
+        var pendingActionIDs: Set<String> = []
         var isLoading = false
         var error: String?
         @Presents var detail: ProjectDetailFeature.State?
@@ -20,9 +21,11 @@ struct ProjectListFeature {
         case projectsLoaded(Result<[ComposeProject], Error>)
         case projectTapped(ComposeProject)
         case projectAction(ComposeProject, ProjectAction)
-        case actionResult(Result<Void, Error>)
+        case actionResult(String, Result<Void, Error>)
         case detail(PresentationAction<ProjectDetailFeature.Action>)
     }
+
+    enum CancelID: Hashable { case load, action(String) }
 
     @Dependency(\.synologyClient) var api
 
@@ -68,19 +71,28 @@ struct ProjectListFeature {
                     return .none
                 }
                 let projectId = project.id.rawValue
+                state.pendingActionIDs.insert(projectId)
                 return .run { [baseURL, session] send in
                     try await api.performProjectAction(baseURL, session, projectId, action)
                     try await Task.sleep(for: .seconds(1))
                     await send(.refresh)
+                    await send(.actionResult(projectId, .success(())))
                 } catch: { error, send in
-                    await send(.actionResult(.failure(error)))
+                    await send(.actionResult(projectId, .failure(error)))
                 }
+                .cancellable(id: CancelID.action(projectId), cancelInFlight: true)
 
-            case .actionResult(.failure(let error)):
+            case .actionResult(let projectId, .failure(let error)):
+                state.pendingActionIDs.remove(projectId)
                 state.error = error.localizedDescription
                 return .none
 
-            case .actionResult(.success):
+            case .actionResult(let projectId, .success):
+                state.pendingActionIDs.remove(projectId)
+                return .none
+
+            case .detail(.presented(.delegate(.projectUpdated(let project)))):
+                state.projects = state.projects.map { $0.id == project.id ? project : $0 }
                 return .none
 
             case .detail:
@@ -99,5 +111,6 @@ struct ProjectListFeature {
         } catch: { error, send in
             await send(.projectsLoaded(.failure(error)))
         }
+        .cancellable(id: CancelID.load, cancelInFlight: true)
     }
 }

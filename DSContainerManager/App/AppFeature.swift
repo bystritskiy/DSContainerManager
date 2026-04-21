@@ -119,6 +119,35 @@ struct AppFeature {
                 return .none
 
             case .disconnect:
+                let containerActionCancels = state.containerList.pendingActionIDs.map {
+                    Effect<Action>.cancel(id: ContainerListFeature.CancelID.action($0))
+                }
+                let projectActionCancels = state.projectList.pendingActionIDs.map {
+                    Effect<Action>.cancel(id: ProjectListFeature.CancelID.action($0))
+                }
+                let effects: [Effect<Action>] = [
+                    .send(.dashboard(.stopPolling)),
+                    .send(.containerList(.stopPolling)),
+                    .send(.systemMonitor(.stopPolling)),
+                    .cancel(id: DashboardFeature.CancelID.load),
+                    .cancel(id: DashboardFeature.CancelID.polling),
+                    .cancel(id: ContainerListFeature.CancelID.load),
+                    .cancel(id: ContainerListFeature.CancelID.polling),
+                    .cancel(id: ContainerDetailFeature.CancelID.detail),
+                    .cancel(id: ContainerDetailFeature.CancelID.logs),
+                    .cancel(id: ContainerDetailFeature.CancelID.resources),
+                    .cancel(id: ContainerDetailFeature.CancelID.action),
+                    .cancel(id: ContainerDetailFeature.CancelID.resourcePolling),
+                    .cancel(id: ProjectListFeature.CancelID.load),
+                    .cancel(id: ProjectDetailFeature.CancelID.load),
+                    .cancel(id: ProjectDetailFeature.CancelID.action),
+                    .cancel(id: SystemMonitorFeature.CancelID.utilizationLoad),
+                    .cancel(id: SystemMonitorFeature.CancelID.storageLoad),
+                    .cancel(id: SystemMonitorFeature.CancelID.polling),
+                    .run { _ in
+                        try? keychain.deleteSavedSession()
+                    }
+                ] + containerActionCancels + projectActionCancels
                 state.activeConnection = nil
                 state.authSession = nil
                 state.dashboard = DashboardFeature.State()
@@ -127,9 +156,7 @@ struct AppFeature {
                 state.systemMonitor = SystemMonitorFeature.State()
                 backgroundMonitor.cancelHealthCheck()
                 // Clear saved session from Keychain
-                return .run { _ in
-                    try? keychain.deleteSavedSession()
-                }
+                return .merge(effects)
 
             case .connectionList(.delegate(.connectionEstablished(let profile, let session))):
                 // Save session to Keychain for next launch
