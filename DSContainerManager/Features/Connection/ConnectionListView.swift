@@ -124,7 +124,7 @@ struct ConnectionRow: View {
                     }
                 }
 
-                Text("\(profile.host):\(profile.port)")
+                Text(verbatim: "\(profile.host):\(profile.port)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 

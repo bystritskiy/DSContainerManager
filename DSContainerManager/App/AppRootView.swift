@@ -145,10 +145,11 @@ struct SettingsView: View {
             List {
                 if let connection = store.activeConnection {
                     Section("Connected NAS") {
+                        let hostAndPort = connection.host + ":" + String(connection.port)
                         LabeledContent("Name", value: connection.name)
                             .accessibilityLabel("NAS Name: \(connection.name)")
-                        LabeledContent("Host", value: "\(connection.host):\(connection.port)")
-                            .accessibilityLabel("Host: \(connection.host), Port: \(connection.port)")
+                        LabeledContent("Host", value: hostAndPort)
+                            .accessibilityLabel("Host: \(connection.host), Port: " + String(connection.port))
                         LabeledContent("User", value: connection.username)
                             .accessibilityLabel("Username: \(connection.username)")
                         if let lastConnected = connection.lastConnected {
