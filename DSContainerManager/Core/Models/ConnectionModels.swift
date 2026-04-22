@@ -60,7 +60,6 @@ struct ConnectionProfile: Sendable, Equatable, Identifiable, Codable {
     let port: Int
     let useHTTPS: Bool
     let username: String
-    let use2FA: Bool
     let lastConnected: Date?
     let isDefault: Bool
     let trustSelfSignedCert: Bool
@@ -84,7 +83,6 @@ extension NASConnection {
             port: port,
             useHTTPS: useHTTPS,
             username: username,
-            use2FA: use2FA,
             lastConnected: lastConnected,
             isDefault: isDefault,
             trustSelfSignedCert: trustSelfSignedCert

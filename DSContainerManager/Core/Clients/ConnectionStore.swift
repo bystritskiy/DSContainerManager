@@ -49,7 +49,6 @@ extension ConnectionStore: DependencyKey {
                     connection.port = profile.port
                     connection.useHTTPS = profile.useHTTPS
                     connection.username = profile.username
-                    connection.use2FA = profile.use2FA
                     connection.isDefault = profile.isDefault
                     connection.trustSelfSignedCert = profile.trustSelfSignedCert
                 } else {
@@ -60,7 +59,6 @@ extension ConnectionStore: DependencyKey {
                         port: profile.port,
                         useHTTPS: profile.useHTTPS,
                         username: profile.username,
-                        use2FA: profile.use2FA,
                         lastConnected: profile.lastConnected,
                         isDefault: profile.isDefault,
                         trustSelfSignedCert: profile.trustSelfSignedCert
@@ -102,7 +100,6 @@ extension ConnectionStore: DependencyKey {
                     port: 5000,
                     useHTTPS: false,
                     username: "admin",
-                    use2FA: false,
                     lastConnected: Date.now.addingTimeInterval(-3600),
                     isDefault: true,
                     trustSelfSignedCert: false
@@ -114,7 +111,6 @@ extension ConnectionStore: DependencyKey {
                     port: 5001,
                     useHTTPS: true,
                     username: "admin",
-                    use2FA: true,
                     lastConnected: Date.now.addingTimeInterval(-86400),
                     isDefault: false,
                     trustSelfSignedCert: true

@@ -18,7 +18,7 @@ struct ConnectionFormView: View {
                 HStack {
                     Text("Port")
                     Spacer()
-                    TextField("Port", value: $store.port, format: .number)
+                    TextField("Port", value: $store.port, format: .number.grouping(.never))
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 100)
@@ -35,8 +35,6 @@ struct ConnectionFormView: View {
 
                 SecureField("Password", text: $store.password)
                     .textContentType(.password)
-
-                Toggle("Two-Factor Authentication", isOn: $store.use2FA)
             }
 
             Section {
@@ -71,13 +69,12 @@ struct ConnectionFormView: View {
             store: Store(
                 initialState: ConnectionFormFeature.State(
                     mode: .add,
-                    name: "",
-                    host: "",
+                    name: "NAS",
+                    host: "192.168.1.70",
                     port: 5000,
                     useHTTPS: false,
                     username: "admin",
                     password: "",
-                    use2FA: false,
                     trustSelfSignedCert: false
                 )
             ) {

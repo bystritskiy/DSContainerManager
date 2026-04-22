@@ -72,7 +72,6 @@ struct ConnectionFeature {
                     useHTTPS: false,
                     username: "admin",
                     password: "",
-                    use2FA: false,
                     trustSelfSignedCert: false
                 )
                 return .none
@@ -87,7 +86,6 @@ struct ConnectionFeature {
                     useHTTPS: profile.useHTTPS,
                     username: profile.username,
                     password: password,
-                    use2FA: profile.use2FA,
                     trustSelfSignedCert: profile.trustSelfSignedCert
                 )
                 return .none
@@ -194,7 +192,6 @@ struct ConnectionFormFeature {
         var useHTTPS: Bool
         var username: String
         var password: String
-        var use2FA: Bool
         var trustSelfSignedCert: Bool
 
         enum Mode: Equatable {
@@ -234,7 +231,6 @@ struct ConnectionFormFeature {
                 port: port,
                 useHTTPS: useHTTPS,
                 username: username,
-                use2FA: use2FA,
                 lastConnected: nil,
                 isDefault: false,
                 trustSelfSignedCert: trustSelfSignedCert

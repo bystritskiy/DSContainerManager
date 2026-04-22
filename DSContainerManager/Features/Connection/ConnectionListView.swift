@@ -69,7 +69,7 @@ struct ConnectionListView: View {
                     ConnectionFormView(store: formStore)
                 }
             }
-            .alert("Enter 2FA Code", isPresented: Binding(
+            .alert("Verification Code Required", isPresented: Binding(
                 get: { store.otpPrompt != nil },
                 set: { if !$0 { store.send(.dismissOTPPrompt) } }
             )) {
@@ -89,7 +89,7 @@ struct ConnectionListView: View {
                     store.send(.dismissOTPPrompt)
                 }
             } message: {
-                Text("Enter the code from your authenticator app")
+                Text("Enter the code from your authenticator app to finish signing in.")
             }
             .onAppear {
                 if store.connections.isEmpty {
@@ -132,9 +132,6 @@ struct ConnectionRow: View {
                     Label(profile.username, systemImage: "person")
                     if profile.useHTTPS {
                         Label("HTTPS", systemImage: "lock.fill")
-                    }
-                    if profile.use2FA {
-                        Label("2FA", systemImage: "key.fill")
                     }
                 }
                 .font(.caption)
