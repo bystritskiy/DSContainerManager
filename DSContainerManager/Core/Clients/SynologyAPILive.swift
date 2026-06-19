@@ -124,16 +124,28 @@ extension SynologyAPIClient: DependencyKey {
                     delegate: sessionDelegate,
                     delegateQueue: nil
                 )
+                let requestedOffset = max(offset, 0)
+                let requestedLimit = max(limit, 1)
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Container.Log",
                     "version": "1",
                     "method": "get",
                     "name": containerName,
-                    "offset": "\(offset)",
-                    "limit": "\(limit)"
+                    "from": "",
+                    "to": "",
+                    "level": "",
+                    "keyword": "",
+                    "sort_dir": "DESC",
+                    "offset": String(requestedOffset),
+                    "limit": String(requestedLimit)
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
+                #if DEBUG
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("[SynologyAPI] Response for ContainerLog name=\(containerName) (\(data.count) bytes): \(jsonString.prefix(2000))")
+                }
+                #endif
                 return try decodeLogResponse(from: data, containerName: containerName)
             },
 
@@ -274,7 +286,10 @@ private func authenticatedParams(_ session: AuthSession, api: [String: String]) 
 private func performRequest(session: URLSession, url: URL) async throws -> Data {
     var request = URLRequest(url: url)
     request.timeoutInterval = 30
+    return try await performRequest(session: session, request: request)
+}
 
+private func performRequest(session: URLSession, request: URLRequest) async throws -> Data {
     let (data, response): (Data, URLResponse)
     do {
         (data, response) = try await session.data(for: request)
@@ -335,13 +350,100 @@ private func decodeResponse<T: Decodable>(_ type: T.Type, from data: Data) throw
 
 // MARK: - Log Response Decoding
 
-/// Synology logs come as a flat structure with an array of log strings.
-/// We parse them into structured ContainerLog objects.
+/// DSM Container Manager returns logs as `{ logs: [{ created, text, stream }], total }`.
+/// Older Docker API shapes may still return flat strings, so keep that fallback.
 private func decodeLogResponse(from data: Data, containerName: String) throws -> [ContainerLog] {
     struct LogResponseData: Decodable {
-        let logs: [String]?
+        let entries: [LogEntry]
         let offset: Int?
-        let total: Int?
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            entries = (try? container.decode([LogEntry].self, forKey: .logs))
+                ?? (try? container.decode([LogEntry].self, forKey: .log))
+                ?? []
+            offset = try? container.decode(Int.self, forKey: .offset)
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case logs
+            case log
+            case offset
+        }
+    }
+
+    struct LogEntry: Decodable {
+        let timestamp: Date
+        let stream: ContainerLog.LogStream
+        let text: String
+
+        init(from decoder: Decoder) throws {
+            if let singleValue = try? decoder.singleValueContainer(),
+               let line = try? singleValue.decode(String.self) {
+                let parsed = parseLogLine(line)
+                timestamp = parsed.0
+                stream = parsed.1
+                text = parsed.2
+                return
+            }
+
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            timestamp = Self.decodeTimestamp(
+                from: container,
+                keys: [.timestamp, .time, .date, .created, .createdAt]
+            ) ?? .now
+
+            let rawStream = (try? container.decode(String.self, forKey: .stream))
+                ?? (try? container.decode(String.self, forKey: .source))
+                ?? "unknown"
+            stream = ContainerLog.LogStream(rawValue: rawStream.lowercased()) ?? .unknown
+
+            text = (try? container.decode(String.self, forKey: .text))
+                ?? (try? container.decode(String.self, forKey: .message))
+                ?? (try? container.decode(String.self, forKey: .msg))
+                ?? (try? container.decode(String.self, forKey: .output))
+                ?? ""
+        }
+
+        private static func decodeTimestamp(
+            from container: KeyedDecodingContainer<CodingKeys>,
+            keys: [CodingKeys]
+        ) -> Date? {
+            for key in keys {
+                if let rawString = try? container.decode(String.self, forKey: key) {
+                    if let numericValue = Double(rawString) {
+                        return date(fromNumericTimestamp: numericValue)
+                    }
+                    if let date = parseLogDate(rawString) {
+                        return date
+                    }
+                }
+
+                if let rawDouble = try? container.decode(Double.self, forKey: key) {
+                    return date(fromNumericTimestamp: rawDouble)
+                }
+
+                if let rawInt = try? container.decode(Int64.self, forKey: key) {
+                    return date(fromNumericTimestamp: Double(rawInt))
+                }
+            }
+
+            return nil
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case timestamp
+            case time
+            case date
+            case created
+            case createdAt = "created_at"
+            case stream
+            case source
+            case text
+            case message
+            case msg
+            case output = "Output"
+        }
     }
 
     let decoder = JSONDecoder()
@@ -359,18 +461,17 @@ private func decodeLogResponse(from data: Data, containerName: String) throws ->
         throw SynologyAPIError.unknownError("Log request failed")
     }
 
-    guard let logData = synologyResponse.data, let logStrings = logData.logs else {
+    guard let logData = synologyResponse.data else {
         return []
     }
 
-    return logStrings.enumerated().map { index, logLine in
-        // Parse log lines: Docker typically uses format like "2024-01-15T10:30:00.000Z stdout message"
-        let (timestamp, stream, text) = parseLogLine(logLine)
+    return logData.entries.enumerated().compactMap { index, entry in
+        guard !entry.text.isEmpty else { return nil }
         return ContainerLog(
             id: UUID(),
-            timestamp: timestamp,
-            stream: stream,
-            text: text,
+            timestamp: entry.timestamp,
+            stream: entry.stream,
+            text: entry.text,
             offset: (logData.offset ?? 0) + index
         )
     }
@@ -385,10 +486,7 @@ private func parseLogLine(_ line: String) -> (Date, ContainerLog.LogStream, Stri
         let streamStr = String(components[1]).lowercased()
         let message = String(components[2])
 
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        let timestamp = formatter.date(from: timestampStr) ?? .now
+        let timestamp = parseLogDate(timestampStr) ?? .now
         let stream: ContainerLog.LogStream = {
             switch streamStr {
             case "stdout": return .stdout
@@ -402,6 +500,31 @@ private func parseLogLine(_ line: String) -> (Date, ContainerLog.LogStream, Stri
 
     // Fallback: treat entire line as stdout message
     return (.now, .unknown, line)
+}
+
+private func parseLogDate(_ rawValue: String) -> Date? {
+    let formatterWithFractions = ISO8601DateFormatter()
+    formatterWithFractions.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    if let date = formatterWithFractions.date(from: rawValue) {
+        return date
+    }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime]
+    if let date = formatter.date(from: rawValue) {
+        return date
+    }
+
+    if let timestamp = Double(rawValue) {
+        return date(fromNumericTimestamp: timestamp)
+    }
+
+    return nil
+}
+
+private func date(fromNumericTimestamp rawValue: Double) -> Date {
+    let seconds = rawValue > 10_000_000_000 ? rawValue / 1_000 : rawValue
+    return Date(timeIntervalSince1970: seconds)
 }
 
 // MARK: - Resource Response Decoding

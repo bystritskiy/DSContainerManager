@@ -113,7 +113,11 @@ struct ContainerDetailFeature {
                 state.logs = logs
                 return .none
 
-            case .logsLoaded(.failure):
+            case .logsLoaded(.failure(let error)):
+                state.error = "Failed to load logs: \(error.localizedDescription)"
+                #if DEBUG
+                print("[ContainerDetailFeature] Failed to load logs for \(state.container.name): \(error.localizedDescription)")
+                #endif
                 return .none
 
             case .resourcesLoaded(.success(let resources)):

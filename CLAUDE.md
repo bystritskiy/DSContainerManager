@@ -13,11 +13,18 @@ No test target currently exists. Use Xcode (`open DSContainerManager.xcodeproj`)
 ```bash
 # Build for simulator
 xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager \
-    -destination 'platform=iOS Simulator,name=iPhone 16' build
+    -destination 'platform=iOS Simulator,name=iPhone 17' \
+    -skipMacroValidation build
 
 # Clean
 xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager clean
 ```
+
+Toolchain: requires Xcode 27 (iOS 26 SDK). `-skipMacroValidation` is needed
+for CLI builds because TCA's SPM macros (ComposableArchitecture, swift-case-paths,
+swift-dependencies, swift-perception) otherwise require an interactive trust prompt;
+opening the project once in the Xcode GUI and approving the macros removes the need.
+Simulators are iPhone 17-series (iPhone 16 no longer exists in Xcode 27).
 
 Swift Package dependencies (resolved automatically by Xcode):
 - `pointfreeco/swift-composable-architecture` — TCA (`ComposableArchitecture`, `Dependencies`, `DependenciesMacros`)

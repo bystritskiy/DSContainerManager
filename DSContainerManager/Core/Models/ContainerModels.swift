@@ -33,58 +33,129 @@ struct DockerContainer: Codable, Sendable, Equatable, Identifiable {
         self.isPackage = isPackage
     }
 
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(image, forKey: .image)
+        try container.encode(status, forKey: .status)
+        try container.encode(state, forKey: .state)
+        try container.encode(created, forKey: .created)
+        try container.encode(ports, forKey: .ports)
+        try container.encode(isPackage, forKey: .isPackage)
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // id can be "id" or "Id" or come as a string
-        if let idStr = try? container.decode(String.self, forKey: .id) {
-            id = ContainerID(rawValue: idStr)
-        } else {
-            id = ContainerID(rawValue: UUID().uuidString)
-        }
+        let rawID = (try? container.decode(String.self, forKey: .id))
+            ?? (try? container.decode(String.self, forKey: .idUpper))
+            ?? UUID().uuidString
+        id = ContainerID(rawValue: rawID)
 
-        // name might have leading slash in Docker
-        let rawName = (try? container.decode(String.self, forKey: .name)) ?? "unknown"
-        name = rawName.hasPrefix("/") ? String(rawName.dropFirst()) : rawName
+        let rawName = (try? container.decode(String.self, forKey: .name))
+            ?? (try? container.decode(String.self, forKey: .nameUpper))
+            ?? (try? container.decode([String].self, forKey: .namesUpper).first)
+            ?? "unknown"
+        name = Self.normalizedContainerName(rawName)
 
-        image = (try? container.decode(String.self, forKey: .image)) ?? ""
+        image = (try? container.decode(String.self, forKey: .image))
+            ?? (try? container.decode(String.self, forKey: .imageUpper))
+            ?? ""
 
-        // status: try as ContainerStatus, fall back to string parsing
-        if let s = try? container.decode(ContainerStatus.self, forKey: .status) {
-            status = s
-        } else if let statusStr = try? container.decode(String.self, forKey: .status) {
-            status = ContainerStatus(rawValue: statusStr.lowercased()) ?? .unknown
-        } else {
-            status = .unknown
-        }
+        let rawStatus = (try? container.decode(String.self, forKey: .status))
+            ?? (try? container.decode(String.self, forKey: .statusUpper))
+            ?? (try? container.decode(RawState.self, forKey: .stateUpper).status)
+            ?? (try? container.decode(String.self, forKey: .state))
+            ?? ""
+        status = Self.containerStatus(from: rawStatus)
 
-        state = (try? container.decode(String.self, forKey: .state)) ?? ""
+        state = (try? container.decode(String.self, forKey: .state))
+            ?? (try? container.decode(String.self, forKey: .stateUpper))
+            ?? (try? container.decode(RawState.self, forKey: .stateUpper).status)
+            ?? rawStatus
 
-        // created: try as Date (seconds since 1970), or as Int, or as String
         if let ts = try? container.decode(Double.self, forKey: .created) {
+            created = Date(timeIntervalSince1970: ts)
+        } else if let ts = try? container.decode(Double.self, forKey: .createdUpper) {
             created = Date(timeIntervalSince1970: ts)
         } else if let ts = try? container.decode(Int.self, forKey: .created) {
             created = Date(timeIntervalSince1970: Double(ts))
-        } else if let dateStr = try? container.decode(String.self, forKey: .created) {
+        } else if let ts = try? container.decode(Int.self, forKey: .createdUpper) {
+            created = Date(timeIntervalSince1970: Double(ts))
+        } else if let dateStr = (try? container.decode(String.self, forKey: .created))
+            ?? (try? container.decode(String.self, forKey: .createdUpper)) {
             let formatter = ISO8601DateFormatter()
             created = formatter.date(from: dateStr) ?? .now
         } else {
             created = .now
         }
 
-        ports = (try? container.decode([PortMapping].self, forKey: .ports)) ?? []
-        isPackage = (try? container.decode(Bool.self, forKey: .isPackage)) ?? false
+        ports = (try? container.decode([PortMapping].self, forKey: .ports))
+            ?? (try? container.decode([PortMapping].self, forKey: .portsUpper))
+            ?? []
+        isPackage = (try? container.decode(Bool.self, forKey: .isPackage))
+            ?? (try? container.decode(Bool.self, forKey: .isPackageUpper))
+            ?? false
+    }
+
+    fileprivate static func normalizedContainerName(_ rawName: String) -> String {
+        var name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        while name.hasPrefix("/") {
+            name.removeFirst()
+        }
+        return name.isEmpty ? "unknown" : name
+    }
+
+    fileprivate static func containerStatus(from rawStatus: String) -> ContainerStatus {
+        let lowercasedStatus = rawStatus.lowercased()
+        if lowercasedStatus.hasPrefix("up") || lowercasedStatus == "running" {
+            return .running
+        }
+        if lowercasedStatus.contains("pause") {
+            return .paused
+        }
+        if lowercasedStatus.contains("restart") {
+            return .restarting
+        }
+        if lowercasedStatus.contains("dead") {
+            return .dead
+        }
+        if lowercasedStatus.contains("created") {
+            return .created
+        }
+        if lowercasedStatus.contains("exit") || lowercasedStatus == "stopped" {
+            return .stopped
+        }
+        return ContainerStatus(rawValue: lowercasedStatus) ?? .unknown
+    }
+
+    private struct RawState: Decodable {
+        let status: String?
+
+        enum CodingKeys: String, CodingKey {
+            case status = "Status"
+        }
     }
 
     enum CodingKeys: String, CodingKey {
         case id
+        case idUpper = "Id"
         case name
+        case nameUpper = "Name"
+        case namesUpper = "Names"
         case image
+        case imageUpper = "Image"
         case status
+        case statusUpper = "Status"
         case state
+        case stateUpper = "State"
         case created
+        case createdUpper = "Created"
         case ports
+        case portsUpper = "Ports"
         case isPackage = "is_package"
+        case isPackageUpper = "isPackage"
     }
 
     struct PortMapping: Sendable, Equatable, Hashable, Codable {
@@ -169,32 +240,119 @@ struct ContainerDetail: Codable, Sendable, Equatable {
         self.restartPolicy = restartPolicy
     }
 
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encode(image, forKey: .image)
+        try container.encode(status, forKey: .status)
+        try container.encode(created, forKey: .created)
+        try container.encode(env, forKey: .env)
+        try container.encode(cmd, forKey: .cmd)
+        try container.encode(volumes, forKey: .volumes)
+        try container.encode(networks, forKey: .networks)
+        try container.encode(labels, forKey: .labels)
+        try container.encodeIfPresent(hostConfig, forKey: .hostConfig)
+        try container.encode(ports, forKey: .ports)
+        try container.encodeIfPresent(restartPolicy, forKey: .restartPolicy)
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        name = (try? container.decode(String.self, forKey: .name)) ?? ""
-        image = (try? container.decode(String.self, forKey: .image)) ?? ""
-        status = (try? container.decode(ContainerStatus.self, forKey: .status)) ?? .unknown
-
-        if let ts = try? container.decode(Double.self, forKey: .created) {
-            created = Date(timeIntervalSince1970: ts)
-        } else if let ts = try? container.decode(Int.self, forKey: .created) {
-            created = Date(timeIntervalSince1970: Double(ts))
-        } else {
-            created = .now
+        if container.contains(.details), let nestedDecoder = try? container.superDecoder(forKey: .details) {
+            self = try Self(from: nestedDecoder)
+            return
         }
 
-        env = (try? container.decode([String].self, forKey: .env)) ?? []
-        cmd = (try? container.decode([String].self, forKey: .cmd)) ?? []
-        volumes = (try? container.decode([VolumeMount].self, forKey: .volumes)) ?? []
-        networks = (try? container.decode([String].self, forKey: .networks)) ?? []
-        labels = (try? container.decode([String: String].self, forKey: .labels)) ?? [:]
-        hostConfig = try? container.decode(HostConfig.self, forKey: .hostConfig)
-        ports = (try? container.decode([DockerContainer.PortMapping].self, forKey: .ports)) ?? []
-        restartPolicy = try? container.decode(String.self, forKey: .restartPolicy)
+        let config = try? container.decode(RawConfig.self, forKey: .config)
+        let rawState = try? container.decode(RawState.self, forKey: .stateUpper)
+
+        let rawName = (try? container.decode(String.self, forKey: .name))
+            ?? (try? container.decode(String.self, forKey: .nameUpper))
+            ?? ""
+        let decodedName = DockerContainer.normalizedContainerName(rawName)
+
+        let decodedImage = (try? container.decode(String.self, forKey: .image))
+            ?? (try? container.decode(String.self, forKey: .imageUpper))
+            ?? config?.image
+            ?? ""
+
+        let rawStatus = (try? container.decode(String.self, forKey: .status))
+            ?? (try? container.decode(String.self, forKey: .statusUpper))
+            ?? rawState?.status
+            ?? ""
+        let decodedStatus = DockerContainer.containerStatus(from: rawStatus)
+
+        let decodedCreated: Date
+        if let ts = try? container.decode(Double.self, forKey: .created) {
+            decodedCreated = Date(timeIntervalSince1970: ts)
+        } else if let ts = try? container.decode(Int.self, forKey: .created) {
+            decodedCreated = Date(timeIntervalSince1970: Double(ts))
+        } else if let dateStr = (try? container.decode(String.self, forKey: .created))
+            ?? (try? container.decode(String.self, forKey: .createdUpper)) {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            decodedCreated = formatter.date(from: dateStr) ?? ISO8601DateFormatter().date(from: dateStr) ?? .now
+        } else {
+            decodedCreated = .now
+        }
+
+        let decodedHostConfig = try? container.decode(HostConfig.self, forKey: .hostConfig)
+        self.init(
+            name: decodedName,
+            image: decodedImage,
+            status: decodedStatus,
+            created: decodedCreated,
+            env: (try? container.decode([String].self, forKey: .env)) ?? config?.env ?? [],
+            cmd: (try? container.decode([String].self, forKey: .cmd)) ?? config?.cmd ?? config?.entrypoint ?? [],
+            volumes: (try? container.decode([VolumeMount].self, forKey: .volumes))
+                ?? (try? container.decode([VolumeMount].self, forKey: .mounts))
+                ?? [],
+            networks: (try? container.decode([String].self, forKey: .networks)) ?? [],
+            labels: (try? container.decode([String: String].self, forKey: .labels)) ?? config?.labels ?? [:],
+            hostConfig: decodedHostConfig,
+            ports: (try? container.decode([DockerContainer.PortMapping].self, forKey: .ports)) ?? [],
+            restartPolicy: (try? container.decode(String.self, forKey: .restartPolicy)) ?? decodedHostConfig?.restartPolicy
+        )
+    }
+
+    private struct RawConfig: Decodable {
+        let image: String?
+        let env: [String]?
+        let cmd: [String]?
+        let entrypoint: [String]?
+        let labels: [String: String]?
+
+        enum CodingKeys: String, CodingKey {
+            case image = "Image"
+            case env = "Env"
+            case cmd = "Cmd"
+            case entrypoint = "Entrypoint"
+            case labels = "Labels"
+        }
+    }
+
+    private struct RawState: Decodable {
+        let status: String?
+
+        enum CodingKeys: String, CodingKey {
+            case status = "Status"
+        }
     }
 
     enum CodingKeys: String, CodingKey {
-        case name, image, status, created, env, cmd, volumes, networks, labels, ports
+        case details
+        case name
+        case nameUpper = "Name"
+        case image
+        case imageUpper = "Image"
+        case status
+        case statusUpper = "Status"
+        case stateUpper = "State"
+        case created
+        case createdUpper = "Created"
+        case env, cmd, volumes, networks, labels, ports
+        case config = "Config"
+        case mounts = "Mounts"
         case hostConfig = "host_config"
         case restartPolicy = "restart_policy"
     }

@@ -11,16 +11,33 @@
 		844321552F5865FE0053598C /* TaggedMoney in Frameworks */ = {isa = PBXBuildFile; productRef = 844321542F5865FE0053598C /* TaggedMoney */; };
 		844321572F5865FE0053598C /* TaggedTime in Frameworks */ = {isa = PBXBuildFile; productRef = 844321562F5865FE0053598C /* TaggedTime */; };
 		8443215A2F58662A0053598C /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 844321592F58662A0053598C /* ComposableArchitecture */; };
+		A10000000000000000000001 /* SnapshottingTests in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000002 /* SnapshottingTests */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A1000000000000000000000C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8443213B2F5861A30053598C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 844321422F5861A30053598C;
+			remoteInfo = DSContainerManager;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		844321432F5861A30053598C /* DSContainerManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DSContainerManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000003 /* DSContainerManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DSContainerManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		844321452F5861A30053598C /* DSContainerManager */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = DSContainerManager;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000004 /* DSContainerManagerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DSContainerManagerTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -37,6 +54,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* SnapshottingTests in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -44,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				844321452F5861A30053598C /* DSContainerManager */,
+				A10000000000000000000004 /* DSContainerManagerTests */,
 				844321442F5861A30053598C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				844321432F5861A30053598C /* DSContainerManager.app */,
+				A10000000000000000000003 /* DSContainerManagerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,6 +112,30 @@
 			productReference = 844321432F5861A30053598C /* DSContainerManager.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A10000000000000000000008 /* DSContainerManagerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000000000000000000000B /* Build configuration list for PBXNativeTarget "DSContainerManagerTests" */;
+			buildPhases = (
+				A10000000000000000000006 /* Sources */,
+				A10000000000000000000005 /* Frameworks */,
+				A10000000000000000000007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1000000000000000000000D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A10000000000000000000004 /* DSContainerManagerTests */,
+			);
+			name = DSContainerManagerTests;
+			packageProductDependencies = (
+				A10000000000000000000002 /* SnapshottingTests */,
+			);
+			productName = DSContainerManagerTests;
+			productReference = A10000000000000000000003 /* DSContainerManagerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -97,6 +148,10 @@
 				TargetAttributes = {
 					844321422F5861A30053598C = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					A10000000000000000000008 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 844321422F5861A30053598C;
 					};
 				};
 			};
@@ -112,6 +167,7 @@
 			packageReferences = (
 				844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */,
 				844321582F58662A0053598C /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				1E68ABFDE4894041B92709CB /* XCRemoteSwiftPackageReference "SnapshotPreviews" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 844321442F5861A30053598C /* Products */;
@@ -119,12 +175,20 @@
 			projectRoot = "";
 			targets = (
 				844321422F5861A30053598C /* DSContainerManager */,
+				A10000000000000000000008 /* DSContainerManagerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		844321412F5861A30053598C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000007 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -141,7 +205,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1000000000000000000000D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 844321422F5861A30053598C /* DSContainerManager */;
+			targetProxy = A1000000000000000000000C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		8443214C2F5861A40053598C /* Debug */ = {
@@ -344,6 +423,62 @@
 			};
 			name = Release;
 		};
+		A10000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bystritski.DSContainerManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DSContainerManager.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DSContainerManager";
+				TEST_TARGET_NAME = DSContainerManager;
+			};
+			name = Debug;
+		};
+		A1000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bystritski.DSContainerManagerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DSContainerManager.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DSContainerManager";
+				TEST_TARGET_NAME = DSContainerManager;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -365,6 +500,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		A1000000000000000000000B /* Build configuration list for PBXNativeTarget "DSContainerManagerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000009 /* Debug */,
+				A1000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -382,6 +526,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.24.1;
+			};
+		};
+		1E68ABFDE4894041B92709CB /* XCRemoteSwiftPackageReference "SnapshotPreviews" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/SnapshotPreviews";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.4;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -406,6 +558,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 844321582F58662A0053598C /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
 			productName = ComposableArchitecture;
+		};
+		A10000000000000000000002 /* SnapshottingTests */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1E68ABFDE4894041B92709CB /* XCRemoteSwiftPackageReference "SnapshotPreviews" */;
+			productName = SnapshottingTests;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

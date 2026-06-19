@@ -97,6 +97,10 @@ extension KeychainClient: DependencyKey {
     )
 }
 
+extension KeychainClient: TestDependencyKey {
+    static let testValue = previewValue
+}
+
 // MARK: - Dependency Registration
 
 extension DependencyValues {

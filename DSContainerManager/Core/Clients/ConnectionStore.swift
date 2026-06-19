@@ -94,24 +94,24 @@ extension ConnectionStore: DependencyKey {
         fetchAll: {
             [
                 ConnectionProfile(
-                    id: UUID(),
+                    id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
                     name: "Home NAS",
                     host: "192.168.1.100",
                     port: 5000,
                     useHTTPS: false,
                     username: "admin",
-                    lastConnected: Date.now.addingTimeInterval(-3600),
+                    lastConnected: Date(timeIntervalSince1970: 1_700_000_000),
                     isDefault: true,
                     trustSelfSignedCert: false
                 ),
                 ConnectionProfile(
-                    id: UUID(),
+                    id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
                     name: "Office NAS",
                     host: "nas.office.local",
                     port: 5001,
                     useHTTPS: true,
                     username: "admin",
-                    lastConnected: Date.now.addingTimeInterval(-86400),
+                    lastConnected: Date(timeIntervalSince1970: 1_699_913_600),
                     isDefault: false,
                     trustSelfSignedCert: true
                 ),
@@ -121,6 +121,10 @@ extension ConnectionStore: DependencyKey {
         delete: { _ in },
         setDefault: { _ in }
     )
+}
+
+extension ConnectionStore: TestDependencyKey {
+    static let testValue = previewValue
 }
 
 // MARK: - Dependency Registration
