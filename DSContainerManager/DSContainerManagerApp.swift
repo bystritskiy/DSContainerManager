@@ -4,9 +4,21 @@ import SwiftUI
 
 @main
 struct DSContainerManagerApp: App {
-    static let store = Store(initialState: AppFeature.State()) {
-        AppFeature()
-    }
+    static let store: StoreOf<AppFeature> = {
+        if DemoMode.isEnabled {
+            return Store(initialState: AppFeature.State()) {
+                AppFeature()
+            } withDependencies: {
+                $0.synologyClient = .mock
+                $0.connectionStore = .demoValue
+                $0.keychainClient = .demoValue
+            }
+        }
+
+        return Store(initialState: AppFeature.State()) {
+            AppFeature()
+        }
+    }()
 
     init() {
         @Dependency(\.backgroundMonitor) var backgroundMonitor

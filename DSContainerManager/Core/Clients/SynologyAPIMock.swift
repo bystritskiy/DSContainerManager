@@ -6,20 +6,18 @@ import Tagged
 extension SynologyAPIClient {
     static let mock = SynologyAPIClient(
         login: { _, _, _, _ in
-            AuthSession(
-                sid: SessionID(rawValue: "mock_sid_abc123"),
-                synotoken: "mock_synotoken",
-                deviceId: nil,
-            )
+            DemoMode.authSession
         },
         logout: { _, _ in },
         listContainers: { _, _ in DockerContainer.mockList },
         getContainerDetail: { _, _, name in ContainerDetail.mock(name: name) },
         performContainerAction: { _, _, _, _ in },
-        getContainerLogs: { _, _, _, _, _ in ContainerLog.mockList },
+        getContainerLogs: { _, _, name, _, _ in ContainerLog.mockList(for: name) },
         getContainerResources: { _, _ in ContainerResources.mockList },
         listProjects: { _, _ in ComposeProject.mockList },
-        getProjectDetail: { _, _, _ in ComposeProject.mockList[0] },
+        getProjectDetail: { _, _, projectId in
+            ComposeProject.mockList.first { $0.id.rawValue == projectId } ?? ComposeProject.mockList[0]
+        },
         performProjectAction: { _, _, _, _ in },
         getSystemUtilization: { _, _ in SystemUtilization.mock },
         getStorageInfo: { _, _ in StorageInfo.mock },
@@ -31,103 +29,50 @@ extension SynologyAPIClient {
 extension DockerContainer {
     static let mockList: [DockerContainer] = [
         DockerContainer(
-            id: ContainerID(rawValue: "abc123def456"),
+            id: ContainerID(rawValue: "demo-plex"),
             name: "plex",
             image: "plexinc/pms-docker:latest",
             status: .running,
             state: "running",
-            created: Date.now.addingTimeInterval(-86400 * 30),
+            created: Date(timeIntervalSinceNow: -86400 * 74),
             ports: [
                 PortMapping(privatePort: 32400, publicPort: 32400, type: "tcp"),
             ],
-            isPackage: false,
         ),
         DockerContainer(
-            id: ContainerID(rawValue: "def456ghi789"),
-            name: "homeassistant",
-            image: "homeassistant/home-assistant:2024.12",
+            id: ContainerID(rawValue: "demo-home-assistant"),
+            name: "home-assistant",
+            image: "ghcr.io/home-assistant/home-assistant:stable",
             status: .running,
             state: "running",
-            created: Date.now.addingTimeInterval(-86400 * 60),
+            created: Date(timeIntervalSinceNow: -86400 * 118),
             ports: [
                 PortMapping(privatePort: 8123, publicPort: 8123, type: "tcp"),
             ],
-            isPackage: false,
         ),
         DockerContainer(
-            id: ContainerID(rawValue: "ghi789jkl012"),
+            id: ContainerID(rawValue: "demo-immich"),
+            name: "immich-server",
+            image: "ghcr.io/immich-app/immich-server:release",
+            status: .running,
+            state: "running",
+            created: Date(timeIntervalSinceNow: -86400 * 39),
+            ports: [
+                PortMapping(privatePort: 2283, publicPort: 2283, type: "tcp"),
+            ],
+        ),
+        DockerContainer(
+            id: ContainerID(rawValue: "demo-pihole"),
             name: "pihole",
             image: "pihole/pihole:latest",
             status: .stopped,
             state: "exited",
-            created: Date.now.addingTimeInterval(-86400 * 90),
+            created: Date(timeIntervalSinceNow: -86400 * 203),
             ports: [
                 PortMapping(privatePort: 53, publicPort: 53, type: "tcp"),
                 PortMapping(privatePort: 53, publicPort: 53, type: "udp"),
                 PortMapping(privatePort: 80, publicPort: 8080, type: "tcp"),
             ],
-            isPackage: false,
-        ),
-        DockerContainer(
-            id: ContainerID(rawValue: "jkl012mno345"),
-            name: "portainer",
-            image: "portainer/portainer-ce:latest",
-            status: .running,
-            state: "running",
-            created: Date.now.addingTimeInterval(-86400 * 120),
-            ports: [
-                PortMapping(privatePort: 9443, publicPort: 9443, type: "tcp"),
-            ],
-            isPackage: false,
-        ),
-        DockerContainer(
-            id: ContainerID(rawValue: "mno345pqr678"),
-            name: "nginx-proxy",
-            image: "jwilder/nginx-proxy:latest",
-            status: .running,
-            state: "running",
-            created: Date.now.addingTimeInterval(-86400 * 45),
-            ports: [
-                PortMapping(privatePort: 80, publicPort: 80, type: "tcp"),
-                PortMapping(privatePort: 443, publicPort: 443, type: "tcp"),
-            ],
-            isPackage: false,
-        ),
-        DockerContainer(
-            id: ContainerID(rawValue: "pqr678stu901"),
-            name: "grafana",
-            image: "grafana/grafana:latest",
-            status: .running,
-            state: "running",
-            created: Date.now.addingTimeInterval(-86400 * 15),
-            ports: [
-                PortMapping(privatePort: 3000, publicPort: 3000, type: "tcp"),
-            ],
-            isPackage: false,
-        ),
-        DockerContainer(
-            id: ContainerID(rawValue: "stu901vwx234"),
-            name: "redis",
-            image: "redis:7-alpine",
-            status: .running,
-            state: "running",
-            created: Date.now.addingTimeInterval(-86400 * 200),
-            ports: [
-                PortMapping(privatePort: 6379, publicPort: nil, type: "tcp"),
-            ],
-            isPackage: false,
-        ),
-        DockerContainer(
-            id: ContainerID(rawValue: "vwx234yza567"),
-            name: "mariadb",
-            image: "mariadb:10.11",
-            status: .stopped,
-            state: "exited",
-            created: Date.now.addingTimeInterval(-86400 * 180),
-            ports: [
-                PortMapping(privatePort: 3306, publicPort: 3306, type: "tcp"),
-            ],
-            isPackage: false,
         ),
     ]
 }
@@ -136,97 +81,244 @@ extension DockerContainer {
 
 extension ContainerDetail {
     static func mock(name: String) -> ContainerDetail {
-        ContainerDetail(
-            name: name,
-            image: "plexinc/pms-docker:latest",
-            status: .running,
-            created: Date.now.addingTimeInterval(-86400 * 30),
-            env: [
-                "PLEX_UID=1000",
-                "PLEX_GID=1000",
-                "TZ=Europe/London",
-                "ADVERTISE_IP=http://192.168.1.100:32400/",
-            ],
-            cmd: ["/init"],
-            volumes: [
-                VolumeMount(source: "/volume1/docker/plex/config", destination: "/config", mode: "rw"),
-                VolumeMount(source: "/volume1/media/movies", destination: "/movies", mode: "ro"),
-                VolumeMount(source: "/volume1/media/tv", destination: "/tv", mode: "ro"),
-            ],
-            networks: ["bridge"],
-            labels: [
-                "com.docker.compose.project": "media-stack",
-                "com.docker.compose.service": "plex",
-            ],
-            hostConfig: HostConfig(
-                memoryLimit: 4_294_967_296,
-                cpuShares: 1024,
+        switch name {
+        case "home-assistant":
+            return ContainerDetail(
+                name: "home-assistant",
+                image: "ghcr.io/home-assistant/home-assistant:stable",
+                status: .running,
+                created: Date(timeIntervalSinceNow: -86400 * 118),
+                env: [
+                    "TZ=Europe/Warsaw",
+                    "PUID=1000",
+                    "PGID=1000",
+                ],
+                cmd: ["/init"],
+                volumes: [
+                    VolumeMount(source: "/volume1/docker/home-assistant/config", destination: "/config"),
+                    VolumeMount(source: "/etc/localtime", destination: "/etc/localtime", mode: "ro"),
+                ],
+                networks: ["host"],
+                labels: composeLabels(project: "smart-home", service: "home-assistant"),
+                hostConfig: HostConfig(
+                    memoryLimit: 2_147_483_648,
+                    cpuShares: 768,
+                    restartPolicy: "unless-stopped",
+                    networkMode: "host",
+                ),
+                ports: [
+                    DockerContainer.PortMapping(privatePort: 8123, publicPort: 8123, type: "tcp"),
+                ],
                 restartPolicy: "unless-stopped",
-                networkMode: "bridge",
-            ),
-            ports: [
-                DockerContainer.PortMapping(privatePort: 32400, publicPort: 32400, type: "tcp"),
-            ],
-            restartPolicy: "unless-stopped",
-        )
+            )
+
+        case "immich-server":
+            return ContainerDetail(
+                name: "immich-server",
+                image: "ghcr.io/immich-app/immich-server:release",
+                status: .running,
+                created: Date(timeIntervalSinceNow: -86400 * 39),
+                env: [
+                    "DB_HOSTNAME=immich-postgres",
+                    "REDIS_HOSTNAME=immich-redis",
+                    "UPLOAD_LOCATION=/usr/src/app/upload",
+                    "TZ=Europe/Warsaw",
+                ],
+                cmd: ["start.sh"],
+                volumes: [
+                    VolumeMount(source: "/volume1/photos", destination: "/usr/src/app/upload"),
+                    VolumeMount(source: "/volume1/docker/immich/model-cache", destination: "/cache"),
+                ],
+                networks: ["media"],
+                labels: composeLabels(project: "photo-library", service: "immich-server"),
+                hostConfig: HostConfig(
+                    memoryLimit: 6_442_450_944,
+                    cpuShares: 1536,
+                    restartPolicy: "unless-stopped",
+                    networkMode: "media",
+                ),
+                ports: [
+                    DockerContainer.PortMapping(privatePort: 2283, publicPort: 2283, type: "tcp"),
+                ],
+                restartPolicy: "unless-stopped",
+            )
+
+        case "pihole":
+            return ContainerDetail(
+                name: "pihole",
+                image: "pihole/pihole:latest",
+                status: .stopped,
+                created: Date(timeIntervalSinceNow: -86400 * 203),
+                env: [
+                    "TZ=Europe/Warsaw",
+                    "WEBPASSWORD=********",
+                    "DNSMASQ_LISTENING=all",
+                ],
+                cmd: ["/s6-init"],
+                volumes: [
+                    VolumeMount(source: "/volume1/docker/pihole/etc-pihole", destination: "/etc/pihole"),
+                    VolumeMount(source: "/volume1/docker/pihole/dnsmasq.d", destination: "/etc/dnsmasq.d"),
+                ],
+                networks: ["bridge"],
+                labels: composeLabels(project: "network-services", service: "pihole"),
+                hostConfig: HostConfig(
+                    memoryLimit: 536_870_912,
+                    cpuShares: 512,
+                    restartPolicy: "unless-stopped",
+                    networkMode: "bridge",
+                ),
+                ports: [
+                    DockerContainer.PortMapping(privatePort: 53, publicPort: 53, type: "tcp"),
+                    DockerContainer.PortMapping(privatePort: 53, publicPort: 53, type: "udp"),
+                    DockerContainer.PortMapping(privatePort: 80, publicPort: 8080, type: "tcp"),
+                ],
+                restartPolicy: "unless-stopped",
+            )
+
+        default:
+            return ContainerDetail(
+                name: "plex",
+                image: "plexinc/pms-docker:latest",
+                status: .running,
+                created: Date(timeIntervalSinceNow: -86400 * 74),
+                env: [
+                    "PLEX_UID=1000",
+                    "PLEX_GID=1000",
+                    "TZ=Europe/Warsaw",
+                    "ADVERTISE_IP=http://demo-nas.local:32400/",
+                ],
+                cmd: ["/init"],
+                volumes: [
+                    VolumeMount(source: "/volume1/docker/plex/config", destination: "/config"),
+                    VolumeMount(source: "/volume1/media/movies", destination: "/movies", mode: "ro"),
+                    VolumeMount(source: "/volume1/media/tv", destination: "/tv", mode: "ro"),
+                ],
+                networks: ["media"],
+                labels: composeLabels(project: "media-server", service: "plex"),
+                hostConfig: HostConfig(
+                    memoryLimit: 4_294_967_296,
+                    cpuShares: 1024,
+                    restartPolicy: "unless-stopped",
+                    networkMode: "media",
+                ),
+                ports: [
+                    DockerContainer.PortMapping(privatePort: 32400, publicPort: 32400, type: "tcp"),
+                ],
+                restartPolicy: "unless-stopped",
+            )
+        }
+    }
+
+    private static func composeLabels(project: String, service: String) -> [String: String] {
+        [
+            "com.docker.compose.project": project,
+            "com.docker.compose.service": service,
+            "com.synology.demo": "true",
+        ]
     }
 }
 
 // MARK: - Mock Container Logs
 
 extension ContainerLog {
-    static let mockList: [ContainerLog] = [
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-300), stream: .stdout,
-                     text: "Starting Plex Media Server...", offset: 0),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-295), stream: .stdout,
-                     text: "Loading configuration from /config/Library", offset: 1),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-290), stream: .stdout,
-                     text: "Database migration complete", offset: 2),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-285), stream: .stderr,
-                     text: "WARN: Slow database query detected (450ms)", offset: 3),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-280), stream: .stdout,
-                     text: "Plex Media Server started, listening on port 32400", offset: 4),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-120), stream: .stdout,
-                     text: "Library scan started: Movies", offset: 5),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-60), stream: .stdout,
-                     text: "Library scan completed: Movies (1,247 items)", offset: 6),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-30), stream: .stdout,
-                     text: "New media detected: /movies/NewRelease.mkv", offset: 7),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-10), stream: .stderr,
-                     text: "WARN: Transcoder memory usage high (3.2GB)", offset: 8),
-        ContainerLog(id: UUID(), timestamp: Date.now.addingTimeInterval(-5), stream: .stdout,
-                     text: "Stream started: user@192.168.1.50 - Movie.mkv (Direct Play)", offset: 9),
-    ]
+    static func mockList(for containerName: String = "plex") -> [ContainerLog] {
+        let lines: [(LogStream, String)] = switch containerName {
+        case "home-assistant":
+            [
+                (.stdout, "Home Assistant Core 2026.6.4 starting"),
+                (.stdout, "Config directory: /config"),
+                (.stdout, "Loaded 64 integrations"),
+                (.stdout, "WebSocket API started on :8123"),
+                (.stdout, "Automation initialized: evening lights"),
+                (.stderr, "WARNING: Sensor kitchen_temperature unavailable"),
+                (.stdout, "Recorder database cleanup completed"),
+            ]
+        case "immich-server":
+            [
+                (.stdout, "Immich API server listening on port 2283"),
+                (.stdout, "Connected to PostgreSQL"),
+                (.stdout, "Connected to Redis"),
+                (.stdout, "Background worker: thumbnail generation started"),
+                (.stdout, "Machine learning queue processed 128 assets"),
+                (.stderr, "WARN: duplicate asset skipped: IMG_2042.HEIC"),
+                (.stdout, "Library scan completed: 18,432 assets indexed"),
+            ]
+        case "pihole":
+            [
+                (.stdout, "Starting pihole-FTL"),
+                (.stdout, "Imported gravity database"),
+                (.stdout, "DNS service listening on 0.0.0.0:53"),
+                (.stderr, "WARNING: container is currently stopped in demo state"),
+                (.stdout, "Last query block rate: 27.4%"),
+            ]
+        default:
+            [
+                (.stdout, "Starting Plex Media Server"),
+                (.stdout, "Loading configuration from /config/Library"),
+                (.stdout, "Database migration complete"),
+                (.stderr, "WARN: slow metadata refresh detected"),
+                (.stdout, "Plex Media Server listening on port 32400"),
+                (.stdout, "Library scan completed: Movies (1,247 items)"),
+                (.stdout, "Stream started: demo-user - Direct Play"),
+            ]
+        }
+
+        return lines.enumerated().map { index, entry in
+            ContainerLog(
+                id: UUID(),
+                timestamp: Date(timeIntervalSinceNow: TimeInterval(-300 + index * 35)),
+                stream: entry.0,
+                text: entry.1,
+                offset: index,
+            )
+        }
+    }
 }
 
 // MARK: - Mock Container Resources
 
 extension ContainerResources {
     static let mockList: [ContainerResources] = [
-        ContainerResources(containerName: "plex", cpuPercent: 45.2,
-                           memoryUsage: 3_221_225_472, memoryLimit: 4_294_967_296,
-                           networkRx: 52_428_800, networkTx: 157_286_400,
-                           blockRead: 1_073_741_824, blockWrite: 536_870_912),
-        ContainerResources(containerName: "homeassistant", cpuPercent: 12.8,
-                           memoryUsage: 536_870_912, memoryLimit: 2_147_483_648,
-                           networkRx: 10_485_760, networkTx: 5_242_880,
-                           blockRead: 209_715_200, blockWrite: 104_857_600),
-        ContainerResources(containerName: "portainer", cpuPercent: 2.1,
-                           memoryUsage: 134_217_728, memoryLimit: 1_073_741_824,
-                           networkRx: 1_048_576, networkTx: 524_288,
-                           blockRead: 52_428_800, blockWrite: 26_214_400),
-        ContainerResources(containerName: "nginx-proxy", cpuPercent: 1.5,
-                           memoryUsage: 67_108_864, memoryLimit: 536_870_912,
-                           networkRx: 104_857_600, networkTx: 209_715_200,
-                           blockRead: 10_485_760, blockWrite: 5_242_880),
-        ContainerResources(containerName: "grafana", cpuPercent: 8.3,
-                           memoryUsage: 268_435_456, memoryLimit: 1_073_741_824,
-                           networkRx: 5_242_880, networkTx: 10_485_760,
-                           blockRead: 104_857_600, blockWrite: 52_428_800),
-        ContainerResources(containerName: "redis", cpuPercent: 0.8,
-                           memoryUsage: 33_554_432, memoryLimit: 268_435_456,
-                           networkRx: 2_097_152, networkTx: 1_048_576,
-                           blockRead: 5_242_880, blockWrite: 10_485_760),
+        ContainerResources(
+            containerName: "plex",
+            cpuPercent: 36.4,
+            memoryUsage: 2_818_572_288,
+            memoryLimit: 4_294_967_296,
+            networkRx: 328_204_288,
+            networkTx: 982_515_712,
+            blockRead: 1_610_612_736,
+            blockWrite: 352_321_536,
+        ),
+        ContainerResources(
+            containerName: "home-assistant",
+            cpuPercent: 9.7,
+            memoryUsage: 621_805_568,
+            memoryLimit: 2_147_483_648,
+            networkRx: 42_467_328,
+            networkTx: 18_874_368,
+            blockRead: 228_589_568,
+            blockWrite: 94_371_840,
+        ),
+        ContainerResources(
+            containerName: "immich-server",
+            cpuPercent: 58.9,
+            memoryUsage: 4_429_185_024,
+            memoryLimit: 6_442_450_944,
+            networkRx: 702_545_920,
+            networkTx: 418_381_824,
+            blockRead: 2_251_799_552,
+            blockWrite: 1_932_735_488,
+        ),
+        ContainerResources(
+            containerName: "pihole",
+            cpuPercent: 0,
+            memoryUsage: 0,
+            memoryLimit: 536_870_912,
+            networkRx: 0,
+            networkTx: 0,
+            blockRead: 0,
+            blockWrite: 0,
+        ),
     ]
 }
 
@@ -235,17 +327,16 @@ extension ContainerResources {
 extension ComposeProject {
     static let mockList: [ComposeProject] = [
         ComposeProject(
-            id: ProjectID(rawValue: "proj-001-media"),
-            name: "media-stack",
+            id: ProjectID(rawValue: "demo-media-server"),
+            name: "media-server",
             status: .running,
-            path: "/volume1/docker/media-stack",
-            sharePath: "docker/media-stack",
-            containerIds: ["plex", "jellyfin"],
+            path: "/volume1/docker/media-server",
+            sharePath: "docker/media-server",
+            containerIds: ["demo-plex"],
             services: [
                 ProjectService(id: "plex", displayName: "Plex", image: "plexinc/pms-docker:latest", status: .running),
             ],
             composeContent: """
-            version: '3.8'
             services:
               plex:
                 image: plexinc/pms-docker:latest
@@ -254,29 +345,81 @@ extension ComposeProject {
                   - "32400:32400"
                 volumes:
                   - /volume1/docker/plex/config:/config
-                  - /volume1/media/movies:/movies
-                  - /volume1/media/tv:/tv
-                environment:
-                  - PLEX_UID=1000
-                  - PLEX_GID=1000
-                  - TZ=Europe/London
+                  - /volume1/media/movies:/movies:ro
+                  - /volume1/media/tv:/tv:ro
                 restart: unless-stopped
             """,
             version: 1,
         ),
         ComposeProject(
-            id: ProjectID(rawValue: "proj-002-network"),
-            name: "network-stack",
-            status: .partiallyRunning,
-            path: "/volume1/docker/network-stack",
-            sharePath: "docker/network-stack",
-            containerIds: ["pihole", "nginx-proxy"],
+            id: ProjectID(rawValue: "demo-smart-home"),
+            name: "smart-home",
+            status: .running,
+            path: "/volume1/docker/smart-home",
+            sharePath: "docker/smart-home",
+            containerIds: ["demo-home-assistant"],
             services: [
-                ProjectService(id: "pihole", displayName: "Pi-hole", image: "pihole/pihole:latest", status: .stopped),
-                ProjectService(id: "nginx-proxy", displayName: "Nginx Proxy", image: "jwilder/nginx-proxy:latest", status: .running),
+                ProjectService(
+                    id: "home-assistant",
+                    displayName: "Home Assistant",
+                    image: "ghcr.io/home-assistant/home-assistant:stable",
+                    status: .running,
+                ),
             ],
             composeContent: """
-            version: '3.8'
+            services:
+              home-assistant:
+                image: ghcr.io/home-assistant/home-assistant:stable
+                container_name: home-assistant
+                network_mode: host
+                volumes:
+                  - /volume1/docker/home-assistant/config:/config
+                restart: unless-stopped
+            """,
+            version: 1,
+        ),
+        ComposeProject(
+            id: ProjectID(rawValue: "demo-photo-library"),
+            name: "photo-library",
+            status: .running,
+            path: "/volume1/docker/photo-library",
+            sharePath: "docker/photo-library",
+            containerIds: ["demo-immich"],
+            services: [
+                ProjectService(
+                    id: "immich-server",
+                    displayName: "Immich",
+                    image: "ghcr.io/immich-app/immich-server:release",
+                    status: .running,
+                ),
+            ],
+            composeContent: """
+            services:
+              immich-server:
+                image: ghcr.io/immich-app/immich-server:release
+                container_name: immich-server
+                ports:
+                  - "2283:2283"
+                volumes:
+                  - /volume1/photos:/usr/src/app/upload
+                depends_on:
+                  - immich-postgres
+                  - immich-redis
+                restart: unless-stopped
+            """,
+            version: 1,
+        ),
+        ComposeProject(
+            id: ProjectID(rawValue: "demo-network-services"),
+            name: "network-services",
+            status: .stopped,
+            path: "/volume1/docker/network-services",
+            sharePath: "docker/network-services",
+            containerIds: ["demo-pihole"],
+            services: [
+                ProjectService(id: "pihole", displayName: "Pi-hole", image: "pihole/pihole:latest", status: .stopped),
+            ],
+            composeContent: """
             services:
               pihole:
                 image: pihole/pihole:latest
@@ -285,42 +428,11 @@ extension ComposeProject {
                   - "53:53/tcp"
                   - "53:53/udp"
                   - "8080:80/tcp"
+                volumes:
+                  - /volume1/docker/pihole/etc-pihole:/etc/pihole
+                  - /volume1/docker/pihole/dnsmasq.d:/etc/dnsmasq.d
                 restart: unless-stopped
-              nginx-proxy:
-                image: jwilder/nginx-proxy:latest
-                container_name: nginx-proxy
-                ports:
-                  - "80:80"
-                  - "443:443"
-                restart: always
             """,
-            version: 1,
-        ),
-        ComposeProject(
-            id: ProjectID(rawValue: "proj-003-monitoring"),
-            name: "monitoring",
-            status: .running,
-            path: "/volume1/docker/monitoring",
-            sharePath: "docker/monitoring",
-            containerIds: ["grafana", "prometheus"],
-            services: [
-                ProjectService(id: "grafana", displayName: "Grafana", image: "grafana/grafana:latest", status: .running),
-            ],
-            composeContent: nil,
-            version: 1,
-        ),
-        ComposeProject(
-            id: ProjectID(rawValue: "proj-004-database"),
-            name: "database",
-            status: .stopped,
-            path: "/volume1/docker/database",
-            sharePath: "docker/database",
-            containerIds: ["mariadb", "redis"],
-            services: [
-                ProjectService(id: "mariadb", displayName: "MariaDB", image: "mariadb:10.11", status: .stopped),
-                ProjectService(id: "redis", displayName: "Redis", image: "redis:7-alpine", status: .stopped),
-            ],
-            composeContent: nil,
             version: 1,
         ),
     ]
@@ -331,30 +443,34 @@ extension ComposeProject {
 extension SystemUtilization {
     static let mock = SystemUtilization(
         cpu: CPUInfo(
-            userLoad: 25, systemLoad: 10, otherLoad: 3,
-            oneMinLoad: 38, fiveMinLoad: 32, fifteenMinLoad: 28,
+            userLoad: 29,
+            systemLoad: 11,
+            otherLoad: 4,
+            oneMinLoad: 44,
+            fiveMinLoad: 38,
+            fifteenMinLoad: 31,
         ),
         memory: MemoryInfo(
             memorySize: 16_777_216,
             totalReal: 16_252_928,
-            availReal: 6_501_171,
+            availReal: 5_526_016,
             totalSwap: 8_388_608,
             availSwap: 8_000_000,
-            realUsage: 60,
+            realUsage: 66,
             swapUsage: 5,
             cached: 4_194_304,
             buffer: 524_288,
         ),
         network: [
-            NetworkInfo(device: "eth0", rx: 5_242_880, tx: 1_048_576),
-            NetworkInfo(device: "total", rx: 5_242_880, tx: 1_048_576),
+            NetworkInfo(device: "eth0", rx: 19_398_246, tx: 6_451_200),
+            NetworkInfo(device: "total", rx: 19_398_246, tx: 6_451_200),
         ],
         disk: DiskOverview(
             disk: [
-                DiskInfo(device: "sda", displayName: "Drive 1", readByte: 1_048_576, writeByte: 524_288, utilization: 15),
-                DiskInfo(device: "sdb", displayName: "Drive 2", readByte: 2_097_152, writeByte: 1_048_576, utilization: 22),
+                DiskInfo(device: "sata1", displayName: "Drive 1", readByte: 3_145_728, writeByte: 1_572_864, utilization: 22),
+                DiskInfo(device: "sata2", displayName: "Drive 2", readByte: 4_194_304, writeByte: 2_097_152, utilization: 24),
             ],
-            total: DiskTotal(readByte: 3_145_728, writeByte: 1_572_864, utilization: 18),
+            total: DiskTotal(readByte: 7_340_032, writeByte: 3_670_016, utilization: 23),
         ),
     )
 }
@@ -369,18 +485,18 @@ extension StorageInfo {
                 path: "/volume1",
                 status: "normal",
                 totalSize: 8_000_000_000_000,
-                usedSize: 5_600_000_000_000,
-                temperature: 38,
-                driveType: "RAID5",
+                usedSize: 5_440_000_000_000,
+                temperature: 37,
+                driveType: "SHR",
             ),
             VolumeInfo(
                 id: "volume_2",
                 path: "/volume2",
                 status: "normal",
                 totalSize: 4_000_000_000_000,
-                usedSize: 1_200_000_000_000,
-                temperature: 36,
-                driveType: "SHR",
+                usedSize: 1_320_000_000_000,
+                temperature: 35,
+                driveType: "SSD Cache",
             ),
         ],
     )

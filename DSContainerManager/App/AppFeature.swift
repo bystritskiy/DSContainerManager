@@ -209,15 +209,20 @@ struct AppFeature {
         state.systemMonitor.baseURL = baseURL
         state.systemMonitor.authSession = session
 
-        return .merge(
+        var effects: [Effect<Action>] = [
             .send(.dashboard(.onAppear)),
             .send(.containerList(.onAppear)),
             .send(.projectList(.onAppear)),
-            .run { _ in
+        ]
+
+        if !DemoMode.isEnabled {
+            effects.append(.run { _ in
                 _ = await backgroundMonitor.requestNotificationPermission()
                 backgroundMonitor.scheduleHealthCheck()
-            },
-        )
+            })
+        }
+
+        return .merge(effects)
     }
 
     /// Tries to restore a previously saved session from Keychain.
