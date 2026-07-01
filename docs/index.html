@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DSContainerManager — Your Synology Docker, in your pocket</title>
+<meta name="description" content="A native iOS app for managing Docker containers and Compose projects on your Synology NAS. Control, monitor, and get alerted — from anywhere." />
+<meta property="og:title" content="DSContainerManager" />
+<meta property="og:description" content="Your Synology Docker, in your pocket. A native iOS control panel for Container Manager." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="assets/appicon-512.png" />
+<meta name="theme-color" content="#0a0c10" />
+<link rel="icon" type="image/png" href="assets/favicon-64.png" />
+<link rel="apple-touch-icon" href="assets/appicon-180.png" />
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface-2: #171b24;
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #e8ebf1;
+    --muted: #8b93a1;
+    --faint: #5b6472;
+    --accent-1: #3ba4ff;
+    --accent-2: #2563eb;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --gray: #4b5563;
+    --radius: 18px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ambient glow */
+  body::before {
+    content: "";
+    position: fixed;
+    top: -30vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120vw;
+    height: 90vh;
+    background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.20), rgba(59, 164, 255, 0.07) 40%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  .accent-text {
+    background: linear-gradient(120deg, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ---- Nav ---- */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 24px;
+    max-width: 1080px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 650; letter-spacing: -0.01em; }
+  .brand img { width: 32px; height: 32px; border-radius: 8px; }
+  .nav-links { display: flex; gap: 26px; font-size: 15px; }
+  .nav-links a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  @media (max-width: 620px) { .nav-links { display: none; } }
+
+  /* ---- Hero ---- */
+  header { padding: 48px 0 40px; text-align: center; }
+  .hero-icon { margin: 0 auto 34px; width: 132px; height: 132px; position: relative; }
+  .hero-icon img { width: 100%; height: 100%; display: block; position: relative; z-index: 1; filter: drop-shadow(0 24px 50px rgba(37, 99, 235, 0.45)); }
+  .hero-icon::after {
+    content: ""; position: absolute; inset: 12px; border-radius: 30px;
+    background: radial-gradient(circle, rgba(59, 164, 255, 0.5), transparent 70%);
+    filter: blur(28px); z-index: 0;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-1);
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: rgba(59, 164, 255, 0.06);
+    margin-bottom: 26px;
+  }
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    margin-bottom: 22px;
+  }
+  .subtitle {
+    font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+    color: var(--muted);
+    max-width: 620px;
+    margin: 0 auto 36px;
+  }
+  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: linear-gradient(120deg, var(--accent-1), var(--accent-2));
+    color: #ffffff;
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 38px rgba(37, 99, 235, 0.45); }
+  .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .btn-ghost:hover { background: var(--surface-2); transform: translateY(-2px); }
+
+  /* ---- Phone mockup ---- */
+  .stage { display: flex; justify-content: center; padding: 50px 0 20px; perspective: 1600px; }
+  .phone {
+    width: 300px;
+    background: #05070b;
+    border-radius: 42px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    transform: rotateX(6deg) rotateY(-8deg) rotateZ(1deg);
+    transition: transform 0.5s ease;
+  }
+  .phone:hover { transform: rotateX(2deg) rotateY(-2deg); }
+  .screen {
+    background: linear-gradient(180deg, #0e1118, #0a0c11);
+    border-radius: 32px;
+    padding: 16px 16px 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  .notch { width: 100px; height: 22px; background: #05070b; border-radius: 0 0 14px 14px; margin: -16px auto 8px; }
+  .statusbar { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 14px; padding: 0 4px; }
+  .screen h2 { font-size: 21px; letter-spacing: -0.02em; margin-bottom: 14px; padding: 0 2px; }
+
+  .gauges { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .gauge-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+  .ring {
+    width: 74px; height: 74px; border-radius: 50%;
+    margin: 0 auto 8px;
+    display: grid; place-items: center;
+    position: relative;
+  }
+  .ring::after {
+    content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--surface);
+  }
+  .ring span { position: relative; z-index: 1; font-size: 17px; font-weight: 700; }
+  .gauge-card small { color: var(--muted); font-size: 11px; letter-spacing: 0.03em; text-transform: uppercase; }
+
+  .summary {
+    display: flex; gap: 8px; margin-bottom: 12px;
+  }
+  .chip {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px; text-align: center;
+  }
+  .chip .n { font-size: 18px; font-weight: 700; }
+  .chip .l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .chip.up .n { color: var(--green); }
+  .chip.warn .n { color: var(--amber); }
+  .chip.off .n { color: var(--faint); }
+
+  .list-title { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 2px 8px; }
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 7px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.g { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot.a { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse 1.4s infinite; }
+  .dot.x { background: var(--gray); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .row .name { font-size: 13px; font-weight: 550; flex: 1; }
+  .row .state { font-size: 11px; color: var(--muted); }
+
+  /* ---- Sections ---- */
+  section { padding: 80px 0; }
+  .section-head { text-align: center; max-width: 640px; margin: 0 auto 54px; }
+  .section-head h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; margin-bottom: 14px; }
+  .section-head p { color: var(--muted); font-size: 1.05rem; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 860px) { .features { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .features { grid-template-columns: 1fr; } }
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 26px 24px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .feature:hover { transform: translateY(-4px); border-color: rgba(59, 164, 255, 0.35); }
+  .feature .ic {
+    width: 42px; height: 42px; border-radius: 11px;
+    display: grid; place-items: center; margin-bottom: 16px;
+    background: rgba(37, 99, 235, 0.14); border: 1px solid rgba(37, 99, 235, 0.24);
+    font-size: 20px;
+  }
+  .feature h3 { font-size: 1.12rem; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .feature p { color: var(--muted); font-size: 0.95rem; }
+
+  /* ---- Trust ---- */
+  .trust {
+    background: linear-gradient(180deg, var(--surface), rgba(18, 21, 28, 0));
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 46px 40px;
+    text-align: center;
+  }
+  .trust h2 { font-size: clamp(1.6rem, 3.5vw, 2.2rem); letter-spacing: -0.02em; margin-bottom: 30px; }
+  .trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; text-align: left; }
+  @media (max-width: 700px) { .trust-grid { grid-template-columns: 1fr; } }
+  .trust-item h4 { font-size: 1.05rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .trust-item p { color: var(--muted); font-size: 0.93rem; }
+  .trust-item .k { color: var(--accent-1); }
+
+  /* ---- Footer ---- */
+  footer { padding: 60px 0 50px; text-align: center; border-top: 1px solid var(--border); margin-top: 40px; }
+  .foot-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 650; margin-bottom: 14px; }
+  .foot-brand img { width: 28px; height: 28px; border-radius: 7px; }
+  footer p { color: var(--faint); font-size: 0.9rem; }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+  .badge {
+    display: inline-block; margin-top: 18px; font-size: 0.82rem; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 100px; padding: 6px 16px;
+    background: var(--surface);
+  }
+
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+  <nav>
+    <div class="brand"><img src="assets/appicon-180.png" alt="DSContainerManager icon" /> DSContainerManager</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#trust">Privacy</a>
+      <a href="https://github.com/bystritskiy/DSContainerManager">GitHub</a>
+    </div>
+  </nav>
+
+  <header class="wrap">
+    <div class="hero-icon"><img src="assets/appicon-512.png" alt="DSContainerManager app icon" /></div>
+    <span class="eyebrow">iOS · Synology Container Manager</span>
+    <h1>Your Synology Docker,<br><span class="accent-text">in your pocket.</span></h1>
+    <p class="subtitle">A native iOS control panel for the Docker containers and Compose projects running on your NAS. Watch, restart, and fix things — from anywhere, without opening DSM in a browser.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/bystritskiy/DSContainerManager">★ View on GitHub</a>
+      <a class="btn btn-ghost" href="#features">See what it does</a>
+    </div>
+  </header>
+
+  <div class="stage reveal">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>NAS · Home ●</span></div>
+        <h2>Dashboard</h2>
+
+        <div class="gauges">
+          <div class="gauge-card">
+            <div class="ring" style="background: conic-gradient(#3ba4ff 0% 34%, rgba(255,255,255,0.07) 34% 100%);"><span>34%</span></div>
+            <small>CPU</small>
+          </div>
+          <div class="gauge-card">
+            <div class="ring" style="background: conic-gradient(#2563eb 0% 61%, rgba(255,255,255,0.07) 61% 100%);"><span>61%</span></div>
+            <small>Memory</small>
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="chip up"><div class="n">12</div><div class="l">Running</div></div>
+          <div class="chip warn"><div class="n">1</div><div class="l">Restarting</div></div>
+          <div class="chip off"><div class="n">3</div><div class="l">Stopped</div></div>
+        </div>
+
+        <div class="list-title">Containers</div>
+        <div class="row"><span class="dot g"></span><span class="name">nginx-proxy</span><span class="state">Running</span></div>
+        <div class="row"><span class="dot g"></span><span class="name">plex</span><span class="state">Running</span></div>
+        <div class="row"><span class="dot a"></span><span class="name">immich-server</span><span class="state">Restarting</span></div>
+        <div class="row"><span class="dot g"></span><span class="name">postgres</span><span class="state">Running</span></div>
+        <div class="row"><span class="dot x"></span><span class="name">backup-cron</span><span class="state">Stopped</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features" class="wrap">
+    <div class="section-head reveal">
+      <h2>Everything Docker, one tap away</h2>
+      <p>A focused toolset for the person who actually runs the NAS.</p>
+    </div>
+    <div class="features">
+      <div class="feature reveal"><div class="ic">📊</div><h3>Live dashboard</h3><p>CPU, memory, storage, and how many containers are up or down — the moment you open the app.</p></div>
+      <div class="feature reveal"><div class="ic">⚡</div><h3>Full container control</h3><p>Start, stop, restart, pause, and unpause any container with a single tap.</p></div>
+      <div class="feature reveal"><div class="ic">📜</div><h3>Logs & live stats</h3><p>Open any container to stream its logs alongside a real-time CPU and memory graph.</p></div>
+      <div class="feature reveal"><div class="ic">🧩</div><h3>Compose projects</h3><p>Bring whole stacks up or down — not just single containers — right from your phone.</p></div>
+      <div class="feature reveal"><div class="ic">📈</div><h3>System monitor</h3><p>Rolling CPU, memory, and network history, drawn as clean, readable charts.</p></div>
+      <div class="feature reveal"><div class="ic">🔔</div><h3>Down-alert notifications</h3><p>Background health checks ping you the moment a container falls over.</p></div>
+      <div class="feature reveal"><div class="ic">🗄️</div><h3>Multiple servers</h3><p>Save every NAS you run and switch between them instantly.</p></div>
+      <div class="feature reveal"><div class="ic">🔐</div><h3>2FA & Keychain</h3><p>Two-factor sign-in, with your session stored safely so you're not re-authenticating each launch.</p></div>
+      <div class="feature reveal"><div class="ic">🍎</div><h3>Native iOS</h3><p>Built entirely in SwiftUI. Fast, fluid, and right at home on your iPhone.</p></div>
+    </div>
+  </section>
+
+  <section id="trust" class="wrap">
+    <div class="trust reveal">
+      <h2>It talks to your NAS. Nothing else.</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <h4><span class="k">✓</span> No cloud, no account</h4>
+          <p>There's no service in the middle. The app connects straight to your NAS — no sign-up, no telemetry, no ads.</p>
+        </div>
+        <div class="trust-item">
+          <h4><span class="k">✓</span> Secure by default</h4>
+          <p>HTTPS, two-factor sign-in, and self-signed-certificate support for the way real home NAS boxes are set up.</p>
+        </div>
+        <div class="trust-item">
+          <h4><span class="k">✓</span> Your keys stay yours</h4>
+          <p>Credentials and sessions live in the iOS Keychain, encrypted by the system and never leaving your device.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-brand"><img src="assets/appicon-180.png" alt="DSContainerManager icon" /> DSContainerManager</div>
+      <p>A native iOS client for Synology Container Manager.</p>
+      <div class="badge">Early &amp; actively developed · Widgets, Lock Screen &amp; iPad on the way</div>
+    </div>
+  </footer>
+
+  <script>
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll(".reveal").forEach((el, i) => {
+      el.style.transitionDelay = (i % 3) * 80 + "ms";
+      io.observe(el);
+    });
+  </script>
+
+</body>
+</html>

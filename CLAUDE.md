@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-iOS app (SwiftUI) for managing Docker containers and Compose projects on a Synology NAS via the DSM WebAPI. Xcode project (not SPM package). iPhone-only, iOS/macOS deployment target 26.0, Swift 5.0. Bundle ID `com.bystritski.DSContainerManager`.
+iOS app (SwiftUI) for managing Docker containers and Compose projects on a Synology NAS via the DSM WebAPI. Xcode project (not SPM package). iPhone-only, iOS/macOS deployment target 26.0, `SWIFT_VERSION = 6.0`. Bundle ID `com.bystritski.DSContainerManager`.
 
 ## Build / Run
 
@@ -23,6 +23,13 @@ xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager \
 
 # Clean
 xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager clean
+```
+
+Lint / format (both installed via Homebrew, both using default rule sets — `.swiftlint.yml` / `.swiftformat`, which pins `--swiftversion 6.3`):
+
+```bash
+swiftlint            # lint in place; add --fix to autocorrect
+swiftformat .        # format the tree in place
 ```
 
 The `run-app` skill (`.claude/skills/run-app/SKILL.md`) documents the full
@@ -56,10 +63,15 @@ Swift Package dependencies (resolved automatically by Xcode):
 - **`Clients/KeychainClient.swift`** — stores per-connection passwords and a single active `SavedSession` (session + connection UUID) so 2FA isn't re-required each launch. `AppFeature.restoreSavedSession()` validates by calling `getSystemUtilization` before trusting it.
 - **`Clients/BackgroundMonitor.swift`** — `BGTaskScheduler` registration (identifier `com.dscontainermanager.container-health-check`, iOS-only via `#if os(iOS)`) and `UNUserNotificationCenter` setup. Call `registerTasks()` from `DSContainerManagerApp.init` — it must run before the scene is created.
 - **`Models/SynologyTypes.swift`** — `Tagged` ID types (`ContainerID`, `ProjectID`, `SessionID`, `ConnectionID`) and the `ContainerStatus` / `ProjectStatus` / `ContainerAction` / `ProjectAction` enums that drive the API method dispatch in `SynologyAPILive`.
+- **`Clients/WidgetSupport/`** — home-screen widget scaffolding (`ContainerWidgetProvider`, small/medium views, `SharedContainerData`). There is **no separate widget-extension target yet** — only two native targets exist (the app and the unit-test bundle), so these files currently compile into the app. Adding a real widget means adding a WidgetKit extension target.
 
 ### Features (`DSContainerManager/Features/`)
 
 One folder per tab (`Connection`, `Dashboard`, `Containers`, `Projects`, `SystemMonitor`), each containing a `*Feature.swift` (reducer) and `*View.swift` (SwiftUI). Containers and Projects additionally have a `*DetailFeature`/`*DetailView` presented via `@Presents`.
+
+### Shared UI (`DSContainerManager/SharedUI/`)
+
+Reusable, feature-agnostic SwiftUI components (gauges, badges, skeleton loaders, empty-state and error banners). Prefer these over re-rolling per-feature equivalents. `App/` also holds cross-cutting screens: `AppRootView`, `MainTabView`, `SidebarNavigationView`, `SettingsView`.
 
 ### Testing (`DSContainerManagerTests/`)
 

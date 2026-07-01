@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43F4C14A2FF54CAC00674B71 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 43F4C1492FF54CAC00674B71 /* AppIcon.icon */; };
 		844321532F5865FE0053598C /* Tagged in Frameworks */ = {isa = PBXBuildFile; productRef = 844321522F5865FE0053598C /* Tagged */; };
 		844321552F5865FE0053598C /* TaggedMoney in Frameworks */ = {isa = PBXBuildFile; productRef = 844321542F5865FE0053598C /* TaggedMoney */; };
 		844321572F5865FE0053598C /* TaggedTime in Frameworks */ = {isa = PBXBuildFile; productRef = 844321562F5865FE0053598C /* TaggedTime */; };
@@ -25,6 +26,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		43F4C1492FF54CAC00674B71 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		844321432F5861A30053598C /* DSContainerManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DSContainerManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000003 /* DSContainerManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DSContainerManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -68,6 +70,7 @@
 		8443213A2F5861A30053598C = {
 			isa = PBXGroup;
 			children = (
+				43F4C1492FF54CAC00674B71 /* AppIcon.icon */,
 				844321452F5861A30053598C /* DSContainerManager */,
 				A10000000000000000000004 /* DSContainerManagerTests */,
 				844321442F5861A30053598C /* Products */,
@@ -185,6 +188,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43F4C14A2FF54CAC00674B71 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
