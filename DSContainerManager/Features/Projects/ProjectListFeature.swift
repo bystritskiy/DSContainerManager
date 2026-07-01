@@ -48,25 +48,25 @@ struct ProjectListFeature {
                 }
                 return fetchProjects(baseURL: baseURL, session: session)
 
-            case .projectsLoaded(.success(let projects)):
+            case let .projectsLoaded(.success(projects)):
                 state.isLoading = false
                 state.projects = projects.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
                 state.error = nil
                 return .none
 
-            case .projectsLoaded(.failure(let error)):
+            case let .projectsLoaded(.failure(error)):
                 state.isLoading = false
                 state.error = error.localizedDescription
                 return .none
 
-            case .projectTapped(let project):
+            case let .projectTapped(project):
                 var detailState = ProjectDetailFeature.State(project: project)
                 detailState.baseURL = state.baseURL
                 detailState.authSession = state.authSession
                 state.detail = detailState
                 return .none
 
-            case .projectAction(let project, let action):
+            case let .projectAction(project, action):
                 guard let baseURL = state.baseURL, let session = state.authSession else {
                     return .none
                 }
@@ -82,16 +82,16 @@ struct ProjectListFeature {
                 }
                 .cancellable(id: CancelID.action(projectId), cancelInFlight: true)
 
-            case .actionResult(let projectId, .failure(let error)):
+            case let .actionResult(projectId, .failure(error)):
                 state.pendingActionIDs.remove(projectId)
                 state.error = error.localizedDescription
                 return .none
 
-            case .actionResult(let projectId, .success):
+            case let .actionResult(projectId, .success):
                 state.pendingActionIDs.remove(projectId)
                 return .none
 
-            case .detail(.presented(.delegate(.projectUpdated(let project)))):
+            case let .detail(.presented(.delegate(.projectUpdated(project)))):
                 state.projects = state.projects.map { $0.id == project.id ? project : $0 }
                 return .none
 

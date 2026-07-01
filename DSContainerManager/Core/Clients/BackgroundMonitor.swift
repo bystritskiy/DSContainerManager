@@ -1,5 +1,5 @@
 #if canImport(BackgroundTasks)
-import BackgroundTasks
+    import BackgroundTasks
 #endif
 import Dependencies
 import Foundation
@@ -7,7 +7,7 @@ import UserNotifications
 
 // MARK: - Background Monitor Client
 
-struct BackgroundMonitorClient: Sendable {
+struct BackgroundMonitorClient {
     var registerTasks: @Sendable () -> Void
     var scheduleHealthCheck: @Sendable () -> Void
     var cancelHealthCheck: @Sendable () -> Void
@@ -25,33 +25,33 @@ extension BackgroundMonitorClient: DependencyKey {
     static let liveValue = BackgroundMonitorClient(
         registerTasks: {
             #if os(iOS)
-            BGTaskScheduler.shared.register(
-                forTaskWithIdentifier: BackgroundTaskIdentifiers.containerHealthCheck,
-                using: nil
-            ) { task in
-                guard let bgTask = task as? BGAppRefreshTask else { return }
-                handleHealthCheck(task: bgTask)
-            }
+                BGTaskScheduler.shared.register(
+                    forTaskWithIdentifier: BackgroundTaskIdentifiers.containerHealthCheck,
+                    using: nil
+                ) { task in
+                    guard let bgTask = task as? BGAppRefreshTask else { return }
+                    handleHealthCheck(task: bgTask)
+                }
             #endif
         },
         scheduleHealthCheck: {
             #if os(iOS)
-            let request = BGAppRefreshTaskRequest(
-                identifier: BackgroundTaskIdentifiers.containerHealthCheck
-            )
-            request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 minutes
-            do {
-                try BGTaskScheduler.shared.submit(request)
-            } catch {
-                print("Failed to schedule background health check: \(error)")
-            }
+                let request = BGAppRefreshTaskRequest(
+                    identifier: BackgroundTaskIdentifiers.containerHealthCheck
+                )
+                request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 minutes
+                do {
+                    try BGTaskScheduler.shared.submit(request)
+                } catch {
+                    print("Failed to schedule background health check: \(error)")
+                }
             #endif
         },
         cancelHealthCheck: {
             #if os(iOS)
-            BGTaskScheduler.shared.cancel(
-                taskRequestWithIdentifier: BackgroundTaskIdentifiers.containerHealthCheck
-            )
+                BGTaskScheduler.shared.cancel(
+                    taskRequestWithIdentifier: BackgroundTaskIdentifiers.containerHealthCheck
+                )
             #endif
         },
         requestNotificationPermission: {
@@ -144,26 +144,26 @@ func setupNotificationCategories() {
 // MARK: - Background Task Handler
 
 #if os(iOS)
-private func handleHealthCheck(task: BGAppRefreshTask) {
-    // Schedule the next check
-    let nextRequest = BGAppRefreshTaskRequest(
-        identifier: BackgroundTaskIdentifiers.containerHealthCheck
-    )
-    nextRequest.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
-    try? BGTaskScheduler.shared.submit(nextRequest)
+    private func handleHealthCheck(task: BGAppRefreshTask) {
+        // Schedule the next check
+        let nextRequest = BGAppRefreshTaskRequest(
+            identifier: BackgroundTaskIdentifiers.containerHealthCheck
+        )
+        nextRequest.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
+        try? BGTaskScheduler.shared.submit(nextRequest)
 
-    // Create a task to check container health
-    let checkTask = Task {
-        @Dependency(\.synologyClient) var api
+        // Create a task to check container health
+        let checkTask = Task {
+            @Dependency(\.synologyClient) var api
 
-        // Attempt to use stored session info for health check
-        // In a full implementation, this would load saved connection + session from Keychain/SwiftData
-        // For MVP, we'll just mark the task as completed
-        task.setTaskCompleted(success: true)
+            // Attempt to use stored session info for health check
+            // In a full implementation, this would load saved connection + session from Keychain/SwiftData
+            // For MVP, we'll just mark the task as completed
+            task.setTaskCompleted(success: true)
+        }
+
+        task.expirationHandler = {
+            checkTask.cancel()
+        }
     }
-
-    task.expirationHandler = {
-        checkTask.cancel()
-    }
-}
 #endif

@@ -45,7 +45,7 @@ struct ContainerDetailView: View {
     private var infoTab: some View {
         List {
             if let error = store.error {
-                ErrorBanner(error)
+                ErrorBannerView(error)
             }
 
             Section("General") {
@@ -240,7 +240,7 @@ struct ContainerDetailView: View {
                 )
                 .foregroundStyle(color.opacity(0.1))
             }
-            .chartYScale(domain: 0...100)
+            .chartYScale(domain: 0 ... 100)
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 4)) { _ in
                     AxisValueLabel(format: .dateTime.hour().minute().second())
@@ -257,7 +257,7 @@ struct ContainerDetailView: View {
     private var actionsTab: some View {
         List {
             if let error = store.error {
-                ErrorBanner(error)
+                ErrorBannerView(error)
             }
 
             Section("Container Actions") {

@@ -17,7 +17,7 @@ typealias ConnectionID = Tagged<ConnectionIDTag, UUID>
 
 // MARK: - Container Status
 
-enum ContainerStatus: String, Codable, Sendable, CaseIterable, Identifiable {
+enum ContainerStatus: String, Codable, CaseIterable, Identifiable {
     case running
     case stopped
     case paused
@@ -26,7 +26,9 @@ enum ContainerStatus: String, Codable, Sendable, CaseIterable, Identifiable {
     case dead
     case unknown
 
-    nonisolated var id: String { rawValue }
+    nonisolated var id: String {
+        rawValue
+    }
 
     var displayName: String {
         switch self {
@@ -49,13 +51,15 @@ enum ContainerStatus: String, Codable, Sendable, CaseIterable, Identifiable {
 
 // MARK: - Project Status
 
-enum ProjectStatus: String, Codable, Sendable, CaseIterable, Identifiable {
+enum ProjectStatus: String, Codable, CaseIterable, Identifiable {
     case running = "RUNNING"
     case stopped = "STOPPED"
     case partiallyRunning = "PARTIALLY_RUNNING"
     case unknown
 
-    nonisolated var id: String { rawValue }
+    nonisolated var id: String {
+        rawValue
+    }
 
     var displayName: String {
         switch self {
@@ -75,7 +79,7 @@ enum ProjectStatus: String, Codable, Sendable, CaseIterable, Identifiable {
 
 // MARK: - Container Action
 
-enum ContainerAction: String, Sendable {
+enum ContainerAction: String {
     case start
     case stop
     case restart
@@ -86,7 +90,7 @@ enum ContainerAction: String, Sendable {
 
 // MARK: - Project Action
 
-enum ProjectAction: String, Sendable {
+enum ProjectAction: String {
     case start
     case stop
     case restart

@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct StatusBadge: View {
+struct StatusBadgeView: View {
     let title: String
     let color: Color
 
@@ -19,7 +19,7 @@ struct StatusBadge: View {
 
 // MARK: - Convenience initializers
 
-extension StatusBadge {
+extension StatusBadgeView {
     init(containerStatus: ContainerStatus) {
         self.init(title: containerStatus.displayName, color: containerStatus.color)
     }
@@ -31,11 +31,11 @@ extension StatusBadge {
 
 #Preview {
     VStack(spacing: 12) {
-        StatusBadge(containerStatus: .running)
-        StatusBadge(containerStatus: .stopped)
-        StatusBadge(containerStatus: .paused)
-        StatusBadge(containerStatus: .restarting)
-        StatusBadge(projectStatus: .partiallyRunning)
+        StatusBadgeView(containerStatus: .running)
+        StatusBadgeView(containerStatus: .stopped)
+        StatusBadgeView(containerStatus: .paused)
+        StatusBadgeView(containerStatus: .restarting)
+        StatusBadgeView(projectStatus: .partiallyRunning)
     }
     .padding()
 }

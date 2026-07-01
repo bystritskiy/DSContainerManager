@@ -9,8 +9,8 @@ struct ProjectListView: View {
             Group {
                 if store.isLoading && store.projects.isEmpty {
                     List {
-                        ForEach(0..<4) { _ in
-                            SkeletonRow()
+                        ForEach(0 ..< 4) { _ in
+                            SkeletonRowView()
                         }
                     }
                 } else if store.projects.isEmpty {
@@ -42,7 +42,7 @@ struct ProjectListView: View {
     private var projectList: some View {
         List {
             if let error = store.error {
-                ErrorBanner(error) {
+                ErrorBannerView(error) {
                     store.send(.refresh)
                 }
                 .listRowInsets(EdgeInsets())
@@ -50,7 +50,7 @@ struct ProjectListView: View {
             }
 
             ForEach(store.projects) { project in
-                ProjectRow(project: project)
+                ProjectRowView(project: project)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         store.send(.projectTapped(project))
@@ -81,39 +81,6 @@ struct ProjectListView: View {
                     }
             }
         }
-    }
-}
-
-// MARK: - Project Row
-
-struct ProjectRow: View {
-    let project: ComposeProject
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "folder.fill")
-                .font(.title3)
-                .foregroundStyle(project.status.color)
-                .frame(width: 28)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(project.name)
-                    .font(.body)
-                    .fontWeight(.medium)
-
-                HStack(spacing: 12) {
-                    Label("\(project.serviceCount) services", systemImage: "square.stack.3d.up")
-                    Label("\(project.containerCount) containers", systemImage: "shippingbox")
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            StatusBadge(projectStatus: project.status)
-        }
-        .padding(.vertical, 4)
     }
 }
 

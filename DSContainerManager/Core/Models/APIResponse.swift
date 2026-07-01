@@ -2,23 +2,23 @@ import Foundation
 
 // MARK: - Generic Synology API Response
 
-struct SynologyResponse<T: Decodable & Sendable>: Decodable, Sendable {
+struct SynologyResponse<T: Decodable & Sendable>: Decodable {
     let success: Bool
     let data: T?
     let error: SynologyErrorPayload?
 }
 
-struct SynologyErrorPayload: Decodable, Sendable {
+struct SynologyErrorPayload: Decodable {
     let code: Int
 }
 
 // MARK: - Empty response for actions that return no data
 
-struct EmptyResponse: Decodable, Sendable {}
+struct EmptyResponse: Decodable {}
 
 // MARK: - API Info response
 
-struct APIInfoResponse: Decodable, Sendable {
+struct APIInfoResponse: Decodable {
     let entries: [String: APIEndpointInfo]
 
     init(from decoder: Decoder) throws {
@@ -27,7 +27,7 @@ struct APIInfoResponse: Decodable, Sendable {
     }
 }
 
-struct APIEndpointInfo: Decodable, Sendable {
+struct APIEndpointInfo: Decodable {
     let path: String
     let minVersion: Int
     let maxVersion: Int

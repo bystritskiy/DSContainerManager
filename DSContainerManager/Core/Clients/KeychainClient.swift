@@ -1,12 +1,12 @@
-import Foundation
 import Dependencies
 import DependenciesMacros
+import Foundation
 import Security
 
 // MARK: - Keychain Client Interface
 
 @DependencyClient
-struct KeychainClient: Sendable {
+struct KeychainClient {
     var save: @Sendable (_ data: Data, _ key: String) throws -> Void
     var load: @Sendable (_ key: String) throws -> Data?
     var delete: @Sendable (_ key: String) throws -> Void
@@ -22,11 +22,11 @@ enum KeychainError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .saveFailed(let status):
+        case let .saveFailed(status):
             "Failed to save to Keychain (status: \(status))"
-        case .loadFailed(let status):
+        case let .loadFailed(status):
             "Failed to load from Keychain (status: \(status))"
-        case .deleteFailed(let status):
+        case let .deleteFailed(status):
             "Failed to delete from Keychain (status: \(status))"
         case .unexpectedData:
             "Unexpected data format in Keychain"
@@ -137,7 +137,7 @@ extension KeychainClient {
     private static let sessionConnectionKey = "active-session-connection-id"
 
     /// Persisted session data: AuthSession + the connection UUID it belongs to
-    struct SavedSession: Codable, Sendable {
+    struct SavedSession: Codable {
         let connectionId: UUID
         let session: AuthSession
     }

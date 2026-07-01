@@ -10,7 +10,7 @@ struct SystemMonitorView: View {
             ScrollView {
                 if store.isLoading && store.currentUtilization == nil {
                     VStack(spacing: 16) {
-                        ForEach(0..<4) { _ in
+                        ForEach(0 ..< 4) { _ in
                             SkeletonView(height: 200)
                         }
                     }
@@ -32,11 +32,10 @@ struct SystemMonitorView: View {
         }
     }
 
-    @ViewBuilder
     private var monitorContent: some View {
         VStack(spacing: 16) {
             if let error = store.error {
-                ErrorBanner(error) {
+                ErrorBannerView(error) {
                     store.send(.refresh)
                 }
             }
@@ -48,7 +47,7 @@ struct SystemMonitorView: View {
 
             // CPU Chart
             if !store.cpuHistory.isEmpty {
-                TimeSeriesChart(
+                TimeSeriesChartView(
                     title: "CPU Usage",
                     data: store.cpuHistory,
                     valuePath: \.cpuPercent,
@@ -59,7 +58,7 @@ struct SystemMonitorView: View {
 
             // Memory Chart
             if !store.memoryHistory.isEmpty {
-                TimeSeriesChart(
+                TimeSeriesChartView(
                     title: "Memory Usage",
                     data: store.memoryHistory,
                     valuePath: \.memoryPercent,

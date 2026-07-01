@@ -1,7 +1,7 @@
 import Charts
 import SwiftUI
 
-struct TimeSeriesChart: View {
+struct TimeSeriesChartView: View {
     let title: String
     let data: [ResourceSnapshot]
     let valuePath: KeyPath<ResourceSnapshot, Double>
@@ -44,7 +44,7 @@ struct TimeSeriesChart: View {
                 )
                 .interpolationMethod(.catmullRom)
             }
-            .chartYScale(domain: 0...maxY)
+            .chartYScale(domain: 0 ... maxY)
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 4)) { _ in
                     AxisValueLabel(format: .dateTime.hour().minute().second())
@@ -70,23 +70,23 @@ struct TimeSeriesChart: View {
 }
 
 #Preview {
-    let data = (0..<30).map { i in
+    let data = (0 ..< 30).map { offset in
         ResourceSnapshot(
-            timestamp: Date.now.addingTimeInterval(Double(-30 + i) * 5),
-            cpuPercent: Double.random(in: 20...60),
-            memoryPercent: Double.random(in: 40...70)
+            timestamp: Date.now.addingTimeInterval(Double(-30 + offset) * 5),
+            cpuPercent: Double.random(in: 20 ... 60),
+            memoryPercent: Double.random(in: 40 ... 70)
         )
     }
 
     VStack(spacing: 16) {
-        TimeSeriesChart(
+        TimeSeriesChartView(
             title: "CPU Usage",
             data: data,
             valuePath: \.cpuPercent,
             color: .blue,
             unit: "%"
         )
-        TimeSeriesChart(
+        TimeSeriesChartView(
             title: "Memory Usage",
             data: data,
             valuePath: \.memoryPercent,

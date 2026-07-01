@@ -1,6 +1,6 @@
 import Foundation
 
-enum SynologyAPIError: Error, Sendable, Equatable, LocalizedError {
+enum SynologyAPIError: Error, Equatable, LocalizedError {
     case invalidURL
     case networkError(String)
     case invalidCredentials
@@ -42,7 +42,7 @@ enum SynologyAPIError: Error, Sendable, Equatable, LocalizedError {
         switch self {
         case .invalidURL:
             "Invalid server URL"
-        case .networkError(let message):
+        case let .networkError(message):
             "Network error: \(message)"
         case .invalidCredentials:
             "Invalid username or password"
@@ -58,11 +58,11 @@ enum SynologyAPIError: Error, Sendable, Equatable, LocalizedError {
             "Two-factor authentication code required"
         case .otpFailed:
             "Invalid two-factor authentication code"
-        case .apiError(let code, let message):
+        case let .apiError(code, message):
             "API error \(code): \(message)"
-        case .decodingError(let message):
+        case let .decodingError(message):
             "Data error: \(message)"
-        case .unknownError(let message):
+        case let .unknownError(message):
             "Unknown error: \(message)"
         case .noActiveSession:
             "No active session — please log in"

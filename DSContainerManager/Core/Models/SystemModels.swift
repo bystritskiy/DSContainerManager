@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - System Utilization
 
-struct SystemUtilization: Codable, Sendable, Equatable {
+struct SystemUtilization: Codable, Equatable {
     let cpu: CPUInfo
     let memory: MemoryInfo
     let network: [NetworkInfo]
@@ -32,7 +32,7 @@ struct SystemUtilization: Codable, Sendable, Equatable {
 
 // MARK: - CPU Info
 
-struct CPUInfo: Codable, Sendable, Equatable {
+struct CPUInfo: Codable, Equatable {
     let userLoad: Int
     let systemLoad: Int
     let otherLoad: Int
@@ -40,8 +40,13 @@ struct CPUInfo: Codable, Sendable, Equatable {
     let fiveMinLoad: Int
     let fifteenMinLoad: Int
 
-    var totalLoad: Int { userLoad + systemLoad + otherLoad }
-    var totalPercent: Double { min(Double(totalLoad), 100.0) }
+    var totalLoad: Int {
+        userLoad + systemLoad + otherLoad
+    }
+
+    var totalPercent: Double {
+        min(Double(totalLoad), 100.0)
+    }
 
     init(userLoad: Int, systemLoad: Int, otherLoad: Int, oneMinLoad: Int, fiveMinLoad: Int, fifteenMinLoad: Int) {
         self.userLoad = userLoad
@@ -74,7 +79,7 @@ struct CPUInfo: Codable, Sendable, Equatable {
 
 // MARK: - Memory Info
 
-struct MemoryInfo: Codable, Sendable, Equatable {
+struct MemoryInfo: Codable, Equatable {
     let memorySize: Int
     let totalReal: Int
     let availReal: Int
@@ -85,8 +90,13 @@ struct MemoryInfo: Codable, Sendable, Equatable {
     let cached: Int
     let buffer: Int
 
-    var usedReal: Int { totalReal - availReal }
-    var usagePercent: Double { Double(realUsage) }
+    var usedReal: Int {
+        totalReal - availReal
+    }
+
+    var usagePercent: Double {
+        Double(realUsage)
+    }
 
     init(memorySize: Int, totalReal: Int, availReal: Int, totalSwap: Int, availSwap: Int, realUsage: Int, swapUsage: Int, cached: Int, buffer: Int) {
         self.memorySize = memorySize
@@ -128,8 +138,11 @@ struct MemoryInfo: Codable, Sendable, Equatable {
 
 // MARK: - Network Info
 
-struct NetworkInfo: Codable, Sendable, Equatable, Identifiable {
-    nonisolated var id: String { device }
+struct NetworkInfo: Codable, Equatable, Identifiable {
+    nonisolated var id: String {
+        device
+    }
+
     let device: String
     let rx: Int
     let tx: Int
@@ -154,7 +167,7 @@ struct NetworkInfo: Codable, Sendable, Equatable, Identifiable {
 
 // MARK: - Disk Overview
 
-struct DiskOverview: Codable, Sendable, Equatable {
+struct DiskOverview: Codable, Equatable {
     let disk: [DiskInfo]
     let total: DiskTotal?
 
@@ -174,8 +187,11 @@ struct DiskOverview: Codable, Sendable, Equatable {
     }
 }
 
-struct DiskInfo: Codable, Sendable, Equatable, Identifiable {
-    nonisolated var id: String { device }
+struct DiskInfo: Codable, Equatable, Identifiable {
+    nonisolated var id: String {
+        device
+    }
+
     let device: String
     let displayName: String
     let readByte: Int
@@ -208,7 +224,7 @@ struct DiskInfo: Codable, Sendable, Equatable, Identifiable {
     }
 }
 
-struct DiskTotal: Codable, Sendable, Equatable {
+struct DiskTotal: Codable, Equatable {
     let readByte: Int
     let writeByte: Int
     let utilization: Int
@@ -235,7 +251,7 @@ struct DiskTotal: Codable, Sendable, Equatable {
 
 // MARK: - Storage Info (SYNO.Storage.CGI.Storage)
 
-struct StorageInfo: Codable, Sendable, Equatable {
+struct StorageInfo: Codable, Equatable {
     let volumes: [VolumeInfo]
 
     init(volumes: [VolumeInfo]) {
@@ -252,7 +268,7 @@ struct StorageInfo: Codable, Sendable, Equatable {
     }
 }
 
-struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
+struct VolumeInfo: Equatable, Identifiable, Codable {
     init(id: String, path: String, status: String, totalSize: Int64, usedSize: Int64, temperature: Int? = nil, driveType: String? = nil) {
         self.id = id
         self.path = path
@@ -304,7 +320,8 @@ struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
 
         // totalSize: Synology returns size as string (e.g. "7676309151744"), try String then Int64
         if let sizeStr = try? container.decode(String.self, forKey: .totalSize),
-           let size = Int64(sizeStr) {
+           let size = Int64(sizeStr)
+        {
             totalSize = size
         } else {
             totalSize = (try? container.decode(Int64.self, forKey: .totalSize)) ?? 0
@@ -312,12 +329,14 @@ struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
 
         // usedSize: Synology provides size_free_byte (not size_used_byte), compute used = total - free
         if let freeStr = try? container.decode(String.self, forKey: .freeSize),
-           let free = Int64(freeStr) {
+           let free = Int64(freeStr)
+        {
             usedSize = totalSize - free
         } else if let free = try? container.decode(Int64.self, forKey: .freeSize) {
             usedSize = totalSize - free
         } else if let sizeStr = try? container.decode(String.self, forKey: .usedSize),
-                  let size = Int64(sizeStr) {
+                  let size = Int64(sizeStr)
+        {
             usedSize = size
         } else {
             usedSize = (try? container.decode(Int64.self, forKey: .usedSize)) ?? 0
@@ -345,7 +364,10 @@ struct VolumeInfo: Sendable, Equatable, Identifiable, Codable {
         case fsType = "fs_type"
     }
 
-    var freeSize: Int64 { totalSize - usedSize }
+    var freeSize: Int64 {
+        totalSize - usedSize
+    }
+
     var usagePercent: Double {
         guard totalSize > 0 else { return 0 }
         return Double(usedSize) / Double(totalSize) * 100

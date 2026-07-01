@@ -17,11 +17,15 @@ struct AppFeature {
         var showingConnectionSheet = false
         var hasAttemptedSessionRestore = false
 
-        var isConnected: Bool { activeConnection != nil && authSession != nil }
+        var isConnected: Bool {
+            activeConnection != nil && authSession != nil
+        }
 
-        var baseURL: URL? { activeConnection?.baseURL }
+        var baseURL: URL? {
+            activeConnection?.baseURL
+        }
 
-        enum Tab: String, CaseIterable, Sendable {
+        enum Tab: String, CaseIterable {
             case dashboard
             case containers
             case projects
@@ -97,7 +101,7 @@ struct AppFeature {
                     restoreSavedSession()
                 )
 
-            case .sessionRestored(let profile, let session):
+            case let .sessionRestored(profile, session):
                 return applyConnection(state: &state, profile: profile, session: session)
 
             case .sessionValidationFailed:
@@ -106,7 +110,7 @@ struct AppFeature {
                     try? keychain.deleteSavedSession()
                 }
 
-            case .tabSelected(let tab):
+            case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
 
@@ -146,7 +150,7 @@ struct AppFeature {
                     .cancel(id: SystemMonitorFeature.CancelID.polling),
                     .run { _ in
                         try? keychain.deleteSavedSession()
-                    }
+                    },
                 ] + containerActionCancels + projectActionCancels
                 state.activeConnection = nil
                 state.authSession = nil
@@ -158,7 +162,7 @@ struct AppFeature {
                 // Clear saved session from Keychain
                 return .merge(effects)
 
-            case .connectionList(.delegate(.connectionEstablished(let profile, let session))):
+            case let .connectionList(.delegate(.connectionEstablished(profile, session))):
                 // Save session to Keychain for next launch
                 let connectionId = profile.id
                 return .merge(
@@ -221,26 +225,27 @@ struct AppFeature {
     private func restoreSavedSession() -> Effect<Action> {
         .run { send in
             #if DEBUG
-            print("[AppFeature] Attempting to restore saved session...")
+                print("[AppFeature] Attempting to restore saved session...")
             #endif
 
             guard let saved = try? keychain.loadSavedSession() else {
                 #if DEBUG
-                print("[AppFeature] No saved session found in Keychain")
+                    print("[AppFeature] No saved session found in Keychain")
                 #endif
                 return
             }
 
             #if DEBUG
-            print("[AppFeature] Found saved session for connection: \(saved.connectionId)")
+                print("[AppFeature] Found saved session for connection: \(saved.connectionId)")
             #endif
 
             // Find the matching connection profile
             let connections = try await connectionStore.fetchAll()
             guard let profile = connections.first(where: { $0.id == saved.connectionId }),
-                  let baseURL = profile.baseURL else {
+                  let baseURL = profile.baseURL
+            else {
                 #if DEBUG
-                print("[AppFeature] Connection profile not found for saved session")
+                    print("[AppFeature] Connection profile not found for saved session")
                 #endif
                 await send(.sessionValidationFailed)
                 return
@@ -250,12 +255,12 @@ struct AppFeature {
             do {
                 _ = try await api.getSystemUtilization(baseURL, saved.session)
                 #if DEBUG
-                print("[AppFeature] Session is valid, restoring connection to \(profile.name)")
+                    print("[AppFeature] Session is valid, restoring connection to \(profile.name)")
                 #endif
                 await send(.sessionRestored(profile, saved.session))
             } catch {
                 #if DEBUG
-                print("[AppFeature] Saved session expired or invalid: \(error)")
+                    print("[AppFeature] Saved session expired or invalid: \(error)")
                 #endif
                 await send(.sessionValidationFailed)
             }

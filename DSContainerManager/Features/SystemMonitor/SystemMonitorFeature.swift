@@ -17,8 +17,13 @@ struct SystemMonitorFeature {
         var error: String?
         var maxHistoryPoints: Int = 60
 
-        var cpuPercent: Double { currentUtilization?.cpu.totalPercent ?? 0 }
-        var memoryPercent: Double { currentUtilization?.memory.usagePercent ?? 0 }
+        var cpuPercent: Double {
+            currentUtilization?.cpu.totalPercent ?? 0
+        }
+
+        var memoryPercent: Double {
+            currentUtilization?.memory.usagePercent ?? 0
+        }
     }
 
     enum Action {
@@ -82,7 +87,7 @@ struct SystemMonitorFeature {
                 }
                 return fetchUtilization(baseURL: baseURL, session: session)
 
-            case .utilizationLoaded(.success(let util)):
+            case let .utilizationLoaded(.success(util)):
                 state.isLoading = false
                 state.currentUtilization = util
                 state.error = nil
@@ -111,12 +116,12 @@ struct SystemMonitorFeature {
 
                 return .none
 
-            case .utilizationLoaded(.failure(let error)):
+            case let .utilizationLoaded(.failure(error)):
                 state.isLoading = false
                 state.error = error.localizedDescription
                 return .none
 
-            case .storageLoaded(.success(let info)):
+            case let .storageLoaded(.success(info)):
                 state.storageInfo = info
                 return .none
 

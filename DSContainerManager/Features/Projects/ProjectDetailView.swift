@@ -53,7 +53,7 @@ struct ProjectDetailView: View {
     private var servicesTab: some View {
         List {
             if let error = store.error {
-                ErrorBanner(error)
+                ErrorBannerView(error)
             }
 
             ForEach(store.project.services) { service in
@@ -78,7 +78,7 @@ struct ProjectDetailView: View {
                     Spacer()
 
                     if let status = service.status {
-                        StatusBadge(containerStatus: status)
+                        StatusBadgeView(containerStatus: status)
                     }
                 }
             }

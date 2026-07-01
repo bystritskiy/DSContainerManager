@@ -34,7 +34,7 @@ struct ContainerRowView: View {
 
             // Status badge + time
             VStack(alignment: .trailing, spacing: 4) {
-                StatusBadge(containerStatus: container.status)
+                StatusBadgeView(containerStatus: container.status)
 
                 Text(container.created.relativeString)
                     .font(.caption2)

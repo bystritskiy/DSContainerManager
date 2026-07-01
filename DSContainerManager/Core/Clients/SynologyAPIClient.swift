@@ -1,12 +1,12 @@
-import Foundation
 import Dependencies
 import DependenciesMacros
+import Foundation
 
 // MARK: - Synology API Client Interface
 
 @DependencyClient
-struct SynologyAPIClient: Sendable {
-    // Auth
+struct SynologyAPIClient {
+    /// Auth
     var login: @Sendable (
         _ baseURL: URL,
         _ username: String,
@@ -19,7 +19,7 @@ struct SynologyAPIClient: Sendable {
         _ session: AuthSession
     ) async throws -> Void
 
-    // Containers
+    /// Containers
     var listContainers: @Sendable (
         _ baseURL: URL,
         _ session: AuthSession
@@ -51,7 +51,7 @@ struct SynologyAPIClient: Sendable {
         _ session: AuthSession
     ) async throws -> [ContainerResources]
 
-    // Projects
+    /// Projects
     var listProjects: @Sendable (
         _ baseURL: URL,
         _ session: AuthSession
@@ -70,7 +70,7 @@ struct SynologyAPIClient: Sendable {
         _ action: ProjectAction
     ) async throws -> Void
 
-    // System
+    /// System
     var getSystemUtilization: @Sendable (
         _ baseURL: URL,
         _ session: AuthSession

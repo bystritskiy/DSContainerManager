@@ -53,7 +53,7 @@ final class NASConnection: @unchecked Sendable {
 
 // MARK: - Sendable snapshot for use across actor boundaries
 
-struct ConnectionProfile: Sendable, Equatable, Identifiable, Codable {
+struct ConnectionProfile: Equatable, Identifiable, Codable {
     let id: UUID
     let name: String
     let host: String

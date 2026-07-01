@@ -17,7 +17,7 @@ struct ContainerListFeature {
         var error: String?
         @Presents var detail: ContainerDetailFeature.State?
 
-        enum SortOrder: String, CaseIterable, Sendable {
+        enum SortOrder: String, CaseIterable {
             case name = "Name"
             case status = "Status"
             case created = "Created"
@@ -31,7 +31,7 @@ struct ContainerListFeature {
             if !searchText.isEmpty {
                 result = result.filter {
                     $0.name.localizedCaseInsensitiveContains(searchText) ||
-                    $0.image.localizedCaseInsensitiveContains(searchText)
+                        $0.image.localizedCaseInsensitiveContains(searchText)
                 }
             }
             switch sortOrder {
@@ -94,25 +94,25 @@ struct ContainerListFeature {
             case .stopPolling:
                 return .cancel(id: CancelID.polling)
 
-            case .containersLoaded(.success(let containers)):
+            case let .containersLoaded(.success(containers)):
                 state.isLoading = false
                 state.containers = containers.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
                 state.error = nil
                 return .none
 
-            case .containersLoaded(.failure(let error)):
+            case let .containersLoaded(.failure(error)):
                 state.isLoading = false
                 state.error = error.localizedDescription
                 return .none
 
-            case .containerTapped(let container):
+            case let .containerTapped(container):
                 var detailState = ContainerDetailFeature.State(container: container)
                 detailState.baseURL = state.baseURL
                 detailState.authSession = state.authSession
                 state.detail = detailState
                 return .none
 
-            case .swipeAction(let container, let action):
+            case let .swipeAction(container, action):
                 guard let baseURL = state.baseURL, let session = state.authSession else {
                     return .none
                 }
@@ -129,27 +129,27 @@ struct ContainerListFeature {
                 }
                 .cancellable(id: CancelID.action(actionID), cancelInFlight: true)
 
-            case .actionResult(let actionID, .failure(let error)):
+            case let .actionResult(actionID, .failure(error)):
                 state.pendingActionIDs.remove(actionID)
                 state.error = error.localizedDescription
                 return .none
 
-            case .actionResult(let actionID, .success):
+            case let .actionResult(actionID, .success):
                 state.pendingActionIDs.remove(actionID)
                 return .none
 
-            case .detail(.presented(.delegate(.containerUpdated(let container)))):
+            case let .detail(.presented(.delegate(.containerUpdated(container)))):
                 state.containers = state.containers.map { $0.id == container.id ? container : $0 }
                 return .none
 
             case .detail:
                 return .none
 
-            case .statusFilterChanged(let filter):
+            case let .statusFilterChanged(filter):
                 state.statusFilter = filter
                 return .none
 
-            case .sortOrderChanged(let order):
+            case let .sortOrderChanged(order):
                 state.sortOrder = order
                 return .none
             }

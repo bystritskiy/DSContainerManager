@@ -2,7 +2,7 @@ import ComposableArchitecture
 import Foundation
 import Tagged
 
-enum ContainerDetailTab: String, CaseIterable, Sendable {
+enum ContainerDetailTab: String, CaseIterable {
     case info = "Info"
     case logs = "Logs"
     case resources = "Resources"
@@ -19,10 +19,11 @@ struct ContainerDetailFeature {
         var authSession: AuthSession?
 
         init(container: DockerContainer, detail: ContainerDetail? = nil) {
-            self.id = container.id.rawValue
+            id = container.id.rawValue
             self.container = container
             self.detail = detail
         }
+
         var detail: ContainerDetail?
         var logs: [ContainerLog] = []
         var resourceHistory: [ResourceSnapshot] = []
@@ -91,11 +92,11 @@ struct ContainerDetailFeature {
                 }
                 return fetchDetail(baseURL: baseURL, session: session, name: state.container.name)
 
-            case .tabSelected(let tab):
+            case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
 
-            case .detailLoaded(.success(let detail)):
+            case let .detailLoaded(.success(detail)):
                 state.detail = detail
                 let container = updatedContainer(from: detail, keeping: state.container)
                 state.container = container
@@ -103,24 +104,24 @@ struct ContainerDetailFeature {
                 state.isPerformingAction = false
                 return .send(.delegate(.containerUpdated(container)))
 
-            case .detailLoaded(.failure(let error)):
+            case let .detailLoaded(.failure(error)):
                 state.error = error.localizedDescription
                 state.isLoading = false
                 state.isPerformingAction = false
                 return .none
 
-            case .logsLoaded(.success(let logs)):
+            case let .logsLoaded(.success(logs)):
                 state.logs = logs
                 return .none
 
-            case .logsLoaded(.failure(let error)):
+            case let .logsLoaded(.failure(error)):
                 state.error = "Failed to load logs: \(error.localizedDescription)"
                 #if DEBUG
-                print("[ContainerDetailFeature] Failed to load logs for \(state.container.name): \(error.localizedDescription)")
+                    print("[ContainerDetailFeature] Failed to load logs for \(state.container.name): \(error.localizedDescription)")
                 #endif
                 return .none
 
-            case .resourcesLoaded(.success(let resources)):
+            case let .resourcesLoaded(.success(resources)):
                 if let resource = resources.first(where: { $0.containerName == state.container.name }) {
                     state.currentResources = resource
                     let snapshot = ResourceSnapshot(
@@ -140,7 +141,7 @@ struct ContainerDetailFeature {
             case .resourcesLoaded(.failure):
                 return .none
 
-            case .actionTapped(let action):
+            case let .actionTapped(action):
                 guard let baseURL = state.baseURL, let session = state.authSession else {
                     return .none
                 }
@@ -159,7 +160,7 @@ struct ContainerDetailFeature {
                 state.isPerformingAction = false
                 return .none
 
-            case .actionResult(.failure(let error)):
+            case let .actionResult(.failure(error)):
                 state.isPerformingAction = false
                 state.error = error.localizedDescription
                 return .none

@@ -1,12 +1,12 @@
-import Foundation
 import Dependencies
 import DependenciesMacros
+import Foundation
 import SwiftData
 
 // MARK: - Connection Store Interface
 
 @DependencyClient
-struct ConnectionStore: Sendable {
+struct ConnectionStore {
     var fetchAll: @Sendable () async throws -> [ConnectionProfile]
     var save: @Sendable (_ profile: ConnectionProfile) async throws -> Void
     var delete: @Sendable (_ id: UUID) async throws -> Void

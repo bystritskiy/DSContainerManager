@@ -14,11 +14,25 @@ struct DashboardFeature {
         var isLoading = false
         var error: String?
 
-        var runningCount: Int { containers.filter { $0.status == .running }.count }
-        var stoppedCount: Int { containers.filter { $0.status == .stopped }.count }
-        var totalCount: Int { containers.count }
-        var cpuPercent: Double { systemUtilization?.cpu.totalPercent ?? 0 }
-        var memoryPercent: Double { systemUtilization?.memory.usagePercent ?? 0 }
+        var runningCount: Int {
+            containers.filter { $0.status == .running }.count
+        }
+
+        var stoppedCount: Int {
+            containers.filter { $0.status == .stopped }.count
+        }
+
+        var totalCount: Int {
+            containers.count
+        }
+
+        var cpuPercent: Double {
+            systemUtilization?.cpu.totalPercent ?? 0
+        }
+
+        var memoryPercent: Double {
+            systemUtilization?.memory.usagePercent ?? 0
+        }
     }
 
     enum Action {
@@ -30,7 +44,7 @@ struct DashboardFeature {
         case pollTick
     }
 
-    struct DashboardData: Equatable, Sendable {
+    struct DashboardData: Equatable {
         var utilization: SystemUtilization?
         var containers: [DockerContainer] = []
         var storage: StorageInfo?
@@ -63,7 +77,7 @@ struct DashboardFeature {
                 }
                 return fetchData(baseURL: baseURL, session: session)
 
-            case .dataLoaded(.success(let data)):
+            case let .dataLoaded(.success(data)):
                 state.isLoading = false
                 if let util = data.utilization {
                     state.systemUtilization = util
@@ -75,7 +89,7 @@ struct DashboardFeature {
                 state.error = nil
                 return .none
 
-            case .dataLoaded(.failure(let error)):
+            case let .dataLoaded(.failure(error)):
                 state.isLoading = false
                 state.error = error.localizedDescription
                 return .none

@@ -2,7 +2,7 @@ import ComposableArchitecture
 import Foundation
 import Tagged
 
-enum ProjectDetailTab: String, CaseIterable, Sendable {
+enum ProjectDetailTab: String, CaseIterable {
     case services = "Services"
     case compose = "Compose"
     case info = "Info"
@@ -21,7 +21,7 @@ struct ProjectDetailFeature {
         var selectedTab: ProjectDetailTab = .services
 
         init(project: ComposeProject) {
-            self.projectId = project.id.rawValue
+            projectId = project.id.rawValue
             self.project = project
         }
     }
@@ -46,7 +46,7 @@ struct ProjectDetailFeature {
     nonisolated var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .tabSelected(let tab):
+            case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
 
@@ -56,7 +56,7 @@ struct ProjectDetailFeature {
                 }
                 return fetchProject(baseURL: baseURL, session: session, projectId: state.projectId)
 
-            case .actionTapped(let projectAction):
+            case let .actionTapped(projectAction):
                 guard let baseURL = state.baseURL, let session = state.authSession else {
                     return .none
                 }
@@ -71,13 +71,13 @@ struct ProjectDetailFeature {
                 }
                 .cancellable(id: CancelID.action, cancelInFlight: true)
 
-            case .projectLoaded(.success(let project)):
+            case let .projectLoaded(.success(project)):
                 state.project = project
                 state.isPerformingAction = false
                 state.error = nil
                 return .send(.delegate(.projectUpdated(project)))
 
-            case .projectLoaded(.failure(let error)):
+            case let .projectLoaded(.failure(error)):
                 state.isPerformingAction = false
                 state.error = error.localizedDescription
                 return .none
@@ -86,7 +86,7 @@ struct ProjectDetailFeature {
                 state.isPerformingAction = false
                 return .none
 
-            case .actionResult(.failure(let error)):
+            case let .actionResult(.failure(error)):
                 state.isPerformingAction = false
                 state.error = error.localizedDescription
                 return .none
@@ -109,5 +109,7 @@ struct ProjectDetailFeature {
 }
 
 extension ProjectDetailFeature.State: Identifiable {
-    nonisolated var id: String { projectId }
+    nonisolated var id: String {
+        projectId
+    }
 }

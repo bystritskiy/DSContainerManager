@@ -9,8 +9,8 @@ struct ContainerListView: View {
             Group {
                 if store.isLoading && store.containers.isEmpty {
                     List {
-                        ForEach(0..<6) { _ in
-                            SkeletonRow()
+                        ForEach(0 ..< 6) { _ in
+                            SkeletonRowView()
                         }
                     }
                 } else if store.filteredContainers.isEmpty && store.containers.isEmpty {
@@ -57,7 +57,7 @@ struct ContainerListView: View {
     private var containerList: some View {
         List {
             if let error = store.error {
-                ErrorBanner(error) {
+                ErrorBannerView(error) {
                     store.send(.refresh)
                 }
                 .listRowInsets(EdgeInsets())

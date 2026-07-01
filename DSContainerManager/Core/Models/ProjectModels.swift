@@ -3,7 +3,7 @@ import Tagged
 
 // MARK: - Compose Project
 
-struct ComposeProject: Codable, Sendable, Equatable, Identifiable {
+struct ComposeProject: Codable, Equatable, Identifiable {
     let id: ProjectID
     let name: String
     let status: ProjectStatus
@@ -49,8 +49,8 @@ struct ComposeProject: Codable, Sendable, Equatable, Identifiable {
 
         name = (try? container.decode(String.self, forKey: .name)) ?? ""
 
-        if let s = try? container.decode(ProjectStatus.self, forKey: .status) {
-            status = s
+        if let decodedStatus = try? container.decode(ProjectStatus.self, forKey: .status) {
+            status = decodedStatus
         } else if let statusStr = try? container.decode(String.self, forKey: .status) {
             status = ProjectStatus(rawValue: statusStr) ?? .unknown
         } else {
@@ -77,13 +77,18 @@ struct ComposeProject: Codable, Sendable, Equatable, Identifiable {
         case version
     }
 
-    var serviceCount: Int { services.count }
-    var containerCount: Int { containerIds.count }
+    var serviceCount: Int {
+        services.count
+    }
+
+    var containerCount: Int {
+        containerIds.count
+    }
 }
 
 // MARK: - Project Service
 
-struct ProjectService: Sendable, Equatable, Identifiable, Hashable, Codable {
+struct ProjectService: Equatable, Identifiable, Hashable, Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
@@ -126,12 +131,13 @@ struct ProjectService: Sendable, Equatable, Identifiable, Hashable, Codable {
 }
 
 // MARK: - Project List API Response
+
 // Synology API may return projects as:
 // 1. { "projects": [ ... ] }  — array under "projects" key
 // 2. { "uuid1": { ... }, "uuid2": { ... } } — dictionary keyed by project UUID
 // 3. [ ... ] — direct array
 
-struct ProjectListResponse: Decodable, Sendable {
+struct ProjectListResponse: Decodable {
     let projects: [ComposeProject]
 
     init(projects: [ComposeProject]) {
@@ -141,7 +147,8 @@ struct ProjectListResponse: Decodable, Sendable {
     init(from decoder: Decoder) throws {
         // Strategy 1: Object with "projects" array
         if let keyed = try? decoder.container(keyedBy: CodingKeys.self),
-           let arr = try? keyed.decode([ComposeProject].self, forKey: .projects) {
+           let arr = try? keyed.decode([ComposeProject].self, forKey: .projects)
+        {
             projects = arr
             return
         }
@@ -175,7 +182,7 @@ struct ProjectListResponse: Decodable, Sendable {
 
         // Fallback: empty
         #if DEBUG
-        print("[ProjectListResponse] Could not decode projects from response")
+            print("[ProjectListResponse] Could not decode projects from response")
         #endif
         projects = []
     }

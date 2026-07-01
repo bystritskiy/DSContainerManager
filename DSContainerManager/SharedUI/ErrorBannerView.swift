@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ErrorBanner: View {
+struct ErrorBannerView: View {
     let message: String
     let retryAction: (() -> Void)?
 
@@ -33,8 +33,8 @@ struct ErrorBanner: View {
 
 #Preview {
     VStack(spacing: 16) {
-        ErrorBanner("Failed to load containers")
-        ErrorBanner("Network connection lost") {
+        ErrorBannerView("Failed to load containers")
+        ErrorBannerView("Network connection lost") {
             print("Retry tapped")
         }
     }

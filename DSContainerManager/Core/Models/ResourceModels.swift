@@ -2,8 +2,11 @@ import Foundation
 
 // MARK: - Container Resources (per-container resource usage)
 
-struct ContainerResources: Sendable, Equatable, Identifiable {
-    nonisolated var id: String { containerName }
+struct ContainerResources: Equatable, Identifiable {
+    nonisolated var id: String {
+        containerName
+    }
+
     let containerName: String
     let cpuPercent: Double
     let memoryUsage: Int64
@@ -21,7 +24,7 @@ struct ContainerResources: Sendable, Equatable, Identifiable {
 
 // MARK: - Resource Snapshot (for time-series charts)
 
-struct ResourceSnapshot: Sendable, Equatable, Identifiable {
+struct ResourceSnapshot: Equatable, Identifiable {
     let id: UUID
     let timestamp: Date
     let cpuPercent: Double

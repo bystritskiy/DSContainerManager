@@ -10,7 +10,7 @@ struct DashboardView: View {
                 if store.isLoading && store.systemUtilization == nil {
                     loadingContent
                 } else if let error = store.error, store.systemUtilization == nil {
-                    ErrorBanner(error) {
+                    ErrorBannerView(error) {
                         store.send(.refresh)
                     }
                     .padding()
@@ -31,7 +31,6 @@ struct DashboardView: View {
         }
     }
 
-    @ViewBuilder
     private var dashboardContent: some View {
         VStack(spacing: 16) {
             // System Gauges
@@ -155,7 +154,7 @@ struct DashboardView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                    StatusBadge(containerStatus: container.status)
+                    StatusBadgeView(containerStatus: container.status)
                 }
             }
         }
@@ -165,7 +164,7 @@ struct DashboardView: View {
 
     private var loadingContent: some View {
         VStack(spacing: 16) {
-            ForEach(0..<4) { _ in
+            ForEach(0 ..< 4) { _ in
                 SkeletonView(height: 80)
             }
         }

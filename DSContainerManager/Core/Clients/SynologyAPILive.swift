@@ -24,7 +24,7 @@ extension SynologyAPIClient: DependencyKey {
                     "passwd": password,
                     "session": "DSContainerManager",
                     "format": "sid",
-                    "enable_syno_token": "yes"
+                    "enable_syno_token": "yes",
                 ]
                 if let otp = otpCode {
                     params["otp_code"] = otp
@@ -46,7 +46,7 @@ extension SynologyAPIClient: DependencyKey {
                     "version": "6",
                     "method": "logout",
                     "session": "DSContainerManager",
-                    "_sid": authSession.sid.rawValue
+                    "_sid": authSession.sid.rawValue,
                 ]
                 let url = buildURL(baseURL: baseURL, path: "webapi/auth.cgi", params: params)
                 _ = try await performRequest(session: session, url: url)
@@ -64,7 +64,7 @@ extension SynologyAPIClient: DependencyKey {
                     "method": "list",
                     "limit": "-1",
                     "offset": "0",
-                    "type": "all"
+                    "type": "all",
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -82,7 +82,7 @@ extension SynologyAPIClient: DependencyKey {
                     "api": "SYNO.Docker.Container",
                     "version": "1",
                     "method": "get",
-                    "name": containerName
+                    "name": containerName,
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -108,7 +108,7 @@ extension SynologyAPIClient: DependencyKey {
                     "api": "SYNO.Docker.Container",
                     "version": "1",
                     "method": apiMethod,
-                    "name": containerName
+                    "name": containerName,
                 ]
                 if action == .kill {
                     apiParams["signal"] = "SIGKILL"
@@ -137,14 +137,14 @@ extension SynologyAPIClient: DependencyKey {
                     "keyword": "",
                     "sort_dir": "DESC",
                     "offset": String(requestedOffset),
-                    "limit": String(requestedLimit)
+                    "limit": String(requestedLimit),
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
                 #if DEBUG
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("[SynologyAPI] Response for ContainerLog name=\(containerName) (\(data.count) bytes): \(jsonString.prefix(2000))")
-                }
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("[SynologyAPI] Response for ContainerLog name=\(containerName) (\(data.count) bytes): \(jsonString.prefix(2000))")
+                    }
                 #endif
                 return try decodeLogResponse(from: data, containerName: containerName)
             },
@@ -158,7 +158,7 @@ extension SynologyAPIClient: DependencyKey {
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Container.Resource",
                     "version": "1",
-                    "method": "get"
+                    "method": "get",
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -176,7 +176,7 @@ extension SynologyAPIClient: DependencyKey {
                     "version": "1",
                     "method": "list",
                     "limit": "-1",
-                    "offset": "0"
+                    "offset": "0",
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -194,7 +194,7 @@ extension SynologyAPIClient: DependencyKey {
                     "api": "SYNO.Docker.Project",
                     "version": "1",
                     "method": "get",
-                    "id": projectId
+                    "id": projectId,
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -217,7 +217,7 @@ extension SynologyAPIClient: DependencyKey {
                     "api": "SYNO.Docker.Project",
                     "version": "1",
                     "method": apiMethod,
-                    "id": projectId
+                    "id": projectId,
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 _ = try await performRequest(session: session, url: url)
@@ -232,7 +232,7 @@ extension SynologyAPIClient: DependencyKey {
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Core.System.Utilization",
                     "version": "1",
-                    "method": "get"
+                    "method": "get",
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -251,7 +251,7 @@ extension SynologyAPIClient: DependencyKey {
                     "method": "list",
                     "limit": "-1",
                     "offset": "0",
-                    "location": "internal"
+                    "location": "internal",
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -303,7 +303,7 @@ private func performRequest(session: URLSession, request: URLRequest) async thro
         throw SynologyAPIError.networkError("Invalid response")
     }
 
-    guard (200...299).contains(httpResponse.statusCode) else {
+    guard (200 ... 299).contains(httpResponse.statusCode) else {
         throw SynologyAPIError.networkError("HTTP \(httpResponse.statusCode)")
     }
 
@@ -312,16 +312,16 @@ private func performRequest(session: URLSession, request: URLRequest) async thro
 
 // MARK: - Response Decoding
 
-private func decodeResponse<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+private func decodeResponse<T: Decodable>(_: T.Type, from data: Data) throws -> T {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .secondsSince1970
 
     // Debug: print raw JSON for troubleshooting
     #if DEBUG
-    if let jsonString = String(data: data, encoding: .utf8) {
-        let preview = jsonString.prefix(2000)
-        print("[SynologyAPI] Response for \(T.self) (\(data.count) bytes): \(preview)")
-    }
+        if let jsonString = String(data: data, encoding: .utf8) {
+            let preview = jsonString.prefix(2000)
+            print("[SynologyAPI] Response for \(T.self) (\(data.count) bytes): \(preview)")
+        }
     #endif
 
     let synologyResponse: SynologyResponse<T>
@@ -329,7 +329,7 @@ private func decodeResponse<T: Decodable>(_ type: T.Type, from data: Data) throw
         synologyResponse = try decoder.decode(SynologyResponse<T>.self, from: data)
     } catch {
         #if DEBUG
-        print("[SynologyAPI] Decode error for \(T.self): \(error)")
+            print("[SynologyAPI] Decode error for \(T.self): \(error)")
         #endif
         throw SynologyAPIError.decodingError(error.localizedDescription)
     }
@@ -352,100 +352,101 @@ private func decodeResponse<T: Decodable>(_ type: T.Type, from data: Data) throw
 
 /// DSM Container Manager returns logs as `{ logs: [{ created, text, stream }], total }`.
 /// Older Docker API shapes may still return flat strings, so keep that fallback.
-private func decodeLogResponse(from data: Data, containerName: String) throws -> [ContainerLog] {
-    struct LogResponseData: Decodable {
-        let entries: [LogEntry]
-        let offset: Int?
+private struct LogResponseData: Decodable {
+    let entries: [LogEntry]
+    let offset: Int?
 
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            entries = (try? container.decode([LogEntry].self, forKey: .logs))
-                ?? (try? container.decode([LogEntry].self, forKey: .log))
-                ?? []
-            offset = try? container.decode(Int.self, forKey: .offset)
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case logs
-            case log
-            case offset
-        }
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        entries = (try? container.decode([LogEntry].self, forKey: .logs))
+            ?? (try? container.decode([LogEntry].self, forKey: .log))
+            ?? []
+        offset = try? container.decode(Int.self, forKey: .offset)
     }
 
-    struct LogEntry: Decodable {
-        let timestamp: Date
-        let stream: ContainerLog.LogStream
-        let text: String
+    enum CodingKeys: String, CodingKey {
+        case logs
+        case log
+        case offset
+    }
+}
 
-        init(from decoder: Decoder) throws {
-            if let singleValue = try? decoder.singleValueContainer(),
-               let line = try? singleValue.decode(String.self) {
-                let parsed = parseLogLine(line)
-                timestamp = parsed.0
-                stream = parsed.1
-                text = parsed.2
-                return
-            }
+private struct LogEntry: Decodable {
+    let timestamp: Date
+    let stream: ContainerLog.LogStream
+    let text: String
 
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            timestamp = Self.decodeTimestamp(
-                from: container,
-                keys: [.timestamp, .time, .date, .created, .createdAt]
-            ) ?? .now
-
-            let rawStream = (try? container.decode(String.self, forKey: .stream))
-                ?? (try? container.decode(String.self, forKey: .source))
-                ?? "unknown"
-            stream = ContainerLog.LogStream(rawValue: rawStream.lowercased()) ?? .unknown
-
-            text = (try? container.decode(String.self, forKey: .text))
-                ?? (try? container.decode(String.self, forKey: .message))
-                ?? (try? container.decode(String.self, forKey: .msg))
-                ?? (try? container.decode(String.self, forKey: .output))
-                ?? ""
+    init(from decoder: Decoder) throws {
+        if let singleValue = try? decoder.singleValueContainer(),
+           let line = try? singleValue.decode(String.self)
+        {
+            let parsed = parseLogLine(line)
+            timestamp = parsed.0
+            stream = parsed.1
+            text = parsed.2
+            return
         }
 
-        private static func decodeTimestamp(
-            from container: KeyedDecodingContainer<CodingKeys>,
-            keys: [CodingKeys]
-        ) -> Date? {
-            for key in keys {
-                if let rawString = try? container.decode(String.self, forKey: key) {
-                    if let numericValue = Double(rawString) {
-                        return date(fromNumericTimestamp: numericValue)
-                    }
-                    if let date = parseLogDate(rawString) {
-                        return date
-                    }
-                }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        timestamp = Self.decodeTimestamp(
+            from: container,
+            keys: [.timestamp, .time, .date, .created, .createdAt]
+        ) ?? .now
 
-                if let rawDouble = try? container.decode(Double.self, forKey: key) {
-                    return date(fromNumericTimestamp: rawDouble)
-                }
+        let rawStream = (try? container.decode(String.self, forKey: .stream))
+            ?? (try? container.decode(String.self, forKey: .source))
+            ?? "unknown"
+        stream = ContainerLog.LogStream(rawValue: rawStream.lowercased()) ?? .unknown
 
-                if let rawInt = try? container.decode(Int64.self, forKey: key) {
-                    return date(fromNumericTimestamp: Double(rawInt))
+        text = (try? container.decode(String.self, forKey: .text))
+            ?? (try? container.decode(String.self, forKey: .message))
+            ?? (try? container.decode(String.self, forKey: .msg))
+            ?? (try? container.decode(String.self, forKey: .output))
+            ?? ""
+    }
+
+    private static func decodeTimestamp(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        keys: [CodingKeys]
+    ) -> Date? {
+        for key in keys {
+            if let rawString = try? container.decode(String.self, forKey: key) {
+                if let numericValue = Double(rawString) {
+                    return date(fromNumericTimestamp: numericValue)
+                }
+                if let date = parseLogDate(rawString) {
+                    return date
                 }
             }
 
-            return nil
+            if let rawDouble = try? container.decode(Double.self, forKey: key) {
+                return date(fromNumericTimestamp: rawDouble)
+            }
+
+            if let rawInt = try? container.decode(Int64.self, forKey: key) {
+                return date(fromNumericTimestamp: Double(rawInt))
+            }
         }
 
-        enum CodingKeys: String, CodingKey {
-            case timestamp
-            case time
-            case date
-            case created
-            case createdAt = "created_at"
-            case stream
-            case source
-            case text
-            case message
-            case msg
-            case output = "Output"
-        }
+        return nil
     }
 
+    enum CodingKeys: String, CodingKey {
+        case timestamp
+        case time
+        case date
+        case created
+        case createdAt = "created_at"
+        case stream
+        case source
+        case text
+        case message
+        case msg
+        case output = "Output"
+    }
+}
+
+private func decodeLogResponse(from data: Data, containerName _: String) throws -> [ContainerLog] {
     let decoder = JSONDecoder()
     let synologyResponse: SynologyResponse<LogResponseData>
     do {
@@ -523,7 +524,7 @@ private func parseLogDate(_ rawValue: String) -> Date? {
 }
 
 private func date(fromNumericTimestamp rawValue: Double) -> Date {
-    let seconds = rawValue > 10_000_000_000 ? rawValue / 1_000 : rawValue
+    let seconds = rawValue > 10_000_000_000 ? rawValue / 1000 : rawValue
     return Date(timeIntervalSince1970: seconds)
 }
 
@@ -594,12 +595,13 @@ private func decodeResourceResponse(from data: Data) throws -> [ContainerResourc
 
 final class SynologySessionDelegate: NSObject, URLSessionDelegate, Sendable {
     nonisolated func urlSession(
-        _ session: URLSession,
+        _: URLSession,
         didReceive challenge: URLAuthenticationChallenge
     ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         // Trust self-signed certificates for Synology NAS devices
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-              let serverTrust = challenge.protectionSpace.serverTrust else {
+              let serverTrust = challenge.protectionSpace.serverTrust
+        else {
             return (.performDefaultHandling, nil)
         }
 

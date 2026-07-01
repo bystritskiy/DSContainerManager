@@ -3,7 +3,7 @@ import Tagged
 
 // MARK: - Container (list response)
 
-struct DockerContainer: Codable, Sendable, Equatable, Identifiable {
+struct DockerContainer: Codable, Equatable, Identifiable {
     let id: ContainerID
     let name: String
     let image: String
@@ -84,7 +84,8 @@ struct DockerContainer: Codable, Sendable, Equatable, Identifiable {
         } else if let ts = try? container.decode(Int.self, forKey: .createdUpper) {
             created = Date(timeIntervalSince1970: Double(ts))
         } else if let dateStr = (try? container.decode(String.self, forKey: .created))
-            ?? (try? container.decode(String.self, forKey: .createdUpper)) {
+            ?? (try? container.decode(String.self, forKey: .createdUpper))
+        {
             let formatter = ISO8601DateFormatter()
             created = formatter.date(from: dateStr) ?? .now
         } else {
@@ -158,7 +159,7 @@ struct DockerContainer: Codable, Sendable, Equatable, Identifiable {
         case isPackageUpper = "isPackage"
     }
 
-    struct PortMapping: Sendable, Equatable, Hashable, Codable {
+    struct PortMapping: Equatable, Hashable, Codable {
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(privatePort, forKey: .privatePort)
@@ -205,7 +206,7 @@ struct DockerContainer: Codable, Sendable, Equatable, Identifiable {
 
 // MARK: - Container Detail
 
-struct ContainerDetail: Codable, Sendable, Equatable {
+struct ContainerDetail: Codable, Equatable {
     let name: String
     let image: String
     let status: ContainerStatus
@@ -288,7 +289,8 @@ struct ContainerDetail: Codable, Sendable, Equatable {
         } else if let ts = try? container.decode(Int.self, forKey: .created) {
             decodedCreated = Date(timeIntervalSince1970: Double(ts))
         } else if let dateStr = (try? container.decode(String.self, forKey: .created))
-            ?? (try? container.decode(String.self, forKey: .createdUpper)) {
+            ?? (try? container.decode(String.self, forKey: .createdUpper))
+        {
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             decodedCreated = formatter.date(from: dateStr) ?? ISO8601DateFormatter().date(from: dateStr) ?? .now
@@ -357,7 +359,7 @@ struct ContainerDetail: Codable, Sendable, Equatable {
         case restartPolicy = "restart_policy"
     }
 
-    struct VolumeMount: Sendable, Equatable, Hashable, Identifiable, Codable {
+    struct VolumeMount: Equatable, Hashable, Identifiable, Codable {
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(source, forKey: .source)
@@ -365,7 +367,10 @@ struct ContainerDetail: Codable, Sendable, Equatable {
             try container.encode(mode, forKey: .mode)
         }
 
-        nonisolated var id: String { "\(source):\(destination)" }
+        nonisolated var id: String {
+            "\(source):\(destination)"
+        }
+
         let source: String
         let destination: String
         let mode: String
@@ -400,7 +405,7 @@ struct ContainerDetail: Codable, Sendable, Equatable {
         }
     }
 
-    struct HostConfig: Codable, Sendable, Equatable {
+    struct HostConfig: Codable, Equatable {
         let memoryLimit: Int64?
         let cpuShares: Int?
         let restartPolicy: String?
@@ -417,14 +422,14 @@ struct ContainerDetail: Codable, Sendable, Equatable {
 
 // MARK: - Container Log Entry
 
-struct ContainerLog: Sendable, Equatable, Identifiable {
+struct ContainerLog: Equatable, Identifiable {
     let id: UUID
     let timestamp: Date
     let stream: LogStream
     let text: String
     let offset: Int
 
-    enum LogStream: String, Sendable, Codable {
+    enum LogStream: String, Codable {
         case stdout
         case stderr
         case unknown
@@ -438,12 +443,13 @@ struct ContainerLog: Sendable, Equatable, Identifiable {
 }
 
 // MARK: - Container List API Response
+
 // Synology API may return containers as:
 // 1. { "containers": [ ... ] }  — array under "containers" key
 // 2. { "id1": { ... }, "id2": { ... } } — dictionary keyed by container ID
 // 3. [ ... ] — direct array (unlikely but handled)
 
-struct ContainerListResponse: Decodable, Sendable {
+struct ContainerListResponse: Decodable {
     let containers: [DockerContainer]
 
     init(containers: [DockerContainer]) {
@@ -453,7 +459,8 @@ struct ContainerListResponse: Decodable, Sendable {
     init(from decoder: Decoder) throws {
         // Strategy 1: Object with "containers" array
         if let keyed = try? decoder.container(keyedBy: CodingKeys.self),
-           let arr = try? keyed.decode([DockerContainer].self, forKey: .containers) {
+           let arr = try? keyed.decode([DockerContainer].self, forKey: .containers)
+        {
             containers = arr
             return
         }
@@ -489,7 +496,7 @@ struct ContainerListResponse: Decodable, Sendable {
 
         // Fallback: empty
         #if DEBUG
-        print("[ContainerListResponse] Could not decode containers from response")
+            print("[ContainerListResponse] Could not decode containers from response")
         #endif
         containers = []
     }
@@ -499,18 +506,18 @@ struct ContainerListResponse: Decodable, Sendable {
     }
 }
 
-// Dynamic coding key for dictionary-style responses
+/// Dynamic coding key for dictionary-style responses
 struct DynamicCodingKey: CodingKey {
     var stringValue: String
     var intValue: Int?
 
     init?(stringValue: String) {
         self.stringValue = stringValue
-        self.intValue = nil
+        intValue = nil
     }
 
     init?(intValue: Int) {
-        self.stringValue = "\(intValue)"
+        stringValue = "\(intValue)"
         self.intValue = intValue
     }
 }

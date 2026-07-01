@@ -5,7 +5,7 @@ import Tagged
 
 /// Data model shared between the main app and widget extension via App Groups.
 /// The main app writes this data; widgets read it.
-struct SharedContainerData: Codable, Sendable {
+struct SharedContainerData: Codable {
     let timestamp: Date
     let containers: [SharedContainerInfo]
     let cpuPercent: Double
@@ -15,7 +15,7 @@ struct SharedContainerData: Codable, Sendable {
     let totalCount: Int
 }
 
-struct SharedContainerInfo: Codable, Sendable, Identifiable {
+struct SharedContainerInfo: Codable, Identifiable {
     let id: String
     let name: String
     let image: String
@@ -42,7 +42,8 @@ enum SharedStorage {
 
     static func loadContainerData() -> SharedContainerData? {
         guard let defaults = sharedDefaults,
-              let data = defaults.data(forKey: containerDataKey) else {
+              let data = defaults.data(forKey: containerDataKey)
+        else {
             return nil
         }
         return try? JSONDecoder().decode(SharedContainerData.self, from: data)

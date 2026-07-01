@@ -53,12 +53,12 @@ struct ConnectionFeature {
                     await send(.connectionsLoaded(result))
                 }
 
-            case .connectionsLoaded(.success(let profiles)):
+            case let .connectionsLoaded(.success(profiles)):
                 state.connections = profiles
                 state.isLoading = false
                 return .none
 
-            case .connectionsLoaded(.failure(let error)):
+            case let .connectionsLoaded(.failure(error)):
                 state.error = error.localizedDescription
                 state.isLoading = false
                 return .none
@@ -76,7 +76,7 @@ struct ConnectionFeature {
                 )
                 return .none
 
-            case .editButtonTapped(let profile):
+            case let .editButtonTapped(profile):
                 let password = (try? keychain.loadPassword(forConnection: profile.id)) ?? ""
                 state.connectionForm = ConnectionFormFeature.State(
                     mode: .edit(profile.id),
@@ -90,7 +90,7 @@ struct ConnectionFeature {
                 )
                 return .none
 
-            case .deleteConnection(let id):
+            case let .deleteConnection(id):
                 return .run { send in
                     try keychain.deletePassword(forConnection: id)
                     try await store.delete(id)
@@ -101,7 +101,7 @@ struct ConnectionFeature {
             case .deleteResult:
                 return .none
 
-            case .connectTapped(let profile):
+            case let .connectTapped(profile):
                 state.loginInProgressId = profile.id
                 state.error = nil
                 let password = (try? keychain.loadPassword(forConnection: profile.id)) ?? ""
@@ -117,11 +117,11 @@ struct ConnectionFeature {
                     await send(.loginResult(result, profile))
                 }
 
-            case .loginResult(.success(let session), let profile):
+            case let .loginResult(.success(session), profile):
                 state.loginInProgressId = nil
                 return .send(.delegate(.connectionEstablished(profile, session)))
 
-            case .loginResult(.failure(let error), let profile):
+            case let .loginResult(.failure(error), profile):
                 state.loginInProgressId = nil
                 if let apiError = error as? SynologyAPIError, apiError == .otpRequired {
                     let password = (try? keychain.loadPassword(forConnection: profile.id)) ?? ""
@@ -134,7 +134,7 @@ struct ConnectionFeature {
                 }
                 return .none
 
-            case .connectionForm(.presented(.delegate(.saved(let profile, let password)))):
+            case let .connectionForm(.presented(.delegate(.saved(profile, password)))):
                 state.connectionForm = nil
                 return .run { send in
                     try keychain.savePassword(password, forConnection: profile.id)
@@ -150,7 +150,7 @@ struct ConnectionFeature {
             case .connectionForm:
                 return .none
 
-            case .otpSubmitted(let otpCode, let profile, let password):
+            case let .otpSubmitted(otpCode, profile, password):
                 state.otpPrompt = nil
                 state.loginInProgressId = profile.id
                 guard let baseURL = profile.baseURL else {
@@ -201,7 +201,7 @@ struct ConnectionFormFeature {
             var id: UUID {
                 switch self {
                 case .add: UUID()
-                case .edit(let id): id
+                case let .edit(id): id
                 }
             }
         }
@@ -221,7 +221,7 @@ struct ConnectionFormFeature {
             let id: UUID = {
                 switch mode {
                 case .add: UUID()
-                case .edit(let existingId): existingId
+                case let .edit(existingId): existingId
                 }
             }()
             return ConnectionProfile(

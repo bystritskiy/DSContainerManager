@@ -3,7 +3,7 @@ import Tagged
 
 // MARK: - Auth Session
 
-struct AuthSession: Codable, Sendable, Equatable {
+struct AuthSession: Codable, Equatable {
     let sid: SessionID
     let synotoken: String?
     let deviceId: String?
@@ -17,7 +17,7 @@ struct AuthSession: Codable, Sendable, Equatable {
 
 // MARK: - Login Response (raw API shape)
 
-struct LoginResponseData: Decodable, Sendable {
+struct LoginResponseData: Decodable {
     let sid: String
     let synotoken: String?
     let did: String?
