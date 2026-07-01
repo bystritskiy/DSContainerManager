@@ -47,3 +47,8 @@ struct ContainerWidgetSmallView: View {
         }
     }
 }
+
+#Preview {
+    ContainerWidgetSmallView(entry: .placeholder)
+        .previewContext(WidgetPreviewContext(family: .systemSmall))
+}

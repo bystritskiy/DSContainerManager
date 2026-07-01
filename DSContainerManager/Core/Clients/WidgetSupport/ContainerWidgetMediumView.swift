@@ -70,3 +70,8 @@ struct ContainerWidgetMediumView: View {
         }
     }
 }
+
+#Preview {
+    ContainerWidgetMediumView(entry: .placeholder)
+        .previewContext(WidgetPreviewContext(family: .systemMedium))
+}

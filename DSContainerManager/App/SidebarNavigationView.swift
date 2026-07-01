@@ -68,3 +68,11 @@ struct SidebarNavigationView: View {
         }
     }
 }
+
+#Preview {
+    SidebarNavigationView(
+        store: Store(initialState: AppFeature.State()) {
+            AppFeature()
+        },
+    )
+}

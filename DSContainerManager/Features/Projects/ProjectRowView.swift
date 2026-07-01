@@ -30,3 +30,11 @@ struct ProjectRowView: View {
         .padding(.vertical, 4)
     }
 }
+
+#Preview {
+    List {
+        ForEach(ComposeProject.mockList) { project in
+            ProjectRowView(project: project)
+        }
+    }
+}

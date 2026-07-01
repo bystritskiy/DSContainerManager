@@ -38,3 +38,11 @@ struct MainTabView: View {
         }
     }
 }
+
+#Preview {
+    MainTabView(
+        store: Store(initialState: AppFeature.State()) {
+            AppFeature()
+        },
+    )
+}

@@ -41,3 +41,11 @@ struct SettingsView: View {
         }
     }
 }
+
+#Preview {
+    SettingsView(
+        store: Store(initialState: AppFeature.State()) {
+            AppFeature()
+        },
+    )
+}

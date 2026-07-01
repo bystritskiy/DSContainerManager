@@ -49,3 +49,36 @@ struct ConnectionRowView: View {
         .padding(.vertical, 4)
     }
 }
+
+#Preview {
+    List {
+        ConnectionRowView(
+            profile: ConnectionProfile(
+                id: UUID(),
+                name: "Home NAS",
+                host: "192.168.1.10",
+                port: 5001,
+                useHTTPS: true,
+                username: "admin",
+                lastConnected: nil,
+                isDefault: true,
+                trustSelfSignedCert: true,
+            ),
+            isConnecting: false,
+        )
+        ConnectionRowView(
+            profile: ConnectionProfile(
+                id: UUID(),
+                name: "Office NAS",
+                host: "10.0.0.5",
+                port: 5000,
+                useHTTPS: false,
+                username: "bogdan",
+                lastConnected: nil,
+                isDefault: false,
+                trustSelfSignedCert: false,
+            ),
+            isConnecting: true,
+        )
+    }
+}
