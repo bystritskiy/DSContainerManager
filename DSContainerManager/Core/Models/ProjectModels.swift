@@ -23,7 +23,7 @@ struct ComposeProject: Codable, Equatable, Identifiable {
         containerIds: [String] = [],
         services: [ProjectService] = [],
         composeContent: String? = nil,
-        version: Int = 0
+        version: Int = 0,
     ) {
         self.id = id
         self.name = name

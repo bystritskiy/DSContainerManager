@@ -87,7 +87,7 @@ struct ProjectDetailView: View {
                 ContentUnavailableView(
                     "No Services",
                     systemImage: "square.stack.3d.up",
-                    description: Text("This project has no services defined.")
+                    description: Text("This project has no services defined."),
                 )
             }
         }
@@ -110,7 +110,7 @@ struct ProjectDetailView: View {
                 EmptyStateView(
                     icon: "doc.text",
                     title: "No Compose File",
-                    message: "The compose file content is not available for this project."
+                    message: "The compose file content is not available for this project.",
                 )
             }
         }
@@ -142,11 +142,11 @@ struct ProjectDetailView: View {
         ProjectDetailView(
             store: Store(
                 initialState: ProjectDetailFeature.State(
-                    project: ComposeProject.mockList[0]
-                )
+                    project: ComposeProject.mockList[0],
+                ),
             ) {
                 ProjectDetailFeature()
-            }
+            },
         )
     }
 }

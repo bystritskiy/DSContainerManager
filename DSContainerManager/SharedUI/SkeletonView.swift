@@ -21,10 +21,10 @@ struct SkeletonView: View {
                         LinearGradient(
                             colors: [.clear, .white.opacity(0.15), .clear],
                             startPoint: .leading,
-                            endPoint: .trailing
-                        )
+                            endPoint: .trailing,
+                        ),
                     )
-                    .offset(x: isAnimating ? 200 : -200)
+                    .offset(x: isAnimating ? 200 : -200),
             )
             .clipShape(RoundedRectangle(cornerRadius: height / 3))
             .onAppear {

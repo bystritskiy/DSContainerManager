@@ -1,8 +1,2 @@
 # SwiftFormat configuration — default rules.
-# See https://github.com/nicklockwood/SwiftFormat for the full rule list.
-
-# Swift language version used by the project.
---swiftversion 5.0
-
-# Paths excluded from formatting.
---exclude .build,.derivedData,.derivedData-device,build,DerivedData,**/SourcePackages
+--swiftversion 6.3

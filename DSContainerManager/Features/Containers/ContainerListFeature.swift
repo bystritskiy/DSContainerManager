@@ -81,7 +81,7 @@ struct ContainerListFeature {
                 state.isLoading = state.containers.isEmpty
                 return .merge(
                     fetchContainers(baseURL: baseURL, session: session),
-                    startPolling()
+                    startPolling(),
                 )
 
             case .refresh:

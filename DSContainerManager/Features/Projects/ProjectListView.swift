@@ -7,7 +7,7 @@ struct ProjectListView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if store.isLoading && store.projects.isEmpty {
+                if store.isLoading, store.projects.isEmpty {
                     List {
                         ForEach(0 ..< 4) { _ in
                             SkeletonRowView()
@@ -18,7 +18,7 @@ struct ProjectListView: View {
                         icon: "folder",
                         title: "No Projects",
                         message: "No Compose projects found. Create projects using Container Manager on your Synology NAS.",
-                        actionTitle: "Refresh"
+                        actionTitle: "Refresh",
                     ) {
                         store.send(.refresh)
                     }
@@ -88,6 +88,6 @@ struct ProjectListView: View {
     ProjectListView(
         store: Store(initialState: ProjectListFeature.State()) {
             ProjectListFeature()
-        }
+        },
     )
 }

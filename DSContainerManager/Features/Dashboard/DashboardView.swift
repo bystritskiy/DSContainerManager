@@ -7,7 +7,7 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                if store.isLoading && store.systemUtilization == nil {
+                if store.isLoading, store.systemUtilization == nil {
                     loadingContent
                 } else if let error = store.error, store.systemUtilization == nil {
                     ErrorBannerView(error) {
@@ -57,20 +57,20 @@ struct DashboardView: View {
             CircularGaugeView(
                 title: "CPU",
                 value: store.cpuPercent,
-                color: gaugeColor(for: store.cpuPercent)
+                color: gaugeColor(for: store.cpuPercent),
             )
 
             CircularGaugeView(
                 title: "RAM",
                 value: store.memoryPercent,
-                color: gaugeColor(for: store.memoryPercent)
+                color: gaugeColor(for: store.memoryPercent),
             )
 
             if let disk = store.systemUtilization?.disk?.total {
                 CircularGaugeView(
                     title: "Disk I/O",
                     value: Double(disk.utilization),
-                    color: gaugeColor(for: Double(disk.utilization))
+                    color: gaugeColor(for: Double(disk.utilization)),
                 )
             }
         }
@@ -96,7 +96,7 @@ struct DashboardView: View {
                 containerStat(
                     count: store.totalCount - store.runningCount - store.stoppedCount,
                     label: "Other",
-                    color: .yellow
+                    color: .yellow,
                 )
             }
         }
@@ -129,7 +129,7 @@ struct DashboardView: View {
                     value: volume.usagePercent,
                     maxValue: 100,
                     color: gaugeColor(for: volume.usagePercent),
-                    subtitle: "\(volume.usedSize.formattedBytes) / \(volume.totalSize.formattedBytes)"
+                    subtitle: "\(volume.usedSize.formattedBytes) / \(volume.totalSize.formattedBytes)",
                 )
             }
         }
@@ -182,6 +182,6 @@ struct DashboardView: View {
     DashboardView(
         store: Store(initialState: DashboardFeature.State()) {
             DashboardFeature()
-        }
+        },
     )
 }

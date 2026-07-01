@@ -18,7 +18,7 @@ struct SidebarNavigationView: View {
                     .listRowBackground(
                         store.selectedTab == tab
                             ? Color.accentColor.opacity(0.15)
-                            : Color.clear
+                            : Color.clear,
                     )
                 }
             }
@@ -49,19 +49,19 @@ struct SidebarNavigationView: View {
         switch store.selectedTab {
         case .dashboard:
             DashboardView(
-                store: store.scope(state: \.dashboard, action: \.dashboard)
+                store: store.scope(state: \.dashboard, action: \.dashboard),
             )
         case .containers:
             ContainerListView(
-                store: store.scope(state: \.containerList, action: \.containerList)
+                store: store.scope(state: \.containerList, action: \.containerList),
             )
         case .projects:
             ProjectListView(
-                store: store.scope(state: \.projectList, action: \.projectList)
+                store: store.scope(state: \.projectList, action: \.projectList),
             )
         case .monitor:
             SystemMonitorView(
-                store: store.scope(state: \.systemMonitor, action: \.systemMonitor)
+                store: store.scope(state: \.systemMonitor, action: \.systemMonitor),
             )
         case .settings:
             SettingsView(store: store)

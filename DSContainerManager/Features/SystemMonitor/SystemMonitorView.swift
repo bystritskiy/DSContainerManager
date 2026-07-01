@@ -8,7 +8,7 @@ struct SystemMonitorView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                if store.isLoading && store.currentUtilization == nil {
+                if store.isLoading, store.currentUtilization == nil {
                     VStack(spacing: 16) {
                         ForEach(0 ..< 4) { _ in
                             SkeletonView(height: 200)
@@ -52,7 +52,7 @@ struct SystemMonitorView: View {
                     data: store.cpuHistory,
                     valuePath: \.cpuPercent,
                     color: .blue,
-                    unit: "%"
+                    unit: "%",
                 )
             }
 
@@ -63,7 +63,7 @@ struct SystemMonitorView: View {
                     data: store.memoryHistory,
                     valuePath: \.memoryPercent,
                     color: .green,
-                    unit: "%"
+                    unit: "%",
                 )
             }
 
@@ -90,12 +90,12 @@ struct SystemMonitorView: View {
             CircularGaugeView(
                 title: "CPU",
                 value: util.cpu.totalPercent,
-                color: gaugeColor(for: util.cpu.totalPercent)
+                color: gaugeColor(for: util.cpu.totalPercent),
             )
             CircularGaugeView(
                 title: "RAM",
                 value: util.memory.usagePercent,
-                color: gaugeColor(for: util.memory.usagePercent)
+                color: gaugeColor(for: util.memory.usagePercent),
             )
 
             VStack(spacing: 4) {
@@ -125,14 +125,14 @@ struct SystemMonitorView: View {
                 ForEach(store.networkHistory) { snapshot in
                     LineMark(
                         x: .value("Time", snapshot.timestamp),
-                        y: .value("RX", snapshot.networkRx)
+                        y: .value("RX", snapshot.networkRx),
                     )
                     .foregroundStyle(.blue)
                     .symbol(.circle)
 
                     LineMark(
                         x: .value("Time", snapshot.timestamp),
-                        y: .value("TX", snapshot.networkTx)
+                        y: .value("TX", snapshot.networkTx),
                     )
                     .foregroundStyle(.green)
                     .symbol(.triangle)
@@ -165,7 +165,7 @@ struct SystemMonitorView: View {
                         value: volume.usagePercent,
                         maxValue: 100,
                         color: gaugeColor(for: volume.usagePercent),
-                        subtitle: "\(volume.usedSize.formattedBytes) / \(volume.totalSize.formattedBytes) — \(volume.freeSize.formattedBytes) free"
+                        subtitle: "\(volume.usedSize.formattedBytes) / \(volume.totalSize.formattedBytes) — \(volume.freeSize.formattedBytes) free",
                     )
 
                     HStack(spacing: 16) {
@@ -226,6 +226,6 @@ struct SystemMonitorView: View {
     SystemMonitorView(
         store: Store(initialState: SystemMonitorFeature.State()) {
             SystemMonitorFeature()
-        }
+        },
     )
 }

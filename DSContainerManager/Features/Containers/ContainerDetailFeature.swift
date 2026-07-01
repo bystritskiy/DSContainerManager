@@ -83,7 +83,7 @@ struct ContainerDetailFeature {
                 return .merge(
                     fetchDetail(baseURL: baseURL, session: session, name: name),
                     fetchLogs(baseURL: baseURL, session: session, name: name),
-                    .send(.startResourcePolling)
+                    .send(.startResourcePolling),
                 )
 
             case .refreshDetail:
@@ -129,7 +129,7 @@ struct ContainerDetailFeature {
                         cpuPercent: resource.cpuPercent,
                         memoryPercent: resource.memoryPercent,
                         networkRx: resource.networkRx,
-                        networkTx: resource.networkTx
+                        networkTx: resource.networkTx,
                     )
                     state.resourceHistory.append(snapshot)
                     if state.resourceHistory.count > 60 {
@@ -230,7 +230,7 @@ struct ContainerDetailFeature {
             state: detail.status.rawValue,
             created: detail.created,
             ports: detail.ports,
-            isPackage: container.isPackage
+            isPackage: container.isPackage,
         )
     }
 }

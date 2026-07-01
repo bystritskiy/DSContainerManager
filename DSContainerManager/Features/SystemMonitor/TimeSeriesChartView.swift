@@ -26,21 +26,21 @@ struct TimeSeriesChartView: View {
             Chart(data) { snapshot in
                 LineMark(
                     x: .value("Time", snapshot.timestamp),
-                    y: .value(title, snapshot[keyPath: valuePath])
+                    y: .value(title, snapshot[keyPath: valuePath]),
                 )
                 .foregroundStyle(color)
                 .interpolationMethod(.catmullRom)
 
                 AreaMark(
                     x: .value("Time", snapshot.timestamp),
-                    y: .value(title, snapshot[keyPath: valuePath])
+                    y: .value(title, snapshot[keyPath: valuePath]),
                 )
                 .foregroundStyle(
                     LinearGradient(
                         colors: [color.opacity(0.2), color.opacity(0.02)],
                         startPoint: .top,
-                        endPoint: .bottom
-                    )
+                        endPoint: .bottom,
+                    ),
                 )
                 .interpolationMethod(.catmullRom)
             }
@@ -74,7 +74,7 @@ struct TimeSeriesChartView: View {
         ResourceSnapshot(
             timestamp: Date.now.addingTimeInterval(Double(-30 + offset) * 5),
             cpuPercent: Double.random(in: 20 ... 60),
-            memoryPercent: Double.random(in: 40 ... 70)
+            memoryPercent: Double.random(in: 40 ... 70),
         )
     }
 
@@ -84,14 +84,14 @@ struct TimeSeriesChartView: View {
             data: data,
             valuePath: \.cpuPercent,
             color: .blue,
-            unit: "%"
+            unit: "%",
         )
         TimeSeriesChartView(
             title: "Memory Usage",
             data: data,
             valuePath: \.memoryPercent,
             color: .green,
-            unit: "%"
+            unit: "%",
         )
     }
     .padding()

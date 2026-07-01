@@ -98,7 +98,7 @@ struct AppFeature {
                 state.hasAttemptedSessionRestore = true
                 return .merge(
                     .send(.connectionList(.loadConnections)),
-                    restoreSavedSession()
+                    restoreSavedSession(),
                 )
 
             case let .sessionRestored(profile, session):
@@ -169,7 +169,7 @@ struct AppFeature {
                     applyConnection(state: &state, profile: profile, session: session),
                     .run { _ in
                         try? keychain.saveSession(session, forConnection: connectionId)
-                    }
+                    },
                 )
 
             case .connectionList:
@@ -216,7 +216,7 @@ struct AppFeature {
             .run { _ in
                 _ = await backgroundMonitor.requestNotificationPermission()
                 backgroundMonitor.scheduleHealthCheck()
-            }
+            },
         )
     }
 

@@ -11,31 +11,31 @@ struct SynologyAPIClient {
         _ baseURL: URL,
         _ username: String,
         _ password: String,
-        _ otpCode: String?
+        _ otpCode: String?,
     ) async throws -> AuthSession
 
     var logout: @Sendable (
         _ baseURL: URL,
-        _ session: AuthSession
+        _ session: AuthSession,
     ) async throws -> Void
 
     /// Containers
     var listContainers: @Sendable (
         _ baseURL: URL,
-        _ session: AuthSession
+        _ session: AuthSession,
     ) async throws -> [DockerContainer]
 
     var getContainerDetail: @Sendable (
         _ baseURL: URL,
         _ session: AuthSession,
-        _ containerName: String
+        _ containerName: String,
     ) async throws -> ContainerDetail
 
     var performContainerAction: @Sendable (
         _ baseURL: URL,
         _ session: AuthSession,
         _ containerName: String,
-        _ action: ContainerAction
+        _ action: ContainerAction,
     ) async throws -> Void
 
     var getContainerLogs: @Sendable (
@@ -43,42 +43,42 @@ struct SynologyAPIClient {
         _ session: AuthSession,
         _ containerName: String,
         _ offset: Int,
-        _ limit: Int
+        _ limit: Int,
     ) async throws -> [ContainerLog]
 
     var getContainerResources: @Sendable (
         _ baseURL: URL,
-        _ session: AuthSession
+        _ session: AuthSession,
     ) async throws -> [ContainerResources]
 
     /// Projects
     var listProjects: @Sendable (
         _ baseURL: URL,
-        _ session: AuthSession
+        _ session: AuthSession,
     ) async throws -> [ComposeProject]
 
     var getProjectDetail: @Sendable (
         _ baseURL: URL,
         _ session: AuthSession,
-        _ projectId: String
+        _ projectId: String,
     ) async throws -> ComposeProject
 
     var performProjectAction: @Sendable (
         _ baseURL: URL,
         _ session: AuthSession,
         _ projectId: String,
-        _ action: ProjectAction
+        _ action: ProjectAction,
     ) async throws -> Void
 
     /// System
     var getSystemUtilization: @Sendable (
         _ baseURL: URL,
-        _ session: AuthSession
+        _ session: AuthSession,
     ) async throws -> SystemUtilization
 
     var getStorageInfo: @Sendable (
         _ baseURL: URL,
-        _ session: AuthSession
+        _ session: AuthSession,
     ) async throws -> StorageInfo
 }
 

@@ -87,13 +87,13 @@ extension KeychainClient: DependencyKey {
             guard status == errSecSuccess || status == errSecItemNotFound else {
                 throw KeychainError.deleteFailed(status)
             }
-        }
+        },
     )
 
     static let previewValue = KeychainClient(
         save: { _, _ in },
         load: { _ in nil },
-        delete: { _ in }
+        delete: { _ in },
     )
 }
 

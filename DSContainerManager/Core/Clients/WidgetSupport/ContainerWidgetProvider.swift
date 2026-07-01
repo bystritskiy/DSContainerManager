@@ -34,7 +34,7 @@ struct ContainerTimelineProvider: AppIntentTimelineProvider {
             memoryPercent: data.memoryPercent,
             runningCount: data.runningCount,
             stoppedCount: data.stoppedCount,
-            totalCount: data.totalCount
+            totalCount: data.totalCount,
         )
     }
 }
@@ -42,8 +42,8 @@ struct ContainerTimelineProvider: AppIntentTimelineProvider {
 // MARK: - Widget Intent
 
 struct ContainerWidgetIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Container Status"
-    static var description: IntentDescription = "Shows the status of your Docker containers"
+    static let title: LocalizedStringResource = "Container Status"
+    static let description: IntentDescription = "Shows the status of your Docker containers"
 }
 
 // MARK: - Widget Entry
@@ -68,7 +68,7 @@ struct ContainerWidgetEntry: TimelineEntry {
         memoryPercent: 67.2,
         runningCount: 6,
         stoppedCount: 2,
-        totalCount: 8
+        totalCount: 8,
     )
 }
 
@@ -85,7 +85,7 @@ extension Color {
         self.init(
             red: Double((rgb & 0xFF0000) >> 16) / 255.0,
             green: Double((rgb & 0x00FF00) >> 8) / 255.0,
-            blue: Double(rgb & 0x0000FF) / 255.0
+            blue: Double(rgb & 0x0000FF) / 255.0,
         )
     }
 }

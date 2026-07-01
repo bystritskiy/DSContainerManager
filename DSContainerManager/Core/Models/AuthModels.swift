@@ -26,7 +26,7 @@ struct LoginResponseData: Decodable {
         AuthSession(
             sid: SessionID(rawValue: sid),
             synotoken: synotoken,
-            deviceId: did
+            deviceId: did,
         )
     }
 }

@@ -27,7 +27,7 @@ final class NASConnection: @unchecked Sendable {
         use2FA: Bool = false,
         lastConnected: Date? = nil,
         isDefault: Bool = false,
-        trustSelfSignedCert: Bool = false
+        trustSelfSignedCert: Bool = false,
     ) {
         self.id = id
         self.name = name
@@ -85,7 +85,7 @@ extension NASConnection {
             username: username,
             lastConnected: lastConnected,
             isDefault: isDefault,
-            trustSelfSignedCert: trustSelfSignedCert
+            trustSelfSignedCert: trustSelfSignedCert,
         )
     }
 }

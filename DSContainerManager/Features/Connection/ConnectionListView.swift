@@ -8,12 +8,12 @@ struct ConnectionListView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if store.connections.isEmpty && !store.isLoading {
+                if store.connections.isEmpty, !store.isLoading {
                     EmptyStateView(
                         icon: "network",
                         title: "No Connections",
                         message: "Add your Synology NAS connection to get started.",
-                        actionTitle: "Add NAS"
+                        actionTitle: "Add NAS",
                     ) {
                         store.send(.addButtonTapped)
                     }
@@ -30,7 +30,7 @@ struct ConnectionListView: View {
                         ForEach(store.connections) { profile in
                             ConnectionRowView(
                                 profile: profile,
-                                isConnecting: store.loginInProgressId == profile.id
+                                isConnecting: store.loginInProgressId == profile.id,
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -71,7 +71,7 @@ struct ConnectionListView: View {
             }
             .alert("Verification Code Required", isPresented: Binding(
                 get: { store.otpPrompt != nil },
-                set: { if !$0 { store.send(.dismissOTPPrompt) } }
+                set: { if !$0 { store.send(.dismissOTPPrompt) } },
             )) {
                 TextField("000000", text: $otpCode)
                     .keyboardType(.numberPad)
@@ -104,6 +104,6 @@ struct ConnectionListView: View {
     ConnectionListView(
         store: Store(initialState: ConnectionFeature.State()) {
             ConnectionFeature()
-        }
+        },
     )
 }

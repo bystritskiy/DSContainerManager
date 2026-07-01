@@ -14,7 +14,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 var params: [String: String] = [
                     "api": "SYNO.API.Auth",
@@ -39,7 +39,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params: [String: String] = [
                     "api": "SYNO.API.Auth",
@@ -56,7 +56,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Container",
@@ -76,7 +76,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Container",
@@ -93,16 +93,15 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
-                let apiMethod: String
-                switch action {
-                case .start: apiMethod = "start"
-                case .stop: apiMethod = "stop"
-                case .restart: apiMethod = "restart"
-                case .pause: apiMethod = "pause"
-                case .unpause: apiMethod = "unpause"
-                case .kill: apiMethod = "signal"
+                let apiMethod = switch action {
+                case .start: "start"
+                case .stop: "stop"
+                case .restart: "restart"
+                case .pause: "pause"
+                case .unpause: "unpause"
+                case .kill: "signal"
                 }
                 var apiParams: [String: String] = [
                     "api": "SYNO.Docker.Container",
@@ -122,7 +121,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let requestedOffset = max(offset, 0)
                 let requestedLimit = max(limit, 1)
@@ -153,7 +152,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Container.Resource",
@@ -169,7 +168,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Project",
@@ -188,7 +187,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Project",
@@ -205,13 +204,12 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
-                let apiMethod: String
-                switch action {
-                case .start: apiMethod = "start"
-                case .stop: apiMethod = "stop"
-                case .restart: apiMethod = "restart"
+                let apiMethod = switch action {
+                case .start: "start"
+                case .stop: "stop"
+                case .restart: "restart"
                 }
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Docker.Project",
@@ -227,7 +225,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Core.System.Utilization",
@@ -243,7 +241,7 @@ extension SynologyAPIClient: DependencyKey {
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
-                    delegateQueue: nil
+                    delegateQueue: nil,
                 )
                 let params = authenticatedParams(authSession, api: [
                     "api": "SYNO.Core.Storage.Volume",
@@ -256,7 +254,7 @@ extension SynologyAPIClient: DependencyKey {
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
                 return try decodeResponse(StorageInfo.self, from: data)
-            }
+            },
         )
     }()
 }
@@ -312,7 +310,7 @@ private func performRequest(session: URLSession, request: URLRequest) async thro
 
 // MARK: - Response Decoding
 
-private func decodeResponse<T: Decodable>(_: T.Type, from data: Data) throws -> T {
+private func decodeResponse<T: Decodable & Sendable>(_: T.Type, from data: Data) throws -> T {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .secondsSince1970
 
@@ -390,7 +388,7 @@ private struct LogEntry: Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         timestamp = Self.decodeTimestamp(
             from: container,
-            keys: [.timestamp, .time, .date, .created, .createdAt]
+            keys: [.timestamp, .time, .date, .created, .createdAt],
         ) ?? .now
 
         let rawStream = (try? container.decode(String.self, forKey: .stream))
@@ -407,7 +405,7 @@ private struct LogEntry: Decodable {
 
     private static func decodeTimestamp(
         from container: KeyedDecodingContainer<CodingKeys>,
-        keys: [CodingKeys]
+        keys: [CodingKeys],
     ) -> Date? {
         for key in keys {
             if let rawString = try? container.decode(String.self, forKey: key) {
@@ -473,7 +471,7 @@ private func decodeLogResponse(from data: Data, containerName _: String) throws 
             timestamp: entry.timestamp,
             stream: entry.stream,
             text: entry.text,
-            offset: (logData.offset ?? 0) + index
+            offset: (logData.offset ?? 0) + index,
         )
     }
 }
@@ -488,13 +486,11 @@ private func parseLogLine(_ line: String) -> (Date, ContainerLog.LogStream, Stri
         let message = String(components[2])
 
         let timestamp = parseLogDate(timestampStr) ?? .now
-        let stream: ContainerLog.LogStream = {
-            switch streamStr {
-            case "stdout": return .stdout
-            case "stderr": return .stderr
-            default: return .unknown
-            }
-        }()
+        let stream: ContainerLog.LogStream = switch streamStr {
+        case "stdout": .stdout
+        case "stderr": .stderr
+        default: .unknown
+        }
 
         return (timestamp, stream, message)
     }
@@ -586,7 +582,7 @@ private func decodeResourceResponse(from data: Data) throws -> [ContainerResourc
             networkRx: raw.networkRx ?? 0,
             networkTx: raw.networkTx ?? 0,
             blockRead: raw.blockRead ?? 0,
-            blockWrite: raw.blockWrite ?? 0
+            blockWrite: raw.blockWrite ?? 0,
         )
     }
 }
@@ -596,7 +592,7 @@ private func decodeResourceResponse(from data: Data) throws -> [ContainerResourc
 final class SynologySessionDelegate: NSObject, URLSessionDelegate, Sendable {
     nonisolated func urlSession(
         _: URLSession,
-        didReceive challenge: URLAuthenticationChallenge
+        didReceive challenge: URLAuthenticationChallenge,
     ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         // Trust self-signed certificates for Synology NAS devices
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,

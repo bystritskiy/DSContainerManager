@@ -15,7 +15,7 @@ struct BackgroundMonitorClient {
     var sendContainerNotification: @Sendable (
         _ containerName: String,
         _ previousStatus: String,
-        _ currentStatus: String
+        _ currentStatus: String,
     ) async -> Void
 }
 
@@ -27,7 +27,7 @@ extension BackgroundMonitorClient: DependencyKey {
             #if os(iOS)
                 BGTaskScheduler.shared.register(
                     forTaskWithIdentifier: BackgroundTaskIdentifiers.containerHealthCheck,
-                    using: nil
+                    using: nil,
                 ) { task in
                     guard let bgTask = task as? BGAppRefreshTask else { return }
                     handleHealthCheck(task: bgTask)
@@ -37,7 +37,7 @@ extension BackgroundMonitorClient: DependencyKey {
         scheduleHealthCheck: {
             #if os(iOS)
                 let request = BGAppRefreshTaskRequest(
-                    identifier: BackgroundTaskIdentifiers.containerHealthCheck
+                    identifier: BackgroundTaskIdentifiers.containerHealthCheck,
                 )
                 request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 minutes
                 do {
@@ -50,7 +50,7 @@ extension BackgroundMonitorClient: DependencyKey {
         cancelHealthCheck: {
             #if os(iOS)
                 BGTaskScheduler.shared.cancel(
-                    taskRequestWithIdentifier: BackgroundTaskIdentifiers.containerHealthCheck
+                    taskRequestWithIdentifier: BackgroundTaskIdentifiers.containerHealthCheck,
                 )
             #endif
         },
@@ -77,11 +77,11 @@ extension BackgroundMonitorClient: DependencyKey {
             let request = UNNotificationRequest(
                 identifier: "container-\(containerName)-\(UUID().uuidString)",
                 content: content,
-                trigger: nil // Deliver immediately
+                trigger: nil, // Deliver immediately
             )
 
             try? await UNUserNotificationCenter.current().add(request)
-        }
+        },
     )
 
     static let testValue = BackgroundMonitorClient(
@@ -89,7 +89,7 @@ extension BackgroundMonitorClient: DependencyKey {
         scheduleHealthCheck: {},
         cancelHealthCheck: {},
         requestNotificationPermission: { true },
-        sendContainerNotification: { _, _, _ in }
+        sendContainerNotification: { _, _, _ in },
     )
 }
 
@@ -121,13 +121,13 @@ func setupNotificationCategories() {
     let restartAction = UNNotificationAction(
         identifier: NotificationActions.restart,
         title: "Restart",
-        options: [.foreground]
+        options: [.foreground],
     )
 
     let openAction = UNNotificationAction(
         identifier: NotificationActions.openApp,
         title: "Open App",
-        options: [.foreground]
+        options: [.foreground],
     )
 
     let statusCategory = UNNotificationCategory(
@@ -135,7 +135,7 @@ func setupNotificationCategories() {
         actions: [restartAction, openAction],
         intentIdentifiers: [],
         hiddenPreviewsBodyPlaceholder: "Container status changed",
-        options: .customDismissAction
+        options: .customDismissAction,
     )
 
     UNUserNotificationCenter.current().setNotificationCategories([statusCategory])
@@ -147,23 +147,14 @@ func setupNotificationCategories() {
     private func handleHealthCheck(task: BGAppRefreshTask) {
         // Schedule the next check
         let nextRequest = BGAppRefreshTaskRequest(
-            identifier: BackgroundTaskIdentifiers.containerHealthCheck
+            identifier: BackgroundTaskIdentifiers.containerHealthCheck,
         )
         nextRequest.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
         try? BGTaskScheduler.shared.submit(nextRequest)
 
-        // Create a task to check container health
-        let checkTask = Task {
-            @Dependency(\.synologyClient) var api
-
-            // Attempt to use stored session info for health check
-            // In a full implementation, this would load saved connection + session from Keychain/SwiftData
-            // For MVP, we'll just mark the task as completed
-            task.setTaskCompleted(success: true)
-        }
-
-        task.expirationHandler = {
-            checkTask.cancel()
-        }
+        // Attempt to use stored session info for health check.
+        // In a full implementation, this would load the saved connection + session
+        // from Keychain/SwiftData and query the API. For MVP we mark it completed.
+        task.setTaskCompleted(success: true)
     }
 #endif

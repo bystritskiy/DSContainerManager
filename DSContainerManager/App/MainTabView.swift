@@ -10,25 +10,25 @@ struct MainTabView: View {
         TabView(selection: $store.selectedTab.sending(\.tabSelected)) {
             Tab("Dashboard", systemImage: "gauge.medium", value: AppFeature.State.Tab.dashboard) {
                 DashboardView(
-                    store: store.scope(state: \.dashboard, action: \.dashboard)
+                    store: store.scope(state: \.dashboard, action: \.dashboard),
                 )
             }
 
             Tab("Containers", systemImage: "shippingbox", value: AppFeature.State.Tab.containers) {
                 ContainerListView(
-                    store: store.scope(state: \.containerList, action: \.containerList)
+                    store: store.scope(state: \.containerList, action: \.containerList),
                 )
             }
 
             Tab("Projects", systemImage: "folder", value: AppFeature.State.Tab.projects) {
                 ProjectListView(
-                    store: store.scope(state: \.projectList, action: \.projectList)
+                    store: store.scope(state: \.projectList, action: \.projectList),
                 )
             }
 
             Tab("Monitor", systemImage: "chart.xyaxis.line", value: AppFeature.State.Tab.monitor) {
                 SystemMonitorView(
-                    store: store.scope(state: \.systemMonitor, action: \.systemMonitor)
+                    store: store.scope(state: \.systemMonitor, action: \.systemMonitor),
                 )
             }
 

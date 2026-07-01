@@ -128,7 +128,7 @@ struct ContainerDetailView: View {
                 EmptyStateView(
                     icon: "text.alignleft",
                     title: "No Logs",
-                    message: "No log entries available for this container."
+                    message: "No log entries available for this container.",
                 )
             } else {
                 ScrollViewReader { proxy in
@@ -178,12 +178,12 @@ struct ContainerDetailView: View {
                         CircularGaugeView(
                             title: "CPU",
                             value: resources.cpuPercent,
-                            color: .blue
+                            color: .blue,
                         )
                         CircularGaugeView(
                             title: "Memory",
                             value: resources.memoryPercent,
-                            color: .green
+                            color: .green,
                         )
                     }
                     .padding()
@@ -210,11 +210,11 @@ struct ContainerDetailView: View {
                     }
                 }
 
-                if store.resourceHistory.isEmpty && store.currentResources == nil {
+                if store.resourceHistory.isEmpty, store.currentResources == nil {
                     EmptyStateView(
                         icon: "chart.xyaxis.line",
                         title: "No Data",
-                        message: "Resource data will appear here once polling starts."
+                        message: "Resource data will appear here once polling starts.",
                     )
                 }
             }
@@ -230,13 +230,13 @@ struct ContainerDetailView: View {
             Chart(store.resourceHistory) { snapshot in
                 LineMark(
                     x: .value("Time", snapshot.timestamp),
-                    y: .value(title, value(snapshot))
+                    y: .value(title, value(snapshot)),
                 )
                 .foregroundStyle(color)
 
                 AreaMark(
                     x: .value("Time", snapshot.timestamp),
-                    y: .value(title, value(snapshot))
+                    y: .value(title, value(snapshot)),
                 )
                 .foregroundStyle(color.opacity(0.1))
             }
@@ -302,11 +302,11 @@ struct ContainerDetailView: View {
         ContainerDetailView(
             store: Store(
                 initialState: ContainerDetailFeature.State(
-                    container: DockerContainer.mockList[0]
-                )
+                    container: DockerContainer.mockList[0],
+                ),
             ) {
                 ContainerDetailFeature()
-            }
+            },
         )
     }
 }

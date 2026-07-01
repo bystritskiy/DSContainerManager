@@ -54,7 +54,7 @@ struct SystemMonitorFeature {
                 return .merge(
                     fetchUtilization(baseURL: baseURL, session: session),
                     fetchStorage(baseURL: baseURL, session: session),
-                    .send(.startPolling)
+                    .send(.startPolling),
                 )
 
             case .onDisappear:
@@ -67,7 +67,7 @@ struct SystemMonitorFeature {
                 }
                 return .merge(
                     fetchUtilization(baseURL: baseURL, session: session),
-                    fetchStorage(baseURL: baseURL, session: session)
+                    fetchStorage(baseURL: baseURL, session: session),
                 )
 
             case .startPolling:
@@ -97,7 +97,7 @@ struct SystemMonitorFeature {
                     cpuPercent: util.cpu.totalPercent,
                     memoryPercent: util.memory.usagePercent,
                     networkRx: Int64(util.network.first(where: { $0.device == "total" })?.rx ?? 0),
-                    networkTx: Int64(util.network.first(where: { $0.device == "total" })?.tx ?? 0)
+                    networkTx: Int64(util.network.first(where: { $0.device == "total" })?.tx ?? 0),
                 )
 
                 state.cpuHistory.append(snapshot)

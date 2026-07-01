@@ -75,11 +75,11 @@ struct ConnectionFormView: View {
                     useHTTPS: false,
                     username: "admin",
                     password: "",
-                    trustSelfSignedCert: false
-                )
+                    trustSelfSignedCert: false,
+                ),
             ) {
                 ConnectionFormFeature()
-            }
+            },
         )
     }
 }

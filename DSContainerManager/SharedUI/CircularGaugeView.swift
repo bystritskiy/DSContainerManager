@@ -30,7 +30,7 @@ struct CircularGaugeView: View {
                     .trim(from: 0, to: fraction)
                     .stroke(
                         color,
-                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                        style: StrokeStyle(lineWidth: 10, lineCap: .round),
                     )
                     .rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: 0.5), value: fraction)

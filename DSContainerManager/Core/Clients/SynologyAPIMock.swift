@@ -9,7 +9,7 @@ extension SynologyAPIClient {
             AuthSession(
                 sid: SessionID(rawValue: "mock_sid_abc123"),
                 synotoken: "mock_synotoken",
-                deviceId: nil
+                deviceId: nil,
             )
         },
         logout: { _, _ in },
@@ -22,7 +22,7 @@ extension SynologyAPIClient {
         getProjectDetail: { _, _, _ in ComposeProject.mockList[0] },
         performProjectAction: { _, _, _, _ in },
         getSystemUtilization: { _, _ in SystemUtilization.mock },
-        getStorageInfo: { _, _ in StorageInfo.mock }
+        getStorageInfo: { _, _ in StorageInfo.mock },
     )
 }
 
@@ -40,7 +40,7 @@ extension DockerContainer {
             ports: [
                 PortMapping(privatePort: 32400, publicPort: 32400, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
         DockerContainer(
             id: ContainerID(rawValue: "def456ghi789"),
@@ -52,7 +52,7 @@ extension DockerContainer {
             ports: [
                 PortMapping(privatePort: 8123, publicPort: 8123, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
         DockerContainer(
             id: ContainerID(rawValue: "ghi789jkl012"),
@@ -66,7 +66,7 @@ extension DockerContainer {
                 PortMapping(privatePort: 53, publicPort: 53, type: "udp"),
                 PortMapping(privatePort: 80, publicPort: 8080, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
         DockerContainer(
             id: ContainerID(rawValue: "jkl012mno345"),
@@ -78,7 +78,7 @@ extension DockerContainer {
             ports: [
                 PortMapping(privatePort: 9443, publicPort: 9443, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
         DockerContainer(
             id: ContainerID(rawValue: "mno345pqr678"),
@@ -91,7 +91,7 @@ extension DockerContainer {
                 PortMapping(privatePort: 80, publicPort: 80, type: "tcp"),
                 PortMapping(privatePort: 443, publicPort: 443, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
         DockerContainer(
             id: ContainerID(rawValue: "pqr678stu901"),
@@ -103,7 +103,7 @@ extension DockerContainer {
             ports: [
                 PortMapping(privatePort: 3000, publicPort: 3000, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
         DockerContainer(
             id: ContainerID(rawValue: "stu901vwx234"),
@@ -115,7 +115,7 @@ extension DockerContainer {
             ports: [
                 PortMapping(privatePort: 6379, publicPort: nil, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
         DockerContainer(
             id: ContainerID(rawValue: "vwx234yza567"),
@@ -127,7 +127,7 @@ extension DockerContainer {
             ports: [
                 PortMapping(privatePort: 3306, publicPort: 3306, type: "tcp"),
             ],
-            isPackage: false
+            isPackage: false,
         ),
     ]
 }
@@ -162,12 +162,12 @@ extension ContainerDetail {
                 memoryLimit: 4_294_967_296,
                 cpuShares: 1024,
                 restartPolicy: "unless-stopped",
-                networkMode: "bridge"
+                networkMode: "bridge",
             ),
             ports: [
                 DockerContainer.PortMapping(privatePort: 32400, publicPort: 32400, type: "tcp"),
             ],
-            restartPolicy: "unless-stopped"
+            restartPolicy: "unless-stopped",
         )
     }
 }
@@ -262,7 +262,7 @@ extension ComposeProject {
                   - TZ=Europe/London
                 restart: unless-stopped
             """,
-            version: 1
+            version: 1,
         ),
         ComposeProject(
             id: ProjectID(rawValue: "proj-002-network"),
@@ -294,7 +294,7 @@ extension ComposeProject {
                   - "443:443"
                 restart: always
             """,
-            version: 1
+            version: 1,
         ),
         ComposeProject(
             id: ProjectID(rawValue: "proj-003-monitoring"),
@@ -307,7 +307,7 @@ extension ComposeProject {
                 ProjectService(id: "grafana", displayName: "Grafana", image: "grafana/grafana:latest", status: .running),
             ],
             composeContent: nil,
-            version: 1
+            version: 1,
         ),
         ComposeProject(
             id: ProjectID(rawValue: "proj-004-database"),
@@ -321,7 +321,7 @@ extension ComposeProject {
                 ProjectService(id: "redis", displayName: "Redis", image: "redis:7-alpine", status: .stopped),
             ],
             composeContent: nil,
-            version: 1
+            version: 1,
         ),
     ]
 }
@@ -332,7 +332,7 @@ extension SystemUtilization {
     static let mock = SystemUtilization(
         cpu: CPUInfo(
             userLoad: 25, systemLoad: 10, otherLoad: 3,
-            oneMinLoad: 38, fiveMinLoad: 32, fifteenMinLoad: 28
+            oneMinLoad: 38, fiveMinLoad: 32, fifteenMinLoad: 28,
         ),
         memory: MemoryInfo(
             memorySize: 16_777_216,
@@ -343,7 +343,7 @@ extension SystemUtilization {
             realUsage: 60,
             swapUsage: 5,
             cached: 4_194_304,
-            buffer: 524_288
+            buffer: 524_288,
         ),
         network: [
             NetworkInfo(device: "eth0", rx: 5_242_880, tx: 1_048_576),
@@ -354,8 +354,8 @@ extension SystemUtilization {
                 DiskInfo(device: "sda", displayName: "Drive 1", readByte: 1_048_576, writeByte: 524_288, utilization: 15),
                 DiskInfo(device: "sdb", displayName: "Drive 2", readByte: 2_097_152, writeByte: 1_048_576, utilization: 22),
             ],
-            total: DiskTotal(readByte: 3_145_728, writeByte: 1_572_864, utilization: 18)
-        )
+            total: DiskTotal(readByte: 3_145_728, writeByte: 1_572_864, utilization: 18),
+        ),
     )
 }
 
@@ -371,7 +371,7 @@ extension StorageInfo {
                 totalSize: 8_000_000_000_000,
                 usedSize: 5_600_000_000_000,
                 temperature: 38,
-                driveType: "RAID5"
+                driveType: "RAID5",
             ),
             VolumeInfo(
                 id: "volume_2",
@@ -380,8 +380,8 @@ extension StorageInfo {
                 totalSize: 4_000_000_000_000,
                 usedSize: 1_200_000_000_000,
                 temperature: 36,
-                driveType: "SHR"
+                driveType: "SHR",
             ),
-        ]
+        ],
     )
 }

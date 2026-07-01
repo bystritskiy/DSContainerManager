@@ -18,23 +18,23 @@ enum SynologyAPIError: Error, Equatable, LocalizedError {
     static func fromErrorCode(_ code: Int) -> SynologyAPIError {
         switch code {
         case 400:
-            return .invalidCredentials
+            .invalidCredentials
         case 401:
-            return .accountDisabled
+            .accountDisabled
         case 402:
-            return .permissionDenied
+            .permissionDenied
         case 403:
-            return .otpRequired
+            .otpRequired
         case 404:
-            return .otpFailed
+            .otpFailed
         case 105:
-            return .permissionDenied
+            .permissionDenied
         case 106:
-            return .sessionExpired
+            .sessionExpired
         case 107:
-            return .sessionInterrupted
+            .sessionInterrupted
         default:
-            return .apiError(code: code, message: "Synology API error code \(code)")
+            .apiError(code: code, message: "Synology API error code \(code)")
         }
     }
 

@@ -38,7 +38,7 @@ struct ResourceSnapshot: Equatable, Identifiable {
         cpuPercent: Double = 0,
         memoryPercent: Double = 0,
         networkRx: Int64 = 0,
-        networkTx: Int64 = 0
+        networkTx: Int64 = 0,
     ) {
         self.id = id
         self.timestamp = timestamp

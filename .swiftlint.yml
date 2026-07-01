@@ -1,13 +1,1 @@
 # SwiftLint configuration — default rule set.
-# See https://github.com/realm/SwiftLint for the full rule list.
-
-included:
-  - DSContainerManager
-  - DSContainerManagerTests
-
-excluded:
-  - .build
-  - .derivedData
-  - .derivedData-device
-  - build
-  - DerivedData

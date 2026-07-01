@@ -72,7 +72,7 @@ struct ConnectionFeature {
                     useHTTPS: false,
                     username: "admin",
                     password: "",
-                    trustSelfSignedCert: false
+                    trustSelfSignedCert: false,
                 )
                 return .none
 
@@ -86,7 +86,7 @@ struct ConnectionFeature {
                     useHTTPS: profile.useHTTPS,
                     username: profile.username,
                     password: password,
-                    trustSelfSignedCert: profile.trustSelfSignedCert
+                    trustSelfSignedCert: profile.trustSelfSignedCert,
                 )
                 return .none
 
@@ -127,7 +127,7 @@ struct ConnectionFeature {
                     let password = (try? keychain.loadPassword(forConnection: profile.id)) ?? ""
                     state.otpPrompt = State.OTPPromptState(
                         connectionProfile: profile,
-                        password: password
+                        password: password,
                     )
                 } else {
                     state.error = error.localizedDescription
@@ -218,12 +218,10 @@ struct ConnectionFormFeature {
         }
 
         func toProfile() -> ConnectionProfile {
-            let id: UUID = {
-                switch mode {
-                case .add: UUID()
-                case let .edit(existingId): existingId
-                }
-            }()
+            let id: UUID = switch mode {
+            case .add: UUID()
+            case let .edit(existingId): existingId
+            }
             return ConnectionProfile(
                 id: id,
                 name: name,
@@ -233,7 +231,7 @@ struct ConnectionFormFeature {
                 username: username,
                 lastConnected: nil,
                 isDefault: false,
-                trustSelfSignedCert: trustSelfSignedCert
+                trustSelfSignedCert: trustSelfSignedCert,
             )
         }
     }

@@ -19,7 +19,7 @@ struct AppRootView: View {
                 #endif
             } else {
                 ConnectionListView(
-                    store: store.scope(state: \.connectionList, action: \.connectionList)
+                    store: store.scope(state: \.connectionList, action: \.connectionList),
                 )
             }
         }
@@ -33,6 +33,6 @@ struct AppRootView: View {
     AppRootView(
         store: Store(initialState: AppFeature.State()) {
             AppFeature()
-        }
+        },
     )
 }

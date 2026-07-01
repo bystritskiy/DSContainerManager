@@ -53,7 +53,7 @@ enum SharedStorage {
     static func updateFromContainers(
         _ containers: [DockerContainer],
         cpuPercent: Double,
-        memoryPercent: Double
+        memoryPercent: Double,
     ) {
         let sharedContainers = containers.map { container in
             SharedContainerInfo(
@@ -61,7 +61,7 @@ enum SharedStorage {
                 name: container.name,
                 image: container.image,
                 status: container.status.rawValue,
-                statusColor: container.status.hexColor
+                statusColor: container.status.hexColor,
             )
         }
 
@@ -70,9 +70,9 @@ enum SharedStorage {
             containers: sharedContainers,
             cpuPercent: cpuPercent,
             memoryPercent: memoryPercent,
-            runningCount: containers.filter { $0.status == .running }.count,
-            stoppedCount: containers.filter { $0.status == .stopped }.count,
-            totalCount: containers.count
+            runningCount: containers.count(where: { $0.status == .running }),
+            stoppedCount: containers.count(where: { $0.status == .stopped }),
+            totalCount: containers.count,
         )
 
         saveContainerData(data)

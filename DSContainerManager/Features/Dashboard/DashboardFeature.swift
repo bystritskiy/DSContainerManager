@@ -15,11 +15,11 @@ struct DashboardFeature {
         var error: String?
 
         var runningCount: Int {
-            containers.filter { $0.status == .running }.count
+            containers.count(where: { $0.status == .running })
         }
 
         var stoppedCount: Int {
-            containers.filter { $0.status == .stopped }.count
+            containers.count(where: { $0.status == .stopped })
         }
 
         var totalCount: Int {
@@ -67,7 +67,7 @@ struct DashboardFeature {
                 state.isLoading = state.systemUtilization == nil
                 return .merge(
                     fetchData(baseURL: baseURL, session: session),
-                    .send(.startPolling)
+                    .send(.startPolling),
                 )
 
             case .refresh:

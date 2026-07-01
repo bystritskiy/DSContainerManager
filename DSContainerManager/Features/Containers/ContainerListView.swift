@@ -7,18 +7,18 @@ struct ContainerListView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if store.isLoading && store.containers.isEmpty {
+                if store.isLoading, store.containers.isEmpty {
                     List {
                         ForEach(0 ..< 6) { _ in
                             SkeletonRowView()
                         }
                     }
-                } else if store.filteredContainers.isEmpty && store.containers.isEmpty {
+                } else if store.filteredContainers.isEmpty, store.containers.isEmpty {
                     EmptyStateView(
                         icon: "shippingbox",
                         title: "No Containers",
                         message: "No containers found. Create containers using Container Manager on your Synology NAS.",
-                        actionTitle: "Refresh"
+                        actionTitle: "Refresh",
                     ) {
                         store.send(.refresh)
                     }
@@ -158,6 +158,6 @@ struct ContainerListView: View {
     ContainerListView(
         store: Store(initialState: ContainerListFeature.State()) {
             ContainerListFeature()
-        }
+        },
     )
 }

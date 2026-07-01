@@ -21,7 +21,7 @@ struct DockerContainer: Codable, Equatable, Identifiable {
         state: String,
         created: Date,
         ports: [PortMapping] = [],
-        isPackage: Bool = false
+        isPackage: Bool = false,
     ) {
         self.id = id
         self.name = name
@@ -225,7 +225,7 @@ struct ContainerDetail: Codable, Equatable {
         env: [String] = [], cmd: [String] = [], volumes: [VolumeMount] = [],
         networks: [String] = [], labels: [String: String] = [:],
         hostConfig: HostConfig? = nil, ports: [DockerContainer.PortMapping] = [],
-        restartPolicy: String? = nil
+        restartPolicy: String? = nil,
     ) {
         self.name = name
         self.image = image
@@ -313,7 +313,7 @@ struct ContainerDetail: Codable, Equatable {
             labels: (try? container.decode([String: String].self, forKey: .labels)) ?? config?.labels ?? [:],
             hostConfig: decodedHostConfig,
             ports: (try? container.decode([DockerContainer.PortMapping].self, forKey: .ports)) ?? [],
-            restartPolicy: (try? container.decode(String.self, forKey: .restartPolicy)) ?? decodedHostConfig?.restartPolicy
+            restartPolicy: (try? container.decode(String.self, forKey: .restartPolicy)) ?? decodedHostConfig?.restartPolicy,
         )
     }
 

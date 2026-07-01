@@ -12,7 +12,7 @@ struct EmptyStateView: View {
         title: String,
         message: String,
         actionTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
     ) {
         self.icon = icon
         self.title = title
@@ -40,7 +40,7 @@ struct EmptyStateView: View {
         icon: "shippingbox",
         title: "No Containers",
         message: "No containers found on this NAS. Create containers using Container Manager on your Synology.",
-        actionTitle: "Refresh"
+        actionTitle: "Refresh",
     ) {
         print("Refresh tapped")
     }

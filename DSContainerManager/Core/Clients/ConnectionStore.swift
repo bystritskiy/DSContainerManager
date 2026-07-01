@@ -31,7 +31,7 @@ extension ConnectionStore: DependencyKey {
             fetchAll: {
                 let context = ModelContext(container)
                 let descriptor = FetchDescriptor<NASConnection>(
-                    sortBy: [SortDescriptor(\.name)]
+                    sortBy: [SortDescriptor(\.name)],
                 )
                 let connections = try context.fetch(descriptor)
                 return connections.map { $0.toProfile() }
@@ -39,7 +39,7 @@ extension ConnectionStore: DependencyKey {
             save: { profile in
                 let context = ModelContext(container)
                 let descriptor = FetchDescriptor<NASConnection>(
-                    predicate: #Predicate { $0.id == profile.id }
+                    predicate: #Predicate { $0.id == profile.id },
                 )
                 let existing = try context.fetch(descriptor)
 
@@ -61,7 +61,7 @@ extension ConnectionStore: DependencyKey {
                         username: profile.username,
                         lastConnected: profile.lastConnected,
                         isDefault: profile.isDefault,
-                        trustSelfSignedCert: profile.trustSelfSignedCert
+                        trustSelfSignedCert: profile.trustSelfSignedCert,
                     )
                     context.insert(connection)
                 }
@@ -70,7 +70,7 @@ extension ConnectionStore: DependencyKey {
             delete: { id in
                 let context = ModelContext(container)
                 let descriptor = FetchDescriptor<NASConnection>(
-                    predicate: #Predicate { $0.id == id }
+                    predicate: #Predicate { $0.id == id },
                 )
                 let connections = try context.fetch(descriptor)
                 for connection in connections {
@@ -86,7 +86,7 @@ extension ConnectionStore: DependencyKey {
                     connection.isDefault = (connection.id == id)
                 }
                 try context.save()
-            }
+            },
         )
     }()
 
@@ -102,7 +102,7 @@ extension ConnectionStore: DependencyKey {
                     username: "admin",
                     lastConnected: Date(timeIntervalSince1970: 1_700_000_000),
                     isDefault: true,
-                    trustSelfSignedCert: false
+                    trustSelfSignedCert: false,
                 ),
                 ConnectionProfile(
                     id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
@@ -113,13 +113,13 @@ extension ConnectionStore: DependencyKey {
                     username: "admin",
                     lastConnected: Date(timeIntervalSince1970: 1_699_913_600),
                     isDefault: false,
-                    trustSelfSignedCert: true
+                    trustSelfSignedCert: true,
                 ),
             ]
         },
         save: { _ in },
         delete: { _ in },
-        setDefault: { _ in }
+        setDefault: { _ in },
     )
 }
 
