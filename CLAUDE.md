@@ -8,7 +8,7 @@ iOS app (SwiftUI) for managing Docker containers and Compose projects on a Synol
 
 ## Build / Run
 
-No test target currently exists. Use Xcode (`open DSContainerManager.xcodeproj`) or xcodebuild:
+Use Xcode (`open DSContainerManager.xcodeproj`) or xcodebuild:
 
 ```bash
 # Build for simulator
@@ -16,9 +16,17 @@ xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager \
     -destination 'platform=iOS Simulator,name=iPhone 17' \
     -skipMacroValidation build
 
+# Run tests (snapshot tests — see below)
+xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager \
+    -destination 'platform=iOS Simulator,name=iPhone 17' \
+    -skipMacroValidation test
+
 # Clean
 xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager clean
 ```
+
+The `run-app` skill (`.claude/skills/run-app/SKILL.md`) documents the full
+build → boot sim → install → launch → screenshot flow.
 
 Toolchain: requires Xcode 27 (iOS 26 SDK). `-skipMacroValidation` is needed
 for CLI builds because TCA's SPM macros (ComposableArchitecture, swift-case-paths,
@@ -29,6 +37,7 @@ Simulators are iPhone 17-series (iPhone 16 no longer exists in Xcode 27).
 Swift Package dependencies (resolved automatically by Xcode):
 - `pointfreeco/swift-composable-architecture` — TCA (`ComposableArchitecture`, `Dependencies`, `DependenciesMacros`)
 - `pointfreeco/swift-tagged` — `Tagged<Tag, Value>` strong-typed IDs
+- `getsentry/SnapshotPreviews` — `SnapshottingTests` library backing the test target (transitively pulls `FlyingFox` + `SimpleDebugger`; not used by app code)
 
 ## Architecture
 
@@ -51,6 +60,10 @@ Swift Package dependencies (resolved automatically by Xcode):
 ### Features (`DSContainerManager/Features/`)
 
 One folder per tab (`Connection`, `Dashboard`, `Containers`, `Projects`, `SystemMonitor`), each containing a `*Feature.swift` (reducer) and `*View.swift` (SwiftUI). Containers and Projects additionally have a `*DetailFeature`/`*DetailView` presented via `@Presents`.
+
+### Testing (`DSContainerManagerTests/`)
+
+The only test is `DSContainerManagerSnapshotTests` — it subclasses `SnapshotTest` from getsentry/SnapshotPreviews and overrides `snapshotPreviewModules()` to return `["DSContainerManager"]`. This auto-discovers and snapshot-renders **every** SwiftUI `#Preview` in the app module; there are no hand-written `XCTestCase` methods. So adding coverage means adding a `#Preview` to a view, not writing a test. The pass/fail signal is primarily "does every preview render without crashing" (reference-image comparison is the Emerge cloud product, not run locally). The target is a unit-test bundle hosted by the app (`TEST_HOST` = `DSContainerManager.app`), so it requires a simulator destination.
 
 ### Polling pattern
 

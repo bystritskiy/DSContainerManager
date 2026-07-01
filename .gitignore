@@ -3,6 +3,7 @@
 
 # Xcode
 build/
+.derivedData/
 DerivedData/
 *.xcuserstate
 *.xcscmblueprint
@@ -18,3 +19,4 @@ playground.xcworkspace/
 
 # Logs
 *.log
+/.derivedData-device
