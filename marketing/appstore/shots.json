@@ -1,0 +1,107 @@
+[
+  {
+    "id": "dashboard",
+    "source": "../../screenshots/demo-dashboard.png",
+    "title": "Your NAS at a glance",
+    "subtitle": "Live CPU, memory, storage and container health in one clean dashboard.",
+    "badge": "Dashboard",
+    "theme": {
+      "bg": "#f6f9ff",
+      "bg2": "#d7f1e5",
+      "ink": "#08111f",
+      "muted": "#506070",
+      "accent": "#1688ff",
+      "accent2": "#2ecc71"
+    }
+  },
+  {
+    "id": "containers",
+    "source": "../../screenshots/demo-containers.png",
+    "title": "Control every container",
+    "subtitle": "Start, stop and inspect Plex, Immich, Home Assistant and Pi-hole from your phone.",
+    "badge": "Containers",
+    "theme": {
+      "bg": "#f5fbf8",
+      "bg2": "#d8ebff",
+      "ink": "#07160f",
+      "muted": "#51645a",
+      "accent": "#2ecb68",
+      "accent2": "#1688ff"
+    }
+  },
+  {
+    "id": "details",
+    "source": "../../screenshots/demo-container-info.png",
+    "title": "Inspect every service",
+    "subtitle": "Ports, volumes, environment variables and runtime details are always close.",
+    "badge": "Details",
+    "theme": {
+      "bg": "#f9fbff",
+      "bg2": "#f0f3ea",
+      "ink": "#0b131f",
+      "muted": "#5a6571",
+      "accent": "#1b8cff",
+      "accent2": "#8ab657"
+    }
+  },
+  {
+    "id": "logs",
+    "source": "../../screenshots/demo-container-logs.png",
+    "title": "Logs without opening DSM",
+    "subtitle": "Search stdout and stderr when a service needs attention.",
+    "badge": "Logs",
+    "theme": {
+      "bg": "#fff8f1",
+      "bg2": "#eef5ff",
+      "ink": "#1c1208",
+      "muted": "#6d5b48",
+      "accent": "#ff5a3d",
+      "accent2": "#1688ff"
+    }
+  },
+  {
+    "id": "resources",
+    "source": "../../screenshots/demo-container-resources.png",
+    "title": "Track container load",
+    "subtitle": "CPU and memory charts help you catch runaway services before they hurt the NAS.",
+    "badge": "Resources",
+    "theme": {
+      "bg": "#f8fbff",
+      "bg2": "#e6f8ea",
+      "ink": "#091523",
+      "muted": "#536474",
+      "accent": "#198cff",
+      "accent2": "#30c56f"
+    }
+  },
+  {
+    "id": "projects",
+    "source": "../../screenshots/demo-projects.png",
+    "title": "Manage Compose stacks",
+    "subtitle": "See which projects are running and control whole stacks, not just single containers.",
+    "badge": "Projects",
+    "theme": {
+      "bg": "#f7f8ff",
+      "bg2": "#fff0df",
+      "ink": "#101126",
+      "muted": "#5f6072",
+      "accent": "#4f7cff",
+      "accent2": "#ff9a3d"
+    }
+  },
+  {
+    "id": "monitor",
+    "source": "../../screenshots/demo-monitor.png",
+    "title": "Watch NAS health live",
+    "subtitle": "Rolling CPU and memory history keeps your server's load visible.",
+    "badge": "Monitor",
+    "theme": {
+      "bg": "#f6fbff",
+      "bg2": "#eaf5df",
+      "ink": "#07131d",
+      "muted": "#536370",
+      "accent": "#1688ff",
+      "accent2": "#78b948"
+    }
+  }
+]

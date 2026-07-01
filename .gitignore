@@ -20,3 +20,6 @@ playground.xcworkspace/
 # Logs
 *.log
 /.derivedData-device
+
+# Marketing renderer
+marketing/appstore/node_modules/

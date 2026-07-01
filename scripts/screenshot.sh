@@ -39,11 +39,12 @@ if [[ "${1:-}" == "--launch-demo" ]]; then
     echo "app not found at $APP_PATH" >&2
     echo "build first with xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' -derivedDataPath build/DerivedData -skipMacroValidation build" >&2
     exit 1
-  fi
-  xcrun simctl install "$DEVICE" "$APP_PATH"
-  SIMCTL_CHILD_DSCM_DEMO_MODE=1 xcrun simctl launch "$DEVICE" "$BUNDLE_ID"
-  exit 0
-fi
+	  fi
+	  xcrun simctl install "$DEVICE" "$APP_PATH"
+	  xcrun simctl terminate "$DEVICE" "$BUNDLE_ID" 2>/dev/null || true
+	  SIMCTL_CHILD_DSCM_DEMO_MODE=1 xcrun simctl launch "$DEVICE" "$BUNDLE_ID"
+	  exit 0
+	fi
 
 NAME="${1:-}"
 if [[ -z "$NAME" ]]; then
@@ -62,7 +63,7 @@ xcrun simctl status_bar "$DEVICE" override \
   --batteryState charged --batteryLevel 100
 
 OUT="$OUT_DIR/$NAME.png"
-xcrun simctl io "$DEVICE" screenshot "$OUT" >/dev/null 2>&1
+xcrun simctl io "$DEVICE" screenshot --display primary --mask ignored "$OUT" >/dev/null 2>&1
 
 SIZE="$(sips -g pixelWidth -g pixelHeight "$OUT" 2>/dev/null | awk '/pixelWidth/{w=$2} /pixelHeight/{h=$2} END{print w"x"h}')"
 echo "saved $OUT  ($SIZE)"
