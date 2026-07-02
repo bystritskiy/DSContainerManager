@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ConnectionListView: View {
     @Bindable var store: StoreOf<ConnectionFeature>
+    @Environment(\.startDemoMode) private var startDemoMode
     @State private var otpCode: String = ""
 
     var body: some View {
@@ -53,6 +54,23 @@ struct ConnectionListView: View {
                         }
                     }
                 }
+            }
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 6) {
+                    Button {
+                        startDemoMode()
+                    } label: {
+                        Label("Try Demo Mode", systemImage: "sparkles")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+
+                    Text("Explore the app with sample data — no NAS required.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .padding([.horizontal, .bottom])
             }
             .navigationTitle("Connections")
             .toolbar {

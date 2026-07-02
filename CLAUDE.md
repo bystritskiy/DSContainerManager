@@ -35,6 +35,10 @@ swiftformat .        # format the tree in place
 The `run-app` skill (`.claude/skills/run-app/SKILL.md`) documents the full
 build → boot sim → install → launch → screenshot flow.
 
+**Demo mode** — launch with the `--demo-mode` argument or `DSCM_DEMO_MODE=1` env var to run fully offline: `DSContainerManagerApp` swaps in `SynologyAPIClient.mock`, `ConnectionStore.demoValue`, and `KeychainClient.demoValue` (see `Core/Models/DemoMode.swift`), which auto-restore a fake "Demo NAS" session. Use it for screenshots or any run without a real NAS.
+
+**Screenshots** — `scripts/screenshot.sh <name>` captures the booted simulator at App Store 6.9" size (1320×2868, requires the iPhone 17 Pro Max sim) with a clean 9:41 marketing status bar into `screenshots/`; `--launch-demo` installs + launches the demo-mode build from `build/DerivedData`, `--clear` restores the live status bar. `marketing/appstore/` is an npm/Playwright renderer (`npm --prefix marketing/appstore install && npm --prefix marketing/appstore run render`) that frames `screenshots/demo-*.png` into marketing artwork under `screenshots/appstore/` — copy lives in `shots.json`, visual system in `template.html`.
+
 Toolchain: requires Xcode 27 (iOS 26 SDK). `-skipMacroValidation` is needed
 for CLI builds because TCA's SPM macros (ComposableArchitecture, swift-case-paths,
 swift-dependencies, swift-perception) otherwise require an interactive trust prompt;
@@ -58,7 +62,7 @@ Swift Package dependencies (resolved automatically by Xcode):
 
 - **`Clients/SynologyAPIClient.swift`** — `@DependencyClient` interface. All endpoints are `@Sendable` closures taking `(baseURL, AuthSession, ...)`.
 - **`Clients/SynologyAPILive.swift`** — live implementation. All Synology calls go through `webapi/auth.cgi` (login/logout) or `webapi/entry.cgi` (everything else) as query-string GETs. Auth params are added via `authenticatedParams(...)` which injects `_sid` + `SynoToken`. `SynologySessionDelegate` trusts self-signed certs (required for typical NAS deployments). Responses are wrapped in `SynologyResponse<T>` — `decodeResponse` checks `.success` and maps `error.code` via `SynologyAPIError.fromErrorCode`. Logs and container resources have custom decoders because their payload shapes differ.
-- **`Clients/SynologyAPIMock.swift`** — `previewValue` used by SwiftUI previews.
+- **`Clients/SynologyAPIMock.swift`** — `SynologyAPIClient.mock` (aliased as `previewValue`), rich fake data used by SwiftUI previews, snapshot tests, and demo mode.
 - **`Clients/ConnectionStore.swift`** — SwiftData-backed store for `NASConnection`. `@Model` class + `ConnectionProfile` `Sendable` snapshot — reducers only use the profile; the `@Model` doesn't cross actor boundaries.
 - **`Clients/KeychainClient.swift`** — stores per-connection passwords and a single active `SavedSession` (session + connection UUID) so 2FA isn't re-required each launch. `AppFeature.restoreSavedSession()` validates by calling `getSystemUtilization` before trusting it.
 - **`Clients/BackgroundMonitor.swift`** — `BGTaskScheduler` registration (identifier `com.dscontainermanager.container-health-check`, iOS-only via `#if os(iOS)`) and `UNUserNotificationCenter` setup. Call `registerTasks()` from `DSContainerManagerApp.init` — it must run before the scene is created.
@@ -93,3 +97,4 @@ Always `.cancellable(id: ..., cancelInFlight: true)` for both one-shot fetches a
 - Error types: `SynologyAPIError` (use `.fromErrorCode` when decoding Synology error payloads; check `.isSessionError` when deciding to force reconnect).
 - `#if DEBUG` `print(...)` statements are used for API response tracing — keep new ones behind `#if DEBUG`.
 - `#if os(iOS)` / `#if os(macOS)` guard platform-specific code (BackgroundTasks, keyboard shortcuts, sidebar column widths). `SUPPORTED_PLATFORMS` is currently `iphoneos iphonesimulator`, but the source keeps macOS guards for future expansion.
+- Commits: short imperative subjects (e.g. `Sort containers and projects by name`), one behavioral change per commit. After making changes, summarize the touched files and validation result and **commit only after the user explicitly approves** (see `AGENTS.md`).

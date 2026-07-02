@@ -39,6 +39,17 @@ extension ConnectionStore {
     )
 }
 
+extension BackgroundMonitorClient {
+    /// No-op monitor so demo sessions never prompt for notifications or schedule BG tasks.
+    static let demoValue = BackgroundMonitorClient(
+        registerTasks: {},
+        scheduleHealthCheck: {},
+        cancelHealthCheck: {},
+        requestNotificationPermission: { false },
+        sendContainerNotification: { _, _, _ in },
+    )
+}
+
 extension KeychainClient {
     static let demoValue = KeychainClient(
         save: { _, _ in },

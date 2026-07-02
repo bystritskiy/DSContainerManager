@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy — DSContainerManager</title>
+<meta name="description" content="Privacy policy for DSContainerManager. The app collects no data: your credentials stay on your device, and all traffic goes directly to your NAS." />
+<meta name="theme-color" content="#0a0c10" />
+<link rel="icon" type="image/png" href="assets/favicon-64.png" />
+<link rel="apple-touch-icon" href="assets/appicon-180.png" />
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #e8ebf1;
+    --muted: #8b93a1;
+    --accent-1: #3ba4ff;
+    --accent-2: #2563eb;
+    --radius: 18px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: -30vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120vw;
+    height: 90vh;
+    background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.20), rgba(59, 164, 255, 0.07) 40%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 24px;
+    max-width: 760px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 650; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
+  .brand img { width: 32px; height: 32px; border-radius: 8px; }
+  nav a.back { color: var(--muted); text-decoration: none; font-size: 15px; }
+  nav a.back:hover { color: var(--text); }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  h1 { font-size: 2.2rem; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .updated { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+
+  h2 { font-size: 1.2rem; letter-spacing: -0.01em; margin: 34px 0 10px; }
+  p, li { color: var(--muted); }
+  strong { color: var(--text); font-weight: 600; }
+  ul { padding-left: 22px; margin: 10px 0; }
+  li { margin: 6px 0; }
+  a { color: var(--accent-1); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 8px;
+  }
+  .summary p { color: var(--text); }
+</style>
+</head>
+<body>
+  <nav>
+    <a class="brand" href="index.html"><img src="assets/appicon-180.png" alt="" />DSContainerManager</a>
+    <a class="back" href="index.html">&larr; Back</a>
+  </nav>
+
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: July 2, 2026</p>
+
+    <div class="summary">
+      <p><strong>The short version:</strong> DSContainerManager collects no data. Nothing you do in the app is sent to us or to any third party. Your credentials never leave your device, and the app talks only to the NAS you configure.</p>
+    </div>
+
+    <h2>Data collection</h2>
+    <p>DSContainerManager does <strong>not</strong> collect, store, transmit, or share any personal data. The app contains no analytics, no advertising, no tracking SDKs, and no crash-reporting services. We operate no servers of our own.</p>
+
+    <h2>Where your data lives</h2>
+    <ul>
+      <li><strong>NAS credentials</strong> (usernames, passwords, session tokens) are stored exclusively in the iOS Keychain on your device, protected by the operating system.</li>
+      <li><strong>Connection profiles</strong> (NAS names, addresses, ports) are stored in a local database on your device.</li>
+      <li>None of this information is ever transmitted anywhere except directly to your own NAS during sign-in.</li>
+    </ul>
+
+    <h2>Network communication</h2>
+    <p>The app communicates only with the Synology NAS devices you add, using the DSM WebAPI over the connection settings you choose. Container names, logs, and system metrics displayed in the app are fetched directly from your NAS and are never relayed through any intermediate service.</p>
+
+    <h2>Notifications</h2>
+    <p>If you enable container health notifications, checks run locally on your device by contacting your NAS in the background. Notification content is generated on-device.</p>
+
+    <h2>Demo mode</h2>
+    <p>Demo mode uses sample data bundled with the app and makes no network requests.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If a future version of the app changes how data is handled, this page will be updated and the "Last updated" date revised.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy? Open an issue on <a href="https://github.com/bystritskiy/DSContainerManager/issues">GitHub</a>.</p>
+  </main>
+</body>
+</html>
