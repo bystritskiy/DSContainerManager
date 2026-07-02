@@ -7,6 +7,20 @@ enum DemoMode {
             || ProcessInfo.processInfo.environment["DSCM_DEMO_MODE"] == "1"
     }
 
+    /// Screen to open right after the demo session is restored, for screenshot automation.
+    /// Values: dashboard, containers, projects, monitor, settings,
+    /// container-info, container-logs, container-resources.
+    static var initialScreen: String? {
+        if let screen = ProcessInfo.processInfo.environment["DSCM_DEMO_SCREEN"] {
+            return screen
+        }
+        let arguments = ProcessInfo.processInfo.arguments
+        if let index = arguments.firstIndex(of: "--demo-screen"), arguments.indices.contains(index + 1) {
+            return arguments[index + 1]
+        }
+        return nil
+    }
+
     static let connectionId = UUID(uuidString: "D5C0DE00-0000-4000-9000-000000000001")!
 
     static let connectionProfile = ConnectionProfile(

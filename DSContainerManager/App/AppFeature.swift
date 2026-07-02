@@ -178,6 +178,10 @@ struct AppFeature {
             case .dashboard:
                 return .none
 
+            case .containerList(.containersLoaded(.success)):
+                presentDemoContainerDetailIfNeeded(state: &state)
+                return .none
+
             case .containerList:
                 return .none
 
@@ -198,6 +202,20 @@ struct AppFeature {
         state.authSession = session
         state.showingConnectionSheet = false
         state.selectedTab = .dashboard
+        if DemoMode.isEnabled, let screen = DemoMode.initialScreen {
+            switch screen {
+            case "containers", "container-info", "container-logs", "container-resources":
+                state.selectedTab = .containers
+            case "projects":
+                state.selectedTab = .projects
+            case "monitor":
+                state.selectedTab = .monitor
+            case "settings":
+                state.selectedTab = .settings
+            default:
+                break
+            }
+        }
 
         let baseURL = profile.baseURL
         state.dashboard.baseURL = baseURL
@@ -223,6 +241,31 @@ struct AppFeature {
         }
 
         return .merge(effects)
+    }
+
+    /// In demo mode, auto-presents a container detail screen when `--demo-screen container-*` is passed,
+    /// so screenshot automation can reach detail tabs without UI taps.
+    private func presentDemoContainerDetailIfNeeded(state: inout State) {
+        guard DemoMode.isEnabled,
+              let screen = DemoMode.initialScreen,
+              screen.hasPrefix("container-"),
+              state.containerList.detail == nil,
+              let container = state.containerList.containers.first(where: { $0.name == "plex" })
+              ?? state.containerList.containers.first
+        else { return }
+
+        var detail = ContainerDetailFeature.State(container: container)
+        detail.baseURL = state.containerList.baseURL
+        detail.authSession = state.containerList.authSession
+        switch screen {
+        case "container-logs":
+            detail.selectedTab = .logs
+        case "container-resources":
+            detail.selectedTab = .resources
+        default:
+            detail.selectedTab = .info
+        }
+        state.containerList.detail = detail
     }
 
     /// Tries to restore a previously saved session from Keychain.
