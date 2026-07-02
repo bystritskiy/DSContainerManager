@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/assets/appicon-512.png" width="128" alt="DSContainerManager app icon" />
+<img src="docs/assets/appicon-512.png" width="128" alt="DSContainer app icon" />
 
-# DSContainerManager
+# DSContainer
 
 **Your Synology Docker, in your pocket.**
 
@@ -18,7 +18,7 @@ Synology ships polished mobile apps for most of its packages, but **Container Ma
 
 Your NAS quietly runs the things you depend on — media servers, home automation, databases, side projects. When one of them goes sideways, you shouldn't have to find a laptop, log into DSM, and dig through menus. You should just pull out your phone and fix it.
 
-DSContainerManager gives you exactly that: a fast, focused, native control panel for everything Docker on your Synology.
+DSContainer gives you exactly that: a fast, focused, native control panel for everything Docker on your Synology.
 
 ## What you can do
 
