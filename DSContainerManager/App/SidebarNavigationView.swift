@@ -8,18 +8,17 @@ struct SidebarNavigationView: View {
 
     var body: some View {
         NavigationSplitView {
-            List {
-                ForEach(AppFeature.State.Tab.allCases, id: \.self) { tab in
-                    Button {
+            List(selection: Binding(
+                get: { store.selectedTab },
+                set: { tab in
+                    if let tab {
                         store.send(.tabSelected(tab))
-                    } label: {
-                        Label(tab.title, systemImage: tab.systemImage)
                     }
-                    .listRowBackground(
-                        store.selectedTab == tab
-                            ? Color.accentColor.opacity(0.15)
-                            : Color.clear,
-                    )
+                },
+            )) {
+                ForEach(AppFeature.State.Tab.allCases, id: \.self) { tab in
+                    Label(tab.title, systemImage: tab.systemImage)
+                        .tag(tab)
                 }
             }
             .navigationTitle("DS Container")

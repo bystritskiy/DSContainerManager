@@ -50,35 +50,36 @@ struct ProjectListView: View {
             }
 
             ForEach(store.projects) { project in
-                ProjectRowView(project: project)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        store.send(.projectTapped(project))
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if project.status == .running || project.status == .partiallyRunning {
-                            Button {
-                                store.send(.projectAction(project, .stop))
-                            } label: {
-                                Label("Stop", systemImage: "stop.fill")
-                            }
-                            .tint(.red)
-
-                            Button {
-                                store.send(.projectAction(project, .restart))
-                            } label: {
-                                Label("Restart", systemImage: "arrow.clockwise")
-                            }
-                            .tint(.orange)
-                        } else {
-                            Button {
-                                store.send(.projectAction(project, .start))
-                            } label: {
-                                Label("Start", systemImage: "play.fill")
-                            }
-                            .tint(.green)
+                Button {
+                    store.send(.projectTapped(project))
+                } label: {
+                    ProjectRowView(project: project)
+                }
+                .buttonStyle(FluidPressButtonStyle())
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if project.status == .running || project.status == .partiallyRunning {
+                        Button {
+                            store.send(.projectAction(project, .stop))
+                        } label: {
+                            Label("Stop", systemImage: "stop.fill")
                         }
+                        .tint(.red)
+
+                        Button {
+                            store.send(.projectAction(project, .restart))
+                        } label: {
+                            Label("Restart", systemImage: "arrow.clockwise")
+                        }
+                        .tint(.orange)
+                    } else {
+                        Button {
+                            store.send(.projectAction(project, .start))
+                        } label: {
+                            Label("Start", systemImage: "play.fill")
+                        }
+                        .tint(.green)
                     }
+                }
             }
         }
     }

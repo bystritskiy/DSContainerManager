@@ -3,6 +3,7 @@ import SwiftUI
 
 struct DashboardView: View {
     let store: StoreOf<DashboardFeature>
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         NavigationStack {
@@ -53,44 +54,54 @@ struct DashboardView: View {
     }
 
     private var systemGaugesSection: some View {
-        HStack(spacing: 24) {
-            CircularGaugeView(
+        CircularGaugeGroupView(items: systemGaugeItems)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var systemGaugeItems: [CircularGaugeGroupView.Item] {
+        var items = [
+            CircularGaugeGroupView.Item(
                 title: "CPU",
                 value: store.cpuPercent,
                 color: gaugeColor(for: store.cpuPercent),
-            )
-
-            CircularGaugeView(
+            ),
+            CircularGaugeGroupView.Item(
                 title: "RAM",
                 value: store.memoryPercent,
                 color: gaugeColor(for: store.memoryPercent),
-            )
+            ),
+        ]
 
-            if let disk = store.systemUtilization?.disk?.total {
-                CircularGaugeView(
-                    title: "Disk I/O",
-                    value: Double(disk.utilization),
-                    color: gaugeColor(for: Double(disk.utilization)),
-                )
-            }
+        if let disk = store.systemUtilization?.disk?.total {
+            let value = Double(disk.utilization)
+            items.append(.init(title: "Disk I/O", value: value, color: gaugeColor(for: value)))
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+
+        return items
     }
 
     private var containerSummaryCard: some View {
         VStack(spacing: 12) {
-            HStack {
-                Text("Containers")
-                    .font(.headline)
-                Spacer()
-                Text("\(store.totalCount) total")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    containerSummaryTitle
+                    Spacer()
+                    containerSummaryTotal
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    containerSummaryTitle
+                    containerSummaryTotal
+                }
             }
 
-            HStack(spacing: 24) {
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(spacing: 12))
+                : AnyLayout(HStackLayout(spacing: 24))
+
+            layout {
                 containerStat(count: store.runningCount, label: "Running", color: .green)
                 containerStat(count: store.stoppedCount, label: "Stopped", color: .red)
                 containerStat(
@@ -102,6 +113,17 @@ struct DashboardView: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var containerSummaryTitle: some View {
+        Text("Containers")
+            .font(.headline)
+    }
+
+    private var containerSummaryTotal: some View {
+        Text("\(store.totalCount) total")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
     }
 
     private func containerStat(count: Int, label: String, color: Color) -> some View {
@@ -142,7 +164,7 @@ struct DashboardView: View {
             Text("Containers")
                 .font(.headline)
 
-            ForEach(store.containers.prefix(6)) { container in
+            ForEach(store.containers) { container in
                 HStack {
                     Circle()
                         .fill(container.status.color)

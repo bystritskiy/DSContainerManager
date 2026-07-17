@@ -1,9 +1,14 @@
 import Charts
 import ComposableArchitecture
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContainerDetailView: View {
     @Bindable var store: StoreOf<ContainerDetailFeature>
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showingKillConfirmation = false
+    @State private var showingLogExporter = false
+    @State private var logExportDocument = ContainerLogsDocument()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,9 +34,50 @@ struct ContainerDetailView: View {
                     actionsTab
                 }
             }
+            .id(store.selectedTab)
+            .transition(.opacity)
         }
+        .animation(
+            reduceMotion
+                ? .easeOut(duration: 0.15)
+                : .spring(response: 0.32, dampingFraction: 1),
+            value: store.selectedTab,
+        )
+        .sensoryFeedback(.selection, trigger: store.selectedTab)
         .navigationTitle(store.container.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if store.selectedTab == .logs {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        logExportDocument = ContainerLogsDocument(logs: store.logs)
+                        showingLogExporter = true
+                    } label: {
+                        Label("Export Logs", systemImage: "square.and.arrow.up")
+                            .labelStyle(.iconOnly)
+                    }
+                    .disabled(store.logs.isEmpty)
+                }
+            }
+        }
+        .fileExporter(
+            isPresented: $showingLogExporter,
+            document: logExportDocument,
+            contentType: .plainText,
+            defaultFilename: "\(store.container.name)-logs",
+        ) { _ in }
+        .confirmationDialog(
+            "Kill \(store.container.name)?",
+            isPresented: $showingKillConfirmation,
+            titleVisibility: .visible,
+        ) {
+            Button("Kill Container", role: .destructive) {
+                store.send(.actionTapped(.kill))
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The container process will be terminated immediately and may lose unsaved data.")
+        }
         .onAppear {
             store.send(.onAppear)
         }
@@ -174,18 +220,10 @@ struct ContainerDetailView: View {
             VStack(spacing: 16) {
                 if let resources = store.currentResources {
                     // Current values
-                    HStack(spacing: 24) {
-                        CircularGaugeView(
-                            title: "CPU",
-                            value: resources.cpuPercent,
-                            color: .blue,
-                        )
-                        CircularGaugeView(
-                            title: "Memory",
-                            value: resources.memoryPercent,
-                            color: .green,
-                        )
-                    }
+                    CircularGaugeGroupView(items: [
+                        .init(title: "CPU", value: resources.cpuPercent, color: .blue),
+                        .init(title: "Memory", value: resources.memoryPercent, color: .green),
+                    ])
                     .padding()
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
 
@@ -280,7 +318,11 @@ struct ContainerDetailView: View {
 
     private func actionButton(title: String, icon: String, color: Color, action: ContainerAction, enabled: Bool) -> some View {
         Button {
-            store.send(.actionTapped(action))
+            if action == .kill {
+                showingKillConfirmation = true
+            } else {
+                store.send(.actionTapped(action))
+            }
         } label: {
             HStack {
                 Image(systemName: icon)
@@ -294,6 +336,37 @@ struct ContainerDetailView: View {
             }
         }
         .disabled(!enabled || store.isPerformingAction)
+    }
+}
+
+private struct ContainerLogsDocument: FileDocument {
+    static let readableContentTypes: [UTType] = [.plainText]
+
+    private let text: String
+
+    init(text: String = "") {
+        self.text = text
+    }
+
+    init(logs: [ContainerLog]) {
+        text = logs
+            .map { log in
+                "\(log.timestamp.formatted(.iso8601)) [\(log.stream.rawValue)] \(log.text)"
+            }
+            .joined(separator: "\n") + "\n"
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        guard let data = configuration.file.regularFileContents,
+              let text = String(data: data, encoding: .utf8)
+        else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        self.text = text
+    }
+
+    func fileWrapper(configuration _: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: Data(text.utf8))
     }
 }
 

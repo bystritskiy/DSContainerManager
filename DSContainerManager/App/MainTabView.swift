@@ -36,6 +36,7 @@ struct MainTabView: View {
                 SettingsView(store: store)
             }
         }
+        .sensoryFeedback(.selection, trigger: store.selectedTab)
     }
 }
 

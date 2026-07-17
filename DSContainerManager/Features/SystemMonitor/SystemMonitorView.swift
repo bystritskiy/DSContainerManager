@@ -86,30 +86,27 @@ struct SystemMonitorView: View {
     }
 
     private func currentValuesSection(_ util: SystemUtilization) -> some View {
-        HStack(spacing: 24) {
-            CircularGaugeView(
-                title: "CPU",
-                value: util.cpu.totalPercent,
-                color: gaugeColor(for: util.cpu.totalPercent),
-            )
-            CircularGaugeView(
-                title: "RAM",
-                value: util.memory.usagePercent,
-                color: gaugeColor(for: util.memory.usagePercent),
-            )
+        VStack(spacing: 16) {
+            CircularGaugeGroupView(items: [
+                .init(
+                    title: "CPU",
+                    value: util.cpu.totalPercent,
+                    color: gaugeColor(for: util.cpu.totalPercent),
+                ),
+                .init(
+                    title: "RAM",
+                    value: util.memory.usagePercent,
+                    color: gaugeColor(for: util.memory.usagePercent),
+                ),
+            ])
 
-            VStack(spacing: 4) {
-                Text(util.memory.usedReal.formattedKilobytes)
-                    .font(.title3)
-                    .fontWeight(.bold)
+            Divider()
+
+            LabeledContent("Physical Memory") {
+                Text("\(util.memory.usedReal.formattedKilobytes) of \(util.memory.totalReal.formattedKilobytes)")
                     .monospacedDigit()
-                Text("of \(util.memory.totalReal.formattedKilobytes)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text("Memory")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
+            .font(.subheadline)
         }
         .padding()
         .frame(maxWidth: .infinity)

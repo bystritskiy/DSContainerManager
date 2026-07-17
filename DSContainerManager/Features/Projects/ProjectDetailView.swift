@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ProjectDetailView: View {
     @Bindable var store: StoreOf<ProjectDetailFeature>
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +25,16 @@ struct ProjectDetailView: View {
                     infoTab
                 }
             }
+            .id(store.selectedTab)
+            .transition(.opacity)
         }
+        .animation(
+            reduceMotion
+                ? .easeOut(duration: 0.15)
+                : .spring(response: 0.32, dampingFraction: 1),
+            value: store.selectedTab,
+        )
+        .sensoryFeedback(.selection, trigger: store.selectedTab)
         .navigationTitle(store.project.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -33,14 +43,16 @@ struct ProjectDetailView: View {
                     Button {
                         store.send(.actionTapped(.stop))
                     } label: {
-                        Image(systemName: "stop.fill")
+                        Label("Stop Project", systemImage: "stop.fill")
+                            .labelStyle(.iconOnly)
                     }
                     .tint(.red)
                 } else {
                     Button {
                         store.send(.actionTapped(.start))
                     } label: {
-                        Image(systemName: "play.fill")
+                        Label("Start Project", systemImage: "play.fill")
+                            .labelStyle(.iconOnly)
                     }
                     .tint(.green)
                 }

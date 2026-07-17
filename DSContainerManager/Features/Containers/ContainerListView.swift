@@ -13,7 +13,7 @@ struct ContainerListView: View {
                             SkeletonRowView()
                         }
                     }
-                } else if store.filteredContainers.isEmpty, store.containers.isEmpty {
+                } else if store.containers.isEmpty {
                     EmptyStateView(
                         icon: "shippingbox",
                         title: "No Containers",
@@ -22,6 +22,8 @@ struct ContainerListView: View {
                     ) {
                         store.send(.refresh)
                     }
+                } else if store.filteredContainers.isEmpty {
+                    filteredEmptyState
                 } else {
                     containerList
                 }
@@ -79,36 +81,55 @@ struct ContainerListView: View {
             }
 
             ForEach(store.filteredContainers) { container in
-                ContainerRowView(container: container)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        store.send(.containerTapped(container))
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        if container.status == .running {
-                            Button {
-                                store.send(.swipeAction(container, .stop))
-                            } label: {
-                                Label("Stop", systemImage: "stop.fill")
-                            }
-                            .tint(.red)
-
-                            Button {
-                                store.send(.swipeAction(container, .restart))
-                            } label: {
-                                Label("Restart", systemImage: "arrow.clockwise")
-                            }
-                            .tint(.orange)
-                        } else {
-                            Button {
-                                store.send(.swipeAction(container, .start))
-                            } label: {
-                                Label("Start", systemImage: "play.fill")
-                            }
-                            .tint(.green)
+                Button {
+                    store.send(.containerTapped(container))
+                } label: {
+                    ContainerRowView(container: container)
+                }
+                .buttonStyle(FluidPressButtonStyle())
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    if container.status == .running {
+                        Button {
+                            store.send(.swipeAction(container, .stop))
+                        } label: {
+                            Label("Stop", systemImage: "stop.fill")
                         }
+                        .tint(.red)
+
+                        Button {
+                            store.send(.swipeAction(container, .restart))
+                        } label: {
+                            Label("Restart", systemImage: "arrow.clockwise")
+                        }
+                        .tint(.orange)
+                    } else {
+                        Button {
+                            store.send(.swipeAction(container, .start))
+                        } label: {
+                            Label("Start", systemImage: "play.fill")
+                        }
+                        .tint(.green)
                     }
+                }
             }
+        }
+    }
+
+    private var filteredEmptyState: some View {
+        ContentUnavailableView {
+            Label("No Matching Containers", systemImage: "magnifyingglass")
+        } description: {
+            if !store.searchText.isEmpty {
+                Text("No containers match \u{201c}\(store.searchText)\u{201d}.")
+            } else if let filter = store.statusFilter {
+                Text("No containers have the \(filter.displayName.lowercased()) status.")
+            }
+        } actions: {
+            Button("Clear Search and Filters") {
+                store.send(.statusFilterChanged(nil))
+                store.searchText = ""
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
 
@@ -127,7 +148,8 @@ struct ContainerListView: View {
                 }
             }
         } label: {
-            Image(systemName: "arrow.up.arrow.down")
+            Label("Sort", systemImage: "arrow.up.arrow.down")
+                .labelStyle(.iconOnly)
         }
     }
 
@@ -149,7 +171,8 @@ struct ContainerListView: View {
                 }
             }
         } label: {
-            Image(systemName: "line.3.horizontal.decrease.circle")
+            Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                .labelStyle(.iconOnly)
         }
     }
 }

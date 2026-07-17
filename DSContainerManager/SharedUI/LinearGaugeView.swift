@@ -7,6 +7,8 @@ struct LinearGaugeView: View {
     let color: Color
     let subtitle: String?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     init(title: String, value: Double, maxValue: Double = 100, color: Color = .blue, subtitle: String? = nil) {
         self.title = title
         self.value = value
@@ -22,15 +24,17 @@ struct LinearGaugeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Spacer()
-                Text(String(format: "%.1f%%", fraction * 100))
-                    .font(.subheadline)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    gaugeTitle
+                    Spacer()
+                    gaugeValue
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    gaugeTitle
+                    gaugeValue
+                }
             }
 
             GeometryReader { geometry in
@@ -41,7 +45,12 @@ struct LinearGaugeView: View {
                     Capsule()
                         .fill(color)
                         .frame(width: geometry.size.width * fraction)
-                        .animation(.easeInOut(duration: 0.5), value: fraction)
+                        .animation(
+                            reduceMotion
+                                ? .easeOut(duration: 0.15)
+                                : .spring(response: 0.4, dampingFraction: 1),
+                            value: fraction,
+                        )
                 }
             }
             .frame(height: 8)
@@ -55,6 +64,20 @@ struct LinearGaugeView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(title): \(String(format: "%.1f", fraction * 100)) percent")
         .accessibilityValue(subtitle ?? "")
+    }
+
+    private var gaugeTitle: some View {
+        Text(title)
+            .font(.subheadline)
+            .fontWeight(.medium)
+    }
+
+    private var gaugeValue: some View {
+        Text(String(format: "%.1f%%", fraction * 100))
+            .font(.subheadline)
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .contentTransition(.numericText(value: fraction))
     }
 }
 

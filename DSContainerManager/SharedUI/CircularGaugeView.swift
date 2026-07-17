@@ -7,6 +7,8 @@ struct CircularGaugeView: View {
     let color: Color
     let unit: String
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     init(title: String, value: Double, maxValue: Double = 100, color: Color = .blue, unit: String = "%") {
         self.title = title
         self.value = value
@@ -33,13 +35,19 @@ struct CircularGaugeView: View {
                         style: StrokeStyle(lineWidth: 10, lineCap: .round),
                     )
                     .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 0.5), value: fraction)
+                    .animation(
+                        reduceMotion
+                            ? .easeOut(duration: 0.15)
+                            : .spring(response: 0.4, dampingFraction: 1),
+                        value: fraction,
+                    )
 
                 VStack(spacing: 2) {
                     Text(String(format: "%.0f", value))
                         .font(.title2)
                         .fontWeight(.bold)
                         .monospacedDigit()
+                        .contentTransition(.numericText(value: value))
                     Text(unit)
                         .font(.caption2)
                         .foregroundStyle(.secondary)

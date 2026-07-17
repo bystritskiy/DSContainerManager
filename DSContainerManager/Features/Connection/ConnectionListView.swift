@@ -29,14 +29,16 @@ struct ConnectionListView: View {
                         }
 
                         ForEach(store.connections) { profile in
-                            ConnectionRowView(
-                                profile: profile,
-                                isConnecting: store.loginInProgressId == profile.id,
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
+                            Button {
                                 store.send(.connectTapped(profile))
+                            } label: {
+                                ConnectionRowView(
+                                    profile: profile,
+                                    isConnecting: store.loginInProgressId == profile.id,
+                                )
                             }
+                            .buttonStyle(FluidPressButtonStyle())
+                            .disabled(store.loginInProgressId != nil)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
                                     store.send(.deleteConnection(profile.id))
