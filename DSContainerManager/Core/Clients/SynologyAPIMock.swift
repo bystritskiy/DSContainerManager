@@ -82,131 +82,140 @@ extension DockerContainer {
 extension ContainerDetail {
     static func mock(name: String) -> ContainerDetail {
         switch name {
-        case "home-assistant":
-            ContainerDetail(
-                name: "home-assistant",
-                image: "ghcr.io/home-assistant/home-assistant:stable",
-                status: .running,
-                created: Date(timeIntervalSinceNow: -86400 * 118),
-                env: [
-                    "TZ=Europe/Warsaw",
-                    "PUID=1000",
-                    "PGID=1000",
-                ],
-                cmd: ["/init"],
-                volumes: [
-                    VolumeMount(source: "/volume1/docker/home-assistant/config", destination: "/config"),
-                    VolumeMount(source: "/etc/localtime", destination: "/etc/localtime", mode: "ro"),
-                ],
-                networks: ["host"],
-                labels: composeLabels(project: "smart-home", service: "home-assistant"),
-                hostConfig: HostConfig(
-                    memoryLimit: 2_147_483_648,
-                    cpuShares: 768,
-                    restartPolicy: "unless-stopped",
-                    networkMode: "host",
-                ),
-                ports: [
-                    DockerContainer.PortMapping(privatePort: 8123, publicPort: 8123, type: "tcp"),
-                ],
-                restartPolicy: "unless-stopped",
-            )
-
-        case "immich-server":
-            ContainerDetail(
-                name: "immich-server",
-                image: "ghcr.io/immich-app/immich-server:release",
-                status: .running,
-                created: Date(timeIntervalSinceNow: -86400 * 39),
-                env: [
-                    "DB_HOSTNAME=immich-postgres",
-                    "REDIS_HOSTNAME=immich-redis",
-                    "UPLOAD_LOCATION=/usr/src/app/upload",
-                    "TZ=Europe/Warsaw",
-                ],
-                cmd: ["start.sh"],
-                volumes: [
-                    VolumeMount(source: "/volume1/photos", destination: "/usr/src/app/upload"),
-                    VolumeMount(source: "/volume1/docker/immich/model-cache", destination: "/cache"),
-                ],
-                networks: ["media"],
-                labels: composeLabels(project: "photo-library", service: "immich-server"),
-                hostConfig: HostConfig(
-                    memoryLimit: 6_442_450_944,
-                    cpuShares: 1536,
-                    restartPolicy: "unless-stopped",
-                    networkMode: "media",
-                ),
-                ports: [
-                    DockerContainer.PortMapping(privatePort: 2283, publicPort: 2283, type: "tcp"),
-                ],
-                restartPolicy: "unless-stopped",
-            )
-
-        case "pihole":
-            ContainerDetail(
-                name: "pihole",
-                image: "pihole/pihole:latest",
-                status: .stopped,
-                created: Date(timeIntervalSinceNow: -86400 * 203),
-                env: [
-                    "TZ=Europe/Warsaw",
-                    "WEBPASSWORD=********",
-                    "DNSMASQ_LISTENING=all",
-                ],
-                cmd: ["/s6-init"],
-                volumes: [
-                    VolumeMount(source: "/volume1/docker/pihole/etc-pihole", destination: "/etc/pihole"),
-                    VolumeMount(source: "/volume1/docker/pihole/dnsmasq.d", destination: "/etc/dnsmasq.d"),
-                ],
-                networks: ["bridge"],
-                labels: composeLabels(project: "network-services", service: "pihole"),
-                hostConfig: HostConfig(
-                    memoryLimit: 536_870_912,
-                    cpuShares: 512,
-                    restartPolicy: "unless-stopped",
-                    networkMode: "bridge",
-                ),
-                ports: [
-                    DockerContainer.PortMapping(privatePort: 53, publicPort: 53, type: "tcp"),
-                    DockerContainer.PortMapping(privatePort: 53, publicPort: 53, type: "udp"),
-                    DockerContainer.PortMapping(privatePort: 80, publicPort: 8080, type: "tcp"),
-                ],
-                restartPolicy: "unless-stopped",
-            )
-
-        default:
-            ContainerDetail(
-                name: "plex",
-                image: "plexinc/pms-docker:latest",
-                status: .running,
-                created: Date(timeIntervalSinceNow: -86400 * 74),
-                env: [
-                    "PLEX_UID=1000",
-                    "PLEX_GID=1000",
-                    "TZ=Europe/Warsaw",
-                    "ADVERTISE_IP=http://demo-nas.local:32400/",
-                ],
-                cmd: ["/init"],
-                volumes: [
-                    VolumeMount(source: "/volume1/docker/plex/config", destination: "/config"),
-                    VolumeMount(source: "/volume1/media/movies", destination: "/movies", mode: "ro"),
-                    VolumeMount(source: "/volume1/media/tv", destination: "/tv", mode: "ro"),
-                ],
-                networks: ["media"],
-                labels: composeLabels(project: "media-server", service: "plex"),
-                hostConfig: HostConfig(
-                    memoryLimit: 4_294_967_296,
-                    cpuShares: 1024,
-                    restartPolicy: "unless-stopped",
-                    networkMode: "media",
-                ),
-                ports: [
-                    DockerContainer.PortMapping(privatePort: 32400, publicPort: 32400, type: "tcp"),
-                ],
-                restartPolicy: "unless-stopped",
-            )
+        case "home-assistant": homeAssistant
+        case "immich-server": immichServer
+        case "pihole": pihole
+        default: plex
         }
+    }
+
+    private static var homeAssistant: ContainerDetail {
+        ContainerDetail(
+            name: "home-assistant",
+            image: "ghcr.io/home-assistant/home-assistant:stable",
+            status: .running,
+            created: Date(timeIntervalSinceNow: -86400 * 118),
+            env: [
+                "TZ=Europe/Warsaw",
+                "PUID=1000",
+                "PGID=1000",
+            ],
+            cmd: ["/init"],
+            volumes: [
+                VolumeMount(source: "/volume1/docker/home-assistant/config", destination: "/config"),
+                VolumeMount(source: "/etc/localtime", destination: "/etc/localtime", mode: "ro"),
+            ],
+            networks: ["host"],
+            labels: composeLabels(project: "smart-home", service: "home-assistant"),
+            hostConfig: HostConfig(
+                memoryLimit: 2_147_483_648,
+                cpuShares: 768,
+                restartPolicy: "unless-stopped",
+                networkMode: "host",
+            ),
+            ports: [
+                DockerContainer.PortMapping(privatePort: 8123, publicPort: 8123, type: "tcp"),
+            ],
+            restartPolicy: "unless-stopped",
+        )
+    }
+
+    private static var immichServer: ContainerDetail {
+        ContainerDetail(
+            name: "immich-server",
+            image: "ghcr.io/immich-app/immich-server:release",
+            status: .running,
+            created: Date(timeIntervalSinceNow: -86400 * 39),
+            env: [
+                "DB_HOSTNAME=immich-postgres",
+                "REDIS_HOSTNAME=immich-redis",
+                "UPLOAD_LOCATION=/usr/src/app/upload",
+                "TZ=Europe/Warsaw",
+            ],
+            cmd: ["start.sh"],
+            volumes: [
+                VolumeMount(source: "/volume1/photos", destination: "/usr/src/app/upload"),
+                VolumeMount(source: "/volume1/docker/immich/model-cache", destination: "/cache"),
+            ],
+            networks: ["media"],
+            labels: composeLabels(project: "photo-library", service: "immich-server"),
+            hostConfig: HostConfig(
+                memoryLimit: 6_442_450_944,
+                cpuShares: 1536,
+                restartPolicy: "unless-stopped",
+                networkMode: "media",
+            ),
+            ports: [
+                DockerContainer.PortMapping(privatePort: 2283, publicPort: 2283, type: "tcp"),
+            ],
+            restartPolicy: "unless-stopped",
+        )
+    }
+
+    private static var pihole: ContainerDetail {
+        ContainerDetail(
+            name: "pihole",
+            image: "pihole/pihole:latest",
+            status: .stopped,
+            created: Date(timeIntervalSinceNow: -86400 * 203),
+            env: [
+                "TZ=Europe/Warsaw",
+                "WEBPASSWORD=********",
+                "DNSMASQ_LISTENING=all",
+            ],
+            cmd: ["/s6-init"],
+            volumes: [
+                VolumeMount(source: "/volume1/docker/pihole/etc-pihole", destination: "/etc/pihole"),
+                VolumeMount(source: "/volume1/docker/pihole/dnsmasq.d", destination: "/etc/dnsmasq.d"),
+            ],
+            networks: ["bridge"],
+            labels: composeLabels(project: "network-services", service: "pihole"),
+            hostConfig: HostConfig(
+                memoryLimit: 536_870_912,
+                cpuShares: 512,
+                restartPolicy: "unless-stopped",
+                networkMode: "bridge",
+            ),
+            ports: [
+                DockerContainer.PortMapping(privatePort: 53, publicPort: 53, type: "tcp"),
+                DockerContainer.PortMapping(privatePort: 53, publicPort: 53, type: "udp"),
+                DockerContainer.PortMapping(privatePort: 80, publicPort: 8080, type: "tcp"),
+            ],
+            restartPolicy: "unless-stopped",
+        )
+    }
+
+    private static var plex: ContainerDetail {
+        ContainerDetail(
+            name: "plex",
+            image: "plexinc/pms-docker:latest",
+            status: .running,
+            created: Date(timeIntervalSinceNow: -86400 * 74),
+            env: [
+                "PLEX_UID=1000",
+                "PLEX_GID=1000",
+                "TZ=Europe/Warsaw",
+                "ADVERTISE_IP=http://demo-nas.local:32400/",
+            ],
+            cmd: ["/init"],
+            volumes: [
+                VolumeMount(source: "/volume1/docker/plex/config", destination: "/config"),
+                VolumeMount(source: "/volume1/media/movies", destination: "/movies", mode: "ro"),
+                VolumeMount(source: "/volume1/media/tv", destination: "/tv", mode: "ro"),
+            ],
+            networks: ["media"],
+            labels: composeLabels(project: "media-server", service: "plex"),
+            hostConfig: HostConfig(
+                memoryLimit: 4_294_967_296,
+                cpuShares: 1024,
+                restartPolicy: "unless-stopped",
+                networkMode: "media",
+            ),
+            ports: [
+                DockerContainer.PortMapping(privatePort: 32400, publicPort: 32400, type: "tcp"),
+            ],
+            restartPolicy: "unless-stopped",
+        )
     }
 
     private static func composeLabels(project: String, service: String) -> [String: String] {
