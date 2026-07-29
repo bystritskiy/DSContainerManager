@@ -6,8 +6,9 @@ Everything to paste into App Store Connect when creating the app record.
 
 | Field | Value |
 | --- | --- |
-| Name | DSContainerManager |
-| Subtitle (30 chars max) | Docker containers on your NAS |
+| Name (30 chars max) | DSContainer Manager |
+| Subtitle (30 chars max) | Syno NAS Docker manager - DSM |
+| Home-screen name (`CFBundleDisplayName`) | DSContainer |
 | Bundle ID | com.bystritski.DSContainerManager |
 | SKU | dscontainermanager-001 |
 | Primary Language | English (U.S.) |
@@ -31,8 +32,8 @@ iPhone. Start, stop, and monitor — from anywhere on your network.
 
 ## Description
 
-DSContainerManager is a native iOS control panel for Synology Container
-Manager. Connect to your NAS over the DSM WebAPI and manage your entire Docker
+DSContainer is a native iOS control panel for the Container Manager package on
+your Synology NAS. Connect over the DSM WebAPI and manage your entire Docker
 setup without opening a browser.
 
 DASHBOARD AT A GLANCE
@@ -105,11 +106,52 @@ dashboard, containers, details, logs, resources, projects, monitor.
 Upload order suggestion: dashboard → containers → details → logs → resources →
 projects → monitor.
 
+## Build configuration (already in the project)
+
+These live in `DSContainerManager/Info.plist`, merged with the Xcode-generated
+keys (`GENERATE_INFOPLIST_FILE = YES` + `INFOPLIST_FILE`):
+
+- `NSAppTransportSecurity` → `NSAllowsLocalNetworking = YES`. The connection
+  form defaults to plain HTTP, which ATS blocks outright; this exception covers
+  local addresses without the review burden of `NSAllowsArbitraryLoads`.
+  HTTP to a *public* DDNS hostname is still blocked — use HTTPS there.
+- `NSLocalNetworkUsageDescription`. iOS 18+ gates every local-network
+  connection behind a permission prompt.
+- `BGTaskSchedulerPermittedIdentifiers` +
+  `UIBackgroundModes = fetch`, for `BackgroundMonitor`'s health check
+  (`com.dscontainermanager.container-health-check`). Without them the task
+  registration is silently rejected.
+
+`DSContainerManager/PrivacyInfo.xcprivacy` declares no tracking, no collected
+data, and the `NSPrivacyAccessedAPICategoryUserDefaults` reason `CA92.1` for
+`SharedStorage.sharedDefaults`. Missing this triggers an ITMS-91053 email from
+Apple after upload.
+
+## Upload (Xcode Organizer)
+
+1. Archive: Xcode → Product → Destination → *Any iOS Device*, then Product →
+   Archive. (CLI equivalent: `xcodebuild -scheme DSContainerManager
+   -destination 'generic/platform=iOS' -archivePath build/DSContainerManager.xcarchive
+   -skipMacroValidation archive`.)
+2. Organizer → *Distribute App* → **App Store Connect** → *Upload*. There is
+   no Apple Distribution certificate in the keychain yet — let Xcode create it
+   when it offers to. Keep automatic signing on.
+3. The app record must exist in App Store Connect **before** the upload
+   (bundle ID `com.bystritski.DSContainerManager` is already registered).
+4. After processing (~10–30 min), attach the build to the 1.0 version, fill in
+   the fields above, and submit.
+
+Bump `CURRENT_PROJECT_VERSION` for every re-upload — build 1 is burned once
+uploaded, even if the submission is rejected.
+
 ## Notes / risks
 
+- App Store name is **DSContainer Manager**, home-screen name is
+  **DSContainer** (`CFBundleDisplayName`) — same split DSLoad Station uses.
+  Avoid "Container Station": that is QNAP's product name, not Synology's.
 - The name and copy mention "Synology" and "Docker" (third-party trademarks).
   The description includes an explicit non-affiliation disclaimer, which is
   the accepted practice for companion apps. If review flags Guideline 5.2.1,
   fallback subtitle: "Containers on your home NAS".
-- `docs/privacy.html` must be pushed to GitHub (Pages serves from `docs/`)
-  **before** submitting, so the Privacy Policy URL resolves.
+- `docs/privacy.html` is live at the Privacy Policy URL above (GitHub Pages
+  serves from `docs/` on `main`) — re-check it resolves before submitting.
