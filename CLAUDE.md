@@ -39,11 +39,19 @@ build → boot sim → install → launch → screenshot flow.
 
 **Screenshots** — `scripts/screenshot.sh <name>` captures the booted simulator at App Store 6.9" size (1320×2868, requires the iPhone 17 Pro Max sim) with a clean 9:41 marketing status bar into `screenshots/`; `--launch-demo` installs + launches the demo-mode build from `build/DerivedData`, `--clear` restores the live status bar. `marketing/appstore/` is an npm/Playwright renderer (`npm --prefix marketing/appstore install && npm --prefix marketing/appstore run render`) that frames `screenshots/demo-*.png` into marketing artwork under `screenshots/appstore/` — copy lives in `shots.json`, visual system in `template.html`.
 
-Toolchain: requires Xcode 27 (iOS 26 SDK). `-skipMacroValidation` is needed
-for CLI builds because TCA's SPM macros (ComposableArchitecture, swift-case-paths,
-swift-dependencies, swift-perception) otherwise require an interactive trust prompt;
-opening the project once in the Xcode GUI and approving the macros removes the need.
-Simulators are iPhone 17-series (iPhone 16 no longer exists in Xcode 27).
+Toolchain: needs the iOS 26 SDK, which ships in **Xcode 26.6** (the version CI
+builds and tests on). Xcode 27 betas also work for local development, but never
+archive with one — App Store Connect rejects builds made with a beta Xcode or
+beta SDK, so distribution archives must come from the released Xcode.
+`-skipMacroValidation` is needed for CLI builds because TCA's SPM macros
+(ComposableArchitecture, swift-case-paths, swift-dependencies, swift-perception)
+otherwise require an interactive trust prompt; opening the project once in the
+Xcode GUI and approving the macros removes the need. Switching between Xcode
+versions re-resolves the packages, which invalidates those macro approvals and
+can leave a stale module cache — if a build then fails with "Unable to resolve
+Swift module dependency to a compatible module: 'SwiftSyntax'", delete
+`~/Library/Developer/Xcode/DerivedData/DSContainerManager-*`.
+Simulators are iPhone 17-series (iPhone 16 no longer exists in Xcode 26.6+).
 
 Swift Package dependencies (resolved automatically by Xcode):
 - `pointfreeco/swift-composable-architecture` — TCA (`ComposableArchitecture`, `Dependencies`, `DependenciesMacros`)
