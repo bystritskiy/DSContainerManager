@@ -107,24 +107,23 @@ struct ProjectDetailView: View {
 
     // MARK: - Compose Tab
 
+    @ViewBuilder
     private var composeTab: some View {
-        Group {
-            if let content = store.project.composeContent {
-                ScrollView {
-                    Text(content)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .textSelection(.enabled)
-                }
-                .background(Color(.systemBackground))
-            } else {
-                EmptyStateView(
-                    icon: "doc.text",
-                    title: "No Compose File",
-                    message: "The compose file content is not available for this project.",
-                )
+        if let content = store.project.composeContent {
+            ScrollView {
+                Text(content)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .textSelection(.enabled)
             }
+            .background(Color(.systemBackground))
+        } else {
+            EmptyStateView(
+                icon: "doc.text",
+                title: "No Compose File",
+                message: "The compose file content is not available for this project.",
+            )
         }
     }
 

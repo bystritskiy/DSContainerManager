@@ -1,2 +1,5 @@
 # SwiftFormat configuration — default rules.
 --swiftversion 6.3
+
+# Build products and SPM checkouts — never our code to format.
+--exclude build,.derivedData,.derivedData-device,DerivedData,.build,marketing

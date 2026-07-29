@@ -91,7 +91,11 @@ struct ConnectionListView: View {
             }
             .alert("Verification Code Required", isPresented: Binding(
                 get: { store.otpPrompt != nil },
-                set: { if !$0 { store.send(.dismissOTPPrompt) } },
+                set: {
+                    if !$0 {
+                        store.send(.dismissOTPPrompt)
+                    }
+                },
             )) {
                 TextField("000000", text: $otpCode)
                     .keyboardType(.numberPad)

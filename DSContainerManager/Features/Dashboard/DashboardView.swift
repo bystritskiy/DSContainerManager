@@ -194,8 +194,12 @@ struct DashboardView: View {
     }
 
     private func gaugeColor(for value: Double) -> Color {
-        if value >= 90 { return .red }
-        if value >= 70 { return .orange }
+        if value >= 90 {
+            return .red
+        }
+        if value >= 70 {
+            return .orange
+        }
         return .blue
     }
 }

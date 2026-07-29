@@ -83,7 +83,7 @@ extension ContainerDetail {
     static func mock(name: String) -> ContainerDetail {
         switch name {
         case "home-assistant":
-            return ContainerDetail(
+            ContainerDetail(
                 name: "home-assistant",
                 image: "ghcr.io/home-assistant/home-assistant:stable",
                 status: .running,
@@ -113,7 +113,7 @@ extension ContainerDetail {
             )
 
         case "immich-server":
-            return ContainerDetail(
+            ContainerDetail(
                 name: "immich-server",
                 image: "ghcr.io/immich-app/immich-server:release",
                 status: .running,
@@ -144,7 +144,7 @@ extension ContainerDetail {
             )
 
         case "pihole":
-            return ContainerDetail(
+            ContainerDetail(
                 name: "pihole",
                 image: "pihole/pihole:latest",
                 status: .stopped,
@@ -176,7 +176,7 @@ extension ContainerDetail {
             )
 
         default:
-            return ContainerDetail(
+            ContainerDetail(
                 name: "plex",
                 image: "plexinc/pms-docker:latest",
                 status: .running,

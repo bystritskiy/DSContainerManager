@@ -163,7 +163,9 @@ struct ProjectListResponse: Decodable {
         if let keyed = try? decoder.container(keyedBy: DynamicCodingKey.self) {
             var result: [ComposeProject] = []
             for key in keyed.allKeys {
-                if ["offset", "total", "limit"].contains(key.stringValue) { continue }
+                if ["offset", "total", "limit"].contains(key.stringValue) {
+                    continue
+                }
                 if let project = try? keyed.decode(ComposeProject.self, forKey: key) {
                     result.append(project)
                 }

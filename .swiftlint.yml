@@ -1,1 +1,8 @@
 # SwiftLint configuration — default rule set.
+excluded:
+  - build
+  - .derivedData
+  - .derivedData-device
+  - DerivedData
+  - .build
+  - marketing

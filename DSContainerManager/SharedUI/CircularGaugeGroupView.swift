@@ -21,7 +21,6 @@ struct CircularGaugeGroupView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    @ViewBuilder
     var body: some View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(spacing: 20) {

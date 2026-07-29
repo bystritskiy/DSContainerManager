@@ -477,7 +477,9 @@ struct ContainerListResponse: Decodable {
             var result: [DockerContainer] = []
             for key in keyed.allKeys {
                 // Skip known metadata keys
-                if ["offset", "total", "limit"].contains(key.stringValue) { continue }
+                if ["offset", "total", "limit"].contains(key.stringValue) {
+                    continue
+                }
                 if let container = try? keyed.decode(DockerContainer.self, forKey: key) {
                     result.append(container)
                 }
