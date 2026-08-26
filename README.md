@@ -6,6 +6,10 @@
 
 **Your Synology Docker, in your pocket.**
 
+<a href="https://apps.apple.com/app/dscontainer/id6786813488">
+<img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" height="54" alt="Download on the App Store" />
+</a>
+
 </div>
 
 A native iOS app for managing the Docker containers and Compose projects running on your Synology NAS — check on your stacks, restart a stuck container, and watch resource usage from anywhere, without ever opening DSM in a browser.
