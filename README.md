@@ -42,4 +42,4 @@ DSContainer gives you exactly that: a fast, focused, native control panel for ev
 
 ---
 
-> Early, actively-developed project. It does real work against the real DSM WebAPI, and it's getting better every week. Widgets, Lock Screen activities, and iPad support are on the way.
+> Actively developed, built directly against the DSM WebAPI. Requires iPhone on iOS 26 or later and a Synology NAS running Container Manager (DSM 7).
