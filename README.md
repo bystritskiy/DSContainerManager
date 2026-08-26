@@ -7,7 +7,7 @@
 **Your Synology Docker, in your pocket.**
 
 <a href="https://apps.apple.com/app/dscontainer/id6786813488">
-<img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" height="54" alt="Download on the App Store" />
+<img src="docs/assets/app-store-badge.svg" height="54" alt="Download on the App Store" />
 </a>
 
 </div>

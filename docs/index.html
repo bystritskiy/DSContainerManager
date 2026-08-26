@@ -140,6 +140,16 @@
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 38px rgba(37, 99, 235, 0.45); }
   .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
   .btn-ghost:hover { background: var(--surface-2); transform: translateY(-2px); }
+  .btn-appstore {
+    display: inline-flex;
+    border-radius: 10px;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  }
+  .btn-appstore img { display: block; height: 52px; width: auto; }
+  .btn-appstore:hover { transform: translateY(-2px); box-shadow: 0 12px 38px rgba(0, 0, 0, 0.55); }
+  .foot-cta { display: flex; justify-content: center; margin: 18px 0; }
+  .foot-cta img { display: block; height: 46px; width: auto; }
 
   /* ---- Phone mockup ---- */
   .stage { display: flex; justify-content: center; padding: 50px 0 20px; perspective: 1600px; }
@@ -253,6 +263,7 @@
       <a href="#features">Features</a>
       <a href="#trust">Privacy</a>
       <a href="https://github.com/bystritskiy/DSContainerManager">GitHub</a>
+      <a href="https://apps.apple.com/app/dscontainer/id6786813488">App Store</a>
     </div>
   </nav>
 
@@ -262,8 +273,10 @@
     <h1>Your Synology Docker,<br><span class="accent-text">in your pocket.</span></h1>
     <p class="subtitle">A native iOS control panel for the Docker containers and Compose projects running on your NAS. Watch, restart, and fix things — from anywhere, without opening DSM in a browser.</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="https://github.com/bystritskiy/DSContainerManager">★ View on GitHub</a>
-      <a class="btn btn-ghost" href="#features">See what it does</a>
+      <a class="btn-appstore" href="https://apps.apple.com/app/dscontainer/id6786813488" aria-label="Download DSContainer on the App Store">
+        <img src="assets/app-store-badge-white.svg" alt="Download on the App Store" width="156" height="52" />
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/bystritskiy/DSContainerManager">★ View on GitHub</a>
     </div>
   </header>
 
@@ -332,7 +345,10 @@
     <div class="wrap">
       <div class="foot-brand"><img src="assets/appicon-180.png" alt="DSContainer icon" /> DSContainer</div>
       <p>A native iOS client for Synology Container Manager.</p>
-      <div class="badge">Early &amp; actively developed · Widgets, Lock Screen &amp; iPad on the way</div>
+      <a class="foot-cta" href="https://apps.apple.com/app/dscontainer/id6786813488" aria-label="Download DSContainer on the App Store">
+        <img loading="lazy" src="assets/app-store-badge-white.svg" alt="Download on the App Store" width="138" height="46" />
+      </a>
+      <div class="badge">On the App Store · Widgets, Lock Screen &amp; iPad on the way</div>
       <p style="margin-top: 14px;"><a href="privacy.html" style="color: var(--muted); text-decoration: none;">Privacy Policy</a></p>
     </div>
   </footer>
