@@ -3,96 +3,91 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Privacy Policy — DSContainer</title>
+<title>Privacy Policy: DSContainer</title>
 <meta name="description" content="Privacy policy for DSContainer. The app collects no data: your credentials stay on your device, and all traffic goes directly to your NAS." />
-<meta name="theme-color" content="#0a0c10" />
+<meta name="theme-color" content="#0b0d11" />
 <link rel="icon" type="image/png" href="assets/favicon-64.png" />
 <link rel="apple-touch-icon" href="assets/appicon-180.png" />
 <style>
+  /* Shares the landing page token set: dark-locked, one accent, one radius scale. */
   :root {
-    --bg: #0a0c10;
-    --surface: #12151c;
-    --border: rgba(255, 255, 255, 0.08);
-    --text: #e8ebf1;
-    --muted: #8b93a1;
-    --accent-1: #3ba4ff;
-    --accent-2: #2563eb;
-    --radius: 18px;
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+    --bg: #0b0d11;
+    --surface: #13161d;
+    --line: rgba(255, 255, 255, 0.07);
+    --line-strong: rgba(255, 255, 255, 0.13);
+    --text: #eef1f6;
+    --muted: #9aa3b2;
+    --faint: #7d8798;
+    --accent: #0a84ff;
+    --accent-hi: #4ea9ff;
+    --r-surface: 20px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: var(--font);
+    font-family: var(--sans);
     background: var(--bg);
     color: var(--text);
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
   }
 
-  body::before {
-    content: "";
-    position: fixed;
-    top: -30vh;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120vw;
-    height: 90vh;
-    background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.20), rgba(59, 164, 255, 0.07) 40%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(11, 13, 17, 0.78);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    border-bottom: 1px solid var(--line);
   }
-
-  nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 22px 24px;
-    max-width: 760px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 2;
+  .topbar .shell {
+    max-width: 760px; margin: 0 auto; padding: 0 24px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
   }
-  .brand { display: flex; align-items: center; gap: 12px; font-weight: 650; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
-  .brand img { width: 32px; height: 32px; border-radius: 8px; }
-  nav a.back { color: var(--muted); text-decoration: none; font-size: 15px; }
-  nav a.back:hover { color: var(--text); }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 620; letter-spacing: -0.015em; color: var(--text); text-decoration: none; }
+  .brand img { width: 28px; height: 28px; border-radius: 7px; }
+  .topbar a.back { color: var(--muted); text-decoration: none; font-size: 14.5px; transition: color 0.18s var(--ease); }
+  .topbar a.back:hover { color: var(--text); }
 
-  main {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 32px 24px 80px;
-    position: relative;
-    z-index: 1;
-  }
+  :focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 3px; border-radius: 4px; }
 
-  h1 { font-size: 2.2rem; letter-spacing: -0.02em; margin-bottom: 8px; }
-  .updated { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 88px; }
 
-  h2 { font-size: 1.2rem; letter-spacing: -0.01em; margin: 34px 0 10px; }
+  h1 { font-size: clamp(1.9rem, 4vw, 2.4rem); letter-spacing: -0.025em; font-weight: 680; margin-bottom: 8px; }
+  .updated { color: var(--faint); font-size: 14px; margin-bottom: 40px; }
+
+  h2 { font-size: 1.18rem; letter-spacing: -0.02em; font-weight: 640; margin: 38px 0 10px; }
   p, li { color: var(--muted); }
   strong { color: var(--text); font-weight: 600; }
   ul { padding-left: 22px; margin: 10px 0; }
   li { margin: 6px 0; }
-  a { color: var(--accent-1); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  main a { color: var(--accent-hi); text-decoration: none; }
+  main a:hover { text-decoration: underline; }
 
   .summary {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px 24px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-surface);
+    padding: 22px 24px;
     margin-bottom: 8px;
   }
   .summary p { color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
 </style>
 </head>
 <body>
-  <nav>
-    <a class="brand" href="index.html"><img src="assets/appicon-180.png" alt="" />DSContainer</a>
-    <a class="back" href="index.html">&larr; Back</a>
-  </nav>
+  <div class="topbar">
+    <div class="shell">
+      <a class="brand" href="index.html"><img src="assets/appicon-180.png" alt="" width="28" height="28" />DSContainer</a>
+      <a class="back" href="index.html">Back to the app</a>
+    </div>
+  </div>
 
   <main>
     <h1>Privacy Policy</h1>
