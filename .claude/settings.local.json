@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(xcrun simctl *)",
+      "Bash(xcode-select -p)",
+      "Read(//Applications/**)",
+      "Bash(export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer)",
+      "Bash(xcodebuild -version)",
+      "Bash(xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build/DerivedData build)",
+      "Bash(xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath build/DerivedData -skipMacroValidation build)",
+      "Bash(echo \"saved\")",
+      "Bash(sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer)",
+      "Bash(echo \"=== exit: $? ===\")",
+      "Bash(git -C /Users/bogdan/GIT/DSContainerManager log --oneline -15)",
+      "Bash(git -C /Users/bogdan/GIT/DSContainerManager show --stat HEAD~1 HEAD --oneline)",
+      "Bash(grep -iB2 -A6 'privacy' docs/index.html)",
+      "Bash(git checkout *)",
+      "Bash(swiftformat DSContainerManager/DSContainerManagerApp.swift DSContainerManager/Core/Models/DemoMode.swift DSContainerManager/Features/Connection/ConnectionListView.swift)",
+      "Bash(swiftlint lint *)",
+      "Bash(xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager -destination 'platform=iOS Simulator,name=iPhone 17' -skipMacroValidation build)",
+      "Bash(open -a Simulator)",
+      "Bash(mdfind -name Simulator.app)",
+      "Bash(xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager -destination 'platform=iOS Simulator,name=iPhone 17' -skipMacroValidation test)",
+      "Bash(xcodebuild -project DSContainerManager.xcodeproj -scheme DSContainerManager -destination 'generic/platform=iOS' -archivePath build/DSContainerManager.xcarchive -skipMacroValidation archive)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' https://bystritskiy.github.io/DSContainerManager/)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' https://bystritskiy.github.io/DSContainerManager/privacy.html)",
+      "Bash(plutil -extract ITSAppUsesNonExemptEncryption raw build/DSContainerManager.xcarchive/Products/Applications/DSContainerManager.app/Info.plist)",
+      "Bash(plutil -extract CFBundleShortVersionString raw build/DSContainerManager.xcarchive/Products/Applications/DSContainerManager.app/Info.plist)",
+      "Bash(plutil -extract CFBundleVersion raw build/DSContainerManager.xcarchive/Products/Applications/DSContainerManager.app/Info.plist)",
+      "Bash(codesign -dv build/DSContainerManager.xcarchive/Products/Applications/DSContainerManager.app)",
+      "Bash(mkdir -p ~/Library/Developer/Xcode/Archives/2026-07-02)",
+      "Bash(cp -R build/DSContainerManager.xcarchive ~/Library/Developer/Xcode/Archives/2026-07-02/)",
+      "Read(//Users/bogdan/Library/Developer/Xcode/Archives/**)"
+    ]
+  }
+}

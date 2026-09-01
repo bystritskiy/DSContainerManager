@@ -99,6 +99,7 @@ struct ConnectionListView: View {
             )) {
                 TextField("000000", text: $otpCode)
                     .keyboardType(.numberPad)
+                    .textContentType(.oneTimeCode)
                     .autocorrectionDisabled()
 
                 Button("Submit") {
