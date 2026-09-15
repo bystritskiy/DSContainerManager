@@ -9,16 +9,20 @@ extension SynologyAPIClient {
             DemoMode.authSession
         },
         logout: { _, _ in },
-        listContainers: { _, _ in DockerContainer.mockList },
-        getContainerDetail: { _, _, name in ContainerDetail.mock(name: name) },
-        performContainerAction: { _, _, _, _ in },
-        getContainerLogs: { _, _, name, _, _ in ContainerLog.mockList(for: name) },
-        getContainerResources: { _, _ in ContainerResources.mockList },
-        listProjects: { _, _ in ComposeProject.mockList },
-        getProjectDetail: { _, _, projectId in
-            ComposeProject.mockList.first { $0.id.rawValue == projectId } ?? ComposeProject.mockList[0]
+        listContainers: { _, _ in await DemoStateStore.shared.allContainers() },
+        getContainerDetail: { _, _, name in await DemoStateStore.shared.containerDetail(name: name) },
+        performContainerAction: { _, _, name, action in
+            await DemoStateStore.shared.perform(action, containerName: name)
         },
-        performProjectAction: { _, _, _, _ in },
+        getContainerLogs: { _, _, name, _, _ in ContainerLog.mockList(for: name) },
+        getContainerResources: { _, _ in await DemoStateStore.shared.allResources() },
+        listProjects: { _, _ in await DemoStateStore.shared.allProjects() },
+        getProjectDetail: { _, _, projectId in
+            await DemoStateStore.shared.project(id: projectId) ?? ComposeProject.mockList[0]
+        },
+        performProjectAction: { _, _, projectId, action in
+            await DemoStateStore.shared.perform(action, projectId: projectId)
+        },
         getSystemUtilization: { _, _ in SystemUtilization.mock },
         getStorageInfo: { _, _ in StorageInfo.mock },
     )

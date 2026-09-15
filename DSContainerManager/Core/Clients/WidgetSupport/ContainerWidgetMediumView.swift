@@ -73,5 +73,5 @@ struct ContainerWidgetMediumView: View {
 
 #Preview {
     ContainerWidgetMediumView(entry: .placeholder)
-        .previewContext(WidgetPreviewContext(family: .systemMedium))
+        .frame(width: 338, height: 158)
 }

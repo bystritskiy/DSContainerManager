@@ -38,9 +38,22 @@ struct DSContainerManagerApp: App {
     }
 }
 
+/// Wraps the demo-entry closure so SwiftUI can compare it between updates.
+struct DemoModeStarter: Equatable {
+    static func == (_: DemoModeStarter, _: DemoModeStarter) -> Bool {
+        true
+    }
+
+    var start: () -> Void = {}
+
+    func callAsFunction() {
+        start()
+    }
+}
+
 extension EnvironmentValues {
     /// Set by `AppRootSwitcherView`; views call it to enter the sample-data demo session.
-    @Entry var startDemoMode: () -> Void = {}
+    @Entry var startDemoMode = DemoModeStarter()
 }
 
 /// Swaps between the live store and an on-demand demo store (mock dependencies).
@@ -58,9 +71,9 @@ private struct AppRootSwitcherView: View {
                 }
         } else {
             AppRootView(store: DSContainerManagerApp.store)
-                .environment(\.startDemoMode) {
+                .environment(\.startDemoMode, DemoModeStarter {
                     demoStore = DSContainerManagerApp.makeDemoStore()
-                }
+                })
         }
     }
 }

@@ -5,7 +5,7 @@ import Tagged
 // MARK: - NAS Connection (persisted via SwiftData)
 
 @Model
-final class NASConnection: @unchecked Sendable {
+final class NASConnection {
     @Attribute(.unique) var id: UUID
     var name: String
     var host: String

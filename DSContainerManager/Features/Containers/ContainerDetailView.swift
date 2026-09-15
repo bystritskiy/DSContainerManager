@@ -281,7 +281,13 @@ struct ContainerDetailView: View {
             .chartYScale(domain: 0 ... 100)
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                    AxisValueLabel(format: .dateTime.hour().minute().second())
+                    AxisValueLabel(format: .dateTime.hour().minute().second(), anchor: .top)
+                }
+            }
+            .chartYAxis {
+                AxisMarks { _ in
+                    AxisValueLabel(anchor: .trailing)
+                    AxisGridLine()
                 }
             }
             .frame(height: 150)

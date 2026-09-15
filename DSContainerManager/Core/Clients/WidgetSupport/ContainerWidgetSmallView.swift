@@ -50,5 +50,5 @@ struct ContainerWidgetSmallView: View {
 
 #Preview {
     ContainerWidgetSmallView(entry: .placeholder)
-        .previewContext(WidgetPreviewContext(family: .systemSmall))
+        .frame(width: 158, height: 158)
 }
