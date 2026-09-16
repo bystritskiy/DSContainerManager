@@ -39,7 +39,3 @@ DSContainer gives you exactly that: a fast, focused, native control panel for ev
 - **No cloud, no account, no tracking.** The app talks directly to your NAS and nothing else.
 - **Secure by default** — HTTPS, two-factor sign-in, and self-signed certificate support for typical home setups.
 - **Stays signed in the safe way** — your session lives in the iOS Keychain, so you're not re-entering 2FA every launch.
-
----
-
-> Actively developed, built directly against the DSM WebAPI. Requires iPhone on iOS 26 or later and a Synology NAS running Container Manager (DSM 7).
