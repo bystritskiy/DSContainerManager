@@ -1,0 +1,28 @@
+# DSContainer
+
+> DSContainer is a free, native iPhone app for managing Docker containers and Compose projects on a Synology NAS through Synology Container Manager. It talks directly to the NAS over the DSM Web API, with no cloud service, account, telemetry, or ads.
+
+- Price: free
+- Platform: iPhone, iOS 26 or later
+- Requires: Synology NAS on DSM 7 with Container Manager installed
+- Source code: open source on GitHub
+
+## Features
+
+- Start, stop, restart, pause, and unpause containers
+- Read container logs next to live CPU and memory charts
+- Inspect a container's ports, volumes, and environment variables
+- Bring whole Compose projects (stacks) up or down
+- System monitor with rolling CPU, memory, and network history for the NAS
+- Background health checks that send a push notification when a container stops
+- Multiple saved NAS connections; sessions are restored on launch, so two-factor sign-in is not needed every time
+- Supports HTTPS, two-factor authentication, and self-signed certificates
+- Credentials and sessions are stored in the iOS Keychain and never leave the device
+
+## Links
+
+- [App Store listing](https://apps.apple.com/app/dscontainer/id6786813488): download DSContainer
+- [Website](https://dscontainer.app/): overview and screenshots
+- [Privacy policy](https://dscontainer.app/privacy.html): the app collects no data
+- [Source code](https://github.com/bystritskiy/DSContainerManager): GitHub repository
+- [Report an issue](https://github.com/bystritskiy/DSContainerManager/issues): bug reports and feature requests
