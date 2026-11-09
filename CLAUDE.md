@@ -55,7 +55,6 @@ Simulators are iPhone 17-series (iPhone 16 no longer exists in Xcode 26.6+).
 
 Swift Package dependencies (resolved automatically by Xcode):
 - `pointfreeco/swift-composable-architecture` — TCA (`ComposableArchitecture`, `Dependencies`, `DependenciesMacros`)
-- `pointfreeco/swift-tagged` — `Tagged<Tag, Value>` strong-typed IDs
 - `getsentry/SnapshotPreviews` — `SnapshottingTests` library backing the test target (transitively pulls `FlyingFox` + `SimpleDebugger`; not used by app code)
 
 ## Architecture
@@ -74,7 +73,7 @@ Swift Package dependencies (resolved automatically by Xcode):
 - **`Clients/ConnectionStore.swift`** — SwiftData-backed store for `NASConnection`. `@Model` class + `ConnectionProfile` `Sendable` snapshot — reducers only use the profile; the `@Model` doesn't cross actor boundaries.
 - **`Clients/KeychainClient.swift`** — stores per-connection passwords and a single active `SavedSession` (session + connection UUID) so 2FA isn't re-required each launch. `AppFeature.restoreSavedSession()` validates by calling `getSystemUtilization` before trusting it.
 - **`Clients/BackgroundMonitor.swift`** — `BGTaskScheduler` registration (identifier `com.dscontainermanager.container-health-check`, iOS-only via `#if os(iOS)`) and `UNUserNotificationCenter` setup. Call `registerTasks()` from `DSContainerManagerApp.init` — it must run before the scene is created.
-- **`Models/SynologyTypes.swift`** — `Tagged` ID types (`ContainerID`, `ProjectID`, `SessionID`, `ConnectionID`) and the `ContainerStatus` / `ProjectStatus` / `ContainerAction` / `ProjectAction` enums that drive the API method dispatch in `SynologyAPILive`.
+- **`Models/SynologyTypes.swift`** — strongly typed IDs (`ContainerID`, `ProjectID`, `SessionID`, `ConnectionID`, all aliases of the local phantom-tagged `TypedID<Tag, RawValue>`, which encodes as its bare raw value) and the `ContainerStatus` / `ProjectStatus` / `ContainerAction` / `ProjectAction` enums that drive the API method dispatch in `SynologyAPILive`.
 - **`Clients/WidgetSupport/`** — home-screen widget scaffolding (`ContainerWidgetProvider`, small/medium views, `SharedContainerData`). There is **no separate widget-extension target yet** — only two native targets exist (the app and the unit-test bundle), so these files currently compile into the app. Adding a real widget means adding a WidgetKit extension target.
 
 ### Features (`DSContainerManager/Features/`)

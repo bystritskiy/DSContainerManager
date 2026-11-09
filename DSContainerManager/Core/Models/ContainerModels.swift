@@ -1,5 +1,4 @@
 import Foundation
-import Tagged
 
 // MARK: - Container (list response)
 

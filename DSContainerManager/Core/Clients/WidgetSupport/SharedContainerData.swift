@@ -1,5 +1,4 @@
 import Foundation
-import Tagged
 
 // MARK: - Shared Data for Widget Extension
 

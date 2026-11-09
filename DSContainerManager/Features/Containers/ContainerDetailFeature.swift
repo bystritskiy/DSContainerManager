@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import Tagged
 
 enum ContainerDetailTab: String, CaseIterable {
     case info = "Info"

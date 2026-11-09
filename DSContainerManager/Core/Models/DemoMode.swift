@@ -1,5 +1,4 @@
 import Foundation
-import Tagged
 
 enum DemoMode {
     static var isEnabled: Bool {

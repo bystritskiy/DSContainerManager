@@ -1,6 +1,5 @@
 import Dependencies
 import Foundation
-import Tagged
 
 // MARK: - Live API Client
 

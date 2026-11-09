@@ -1,19 +1,50 @@
 import Foundation
-import Tagged
 
-// MARK: - Tagged ID Types
+// MARK: - Typed IDs
+
+/// A raw value distinguished at compile time by a phantom `Tag`, so a `ProjectID`
+/// can't be passed where a `ContainerID` is expected even though both wrap `String`.
+///
+/// Encodes and decodes as the bare raw value (no wrapping object), matching the
+/// on-disk format of previously persisted sessions.
+struct TypedID<Tag, RawValue>: RawRepresentable {
+    var rawValue: RawValue
+}
+
+extension TypedID: Equatable where RawValue: Equatable {}
+extension TypedID: Hashable where RawValue: Hashable {}
+extension TypedID: Sendable where RawValue: Sendable {}
+
+extension TypedID: Decodable where RawValue: Decodable {
+    init(from decoder: Decoder) throws {
+        rawValue = try decoder.singleValueContainer().decode(RawValue.self)
+    }
+}
+
+extension TypedID: Encodable where RawValue: Encodable {
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+extension TypedID: CustomStringConvertible {
+    var description: String {
+        String(describing: rawValue)
+    }
+}
 
 enum ContainerIDTag {}
-typealias ContainerID = Tagged<ContainerIDTag, String>
+typealias ContainerID = TypedID<ContainerIDTag, String>
 
 enum ProjectIDTag {}
-typealias ProjectID = Tagged<ProjectIDTag, String>
+typealias ProjectID = TypedID<ProjectIDTag, String>
 
 enum SessionIDTag {}
-typealias SessionID = Tagged<SessionIDTag, String>
+typealias SessionID = TypedID<SessionIDTag, String>
 
 enum ConnectionIDTag {}
-typealias ConnectionID = Tagged<ConnectionIDTag, UUID>
+typealias ConnectionID = TypedID<ConnectionIDTag, UUID>
 
 // MARK: - Container Status
 
