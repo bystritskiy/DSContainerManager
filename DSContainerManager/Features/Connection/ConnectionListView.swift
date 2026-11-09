@@ -53,7 +53,26 @@ struct ConnectionListView: View {
                                 }
                                 .tint(.blue)
                             }
+                            // Swipe actions alone aren't discoverable; long-press offers the same options.
+                            .contextMenu {
+                                Button {
+                                    store.send(.editButtonTapped(profile))
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+
+                                Button(role: .destructive) {
+                                    store.send(.deleteConnection(profile.id))
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         }
+
+                        Text("Touch and hold a connection to edit or delete it.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .listRowBackground(Color.clear)
                     }
                 }
             }
@@ -128,6 +147,29 @@ struct ConnectionListView: View {
 #Preview {
     ConnectionListView(
         store: Store(initialState: ConnectionFeature.State()) {
+            ConnectionFeature()
+        },
+    )
+}
+
+#Preview("Local network unreachable") {
+    ConnectionListView(
+        store: Store(initialState: ConnectionFeature.State(
+            connections: [
+                ConnectionProfile(
+                    id: UUID(),
+                    name: "Home NAS",
+                    host: "192.168.1.10",
+                    port: 5000,
+                    useHTTPS: false,
+                    username: "admin",
+                    lastConnected: nil,
+                    isDefault: true,
+                    trustSelfSignedCert: false,
+                ),
+            ],
+            error: SynologyAPIError.networkUnreachable.localizedDescription,
+        )) {
             ConnectionFeature()
         },
     )

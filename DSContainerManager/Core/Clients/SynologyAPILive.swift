@@ -9,7 +9,7 @@ extension SynologyAPIClient: DependencyKey {
         let sessionDelegate = SynologySessionDelegate()
 
         return SynologyAPIClient(
-            login: { baseURL, username, password, otpCode in
+            login: { baseURL, username, password, otpCode, deviceId in
                 let session = URLSession(
                     configuration: .ephemeral,
                     delegate: sessionDelegate,
@@ -27,6 +27,12 @@ extension SynologyAPIClient: DependencyKey {
                 ]
                 if let otp = otpCode {
                     params["otp_code"] = otp
+                    // Same as "Remember this device" in the DSM sign-in page: the response
+                    // carries a `did` token that lets later logins skip the OTP step.
+                    params["enable_device_token"] = "yes"
+                    params["device_name"] = "DSContainer"
+                } else if let deviceId {
+                    params["device_id"] = deviceId
                 }
                 let url = buildURL(baseURL: baseURL, path: "webapi/auth.cgi", params: params)
                 let data = try await performRequest(session: session, url: url)
@@ -290,6 +296,8 @@ private func performRequest(session: URLSession, request: URLRequest) async thro
     let (data, response): (Data, URLResponse)
     do {
         (data, response) = try await session.data(for: request)
+    } catch let urlError as URLError where urlError.code == .notConnectedToInternet {
+        throw SynologyAPIError.networkUnreachable
     } catch let urlError as URLError {
         throw SynologyAPIError.networkError(urlError.localizedDescription)
     } catch {

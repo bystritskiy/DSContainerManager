@@ -224,7 +224,8 @@ struct ContainerDetailFeature {
         DockerContainer(
             id: container.id,
             name: detail.name,
-            image: detail.image,
+            // The detail endpoint reports the image digest; the list's "repo:tag" is what users recognise.
+            image: detail.image.hasPrefix("sha256:") ? container.image : detail.image,
             status: detail.status,
             state: detail.status.rawValue,
             created: detail.created,

@@ -5,11 +5,11 @@ struct ContainerRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Status indicator
-            Image(systemName: container.status.iconName)
-                .font(.title3)
-                .foregroundStyle(container.status.color)
-                .frame(width: 28)
+            // Status dot: play/stop glyphs here read as start/stop buttons, the opposite of their meaning.
+            Circle()
+                .fill(container.status.color)
+                .frame(width: 10, height: 10)
+                .frame(width: 16)
 
             // Info
             VStack(alignment: .leading, spacing: 4) {

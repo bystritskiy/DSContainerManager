@@ -98,7 +98,6 @@ struct ContainerDetailView: View {
                 LabeledContent("Image", value: store.container.image)
                 LabeledContent("Status", value: store.container.status.displayName)
                 LabeledContent("Created", value: store.container.created.mediumDateTimeString)
-                LabeledContent("State", value: store.container.state)
             }
 
             if !store.container.ports.isEmpty {
@@ -131,9 +130,7 @@ struct ContainerDetailView: View {
                 if !detail.env.isEmpty {
                     Section("Environment") {
                         ForEach(detail.env, id: \.self) { env in
-                            Text(env)
-                                .font(.caption.monospaced())
-                                .lineLimit(2)
+                            EnvironmentVariableRow(entry: env)
                         }
                     }
                 }
@@ -332,7 +329,8 @@ struct ContainerDetailView: View {
         } label: {
             HStack {
                 Image(systemName: icon)
-                    .foregroundStyle(color)
+                    // Disabled buttons dim their text but not an explicit style, so dim the icon too.
+                    .foregroundStyle(enabled ? color : .secondary)
                     .frame(width: 24)
                 Text(title)
                 Spacer()
@@ -373,6 +371,49 @@ private struct ContainerLogsDocument: FileDocument {
 
     func fileWrapper(configuration _: WriteConfiguration) throws -> FileWrapper {
         FileWrapper(regularFileWithContents: Data(text.utf8))
+    }
+}
+
+/// One `KEY=value` line. Values of likely secrets are masked until tapped, so tokens and
+/// passwords don't sit in plain sight on screen (or in screenshots).
+private struct EnvironmentVariableRow: View {
+    let entry: String
+    @State private var isRevealed = false
+
+    private static let sensitiveMarkers = ["TOKEN", "SECRET", "PASSWORD", "PASSWD", "KEY", "CREDENTIAL", "AUTH"]
+
+    private var name: String {
+        String(entry.prefix { $0 != "=" })
+    }
+
+    private var isSensitive: Bool {
+        let upperName = name.uppercased()
+        return entry.contains("=") && Self.sensitiveMarkers.contains { upperName.contains($0) }
+    }
+
+    var body: some View {
+        if isSensitive {
+            Button {
+                isRevealed.toggle()
+            } label: {
+                HStack {
+                    Text(isRevealed ? entry : "\(name)=••••••••")
+                        .font(.caption.monospaced())
+                        .lineLimit(isRevealed ? nil : 2)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: isRevealed ? "eye.slash" : "eye")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(isRevealed ? "Hides the value" : "Shows the value")
+        } else {
+            Text(entry)
+                .font(.caption.monospaced())
+                .lineLimit(2)
+        }
     }
 }
 

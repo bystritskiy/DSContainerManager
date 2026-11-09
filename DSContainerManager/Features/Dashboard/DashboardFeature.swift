@@ -25,6 +25,11 @@ struct DashboardFeature {
             containers.count
         }
 
+        /// A short preview for the dashboard card; the Containers tab has the full list.
+        var runningPreview: [DockerContainer] {
+            Array(containers.filter { $0.status == .running }.prefix(5))
+        }
+
         var cpuPercent: Double {
             systemUtilization?.cpu.totalPercent ?? 0
         }
@@ -41,6 +46,12 @@ struct DashboardFeature {
         case startPolling
         case stopPolling
         case pollTick
+        case showAllContainersTapped
+        case delegate(Delegate)
+
+        enum Delegate: Equatable {
+            case showAllContainers
+        }
     }
 
     struct DashboardData: Equatable {
@@ -109,6 +120,12 @@ struct DashboardFeature {
                     return .none
                 }
                 return fetchData(baseURL: baseURL, session: session)
+
+            case .showAllContainersTapped:
+                return .send(.delegate(.showAllContainers))
+
+            case .delegate:
+                return .none
             }
         }
     }

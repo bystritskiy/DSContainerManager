@@ -2,10 +2,13 @@ import Foundation
 
 // MARK: - Shared Data for Widget Extension
 
-/// Data model shared between the main app and widget extension via App Groups.
-/// The main app writes this data; widgets read it.
-struct SharedContainerData: Codable {
+// Compiled into both the app and the DSContainerWidgets extension (see the target
+// membership exception in project.pbxproj), so it must not reference app-only types.
+
+/// Snapshot the app writes after each dashboard refresh; the widget only reads it.
+struct SharedContainerData: Codable, Equatable {
     let timestamp: Date
+    let nasName: String
     let containers: [SharedContainerInfo]
     let cpuPercent: Double
     let memoryPercent: Double
@@ -14,29 +17,32 @@ struct SharedContainerData: Codable {
     let totalCount: Int
 }
 
-struct SharedContainerInfo: Codable, Identifiable {
+struct SharedContainerInfo: Codable, Equatable, Identifiable {
     let id: String
     let name: String
     let image: String
+    /// `ContainerStatus.rawValue` — kept as a string so the widget needs no app model types.
     let status: String
-    let statusColor: String // hex color for display
 }
 
 // MARK: - App Group Storage
 
 enum SharedStorage {
-    static let appGroupIdentifier = "group.com.dscontainermanager.shared"
+    static let appGroupIdentifier = "group.com.bystritski.DSContainerManager"
     static let containerDataKey = "containerData"
+    static let widgetKind = "ContainerStatusWidget"
 
     static var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: appGroupIdentifier)
     }
 
     static func saveContainerData(_ data: SharedContainerData) {
-        guard let defaults = sharedDefaults else { return }
-        if let encoded = try? JSONEncoder().encode(data) {
-            defaults.set(encoded, forKey: containerDataKey)
+        guard let defaults = sharedDefaults,
+              let encoded = try? JSONEncoder().encode(data)
+        else {
+            return
         }
+        defaults.set(encoded, forKey: containerDataKey)
     }
 
     static func loadContainerData() -> SharedContainerData? {
@@ -48,48 +54,7 @@ enum SharedStorage {
         return try? JSONDecoder().decode(SharedContainerData.self, from: data)
     }
 
-    /// Called from the main app after fetching fresh data
-    static func updateFromContainers(
-        _ containers: [DockerContainer],
-        cpuPercent: Double,
-        memoryPercent: Double,
-    ) {
-        let sharedContainers = containers.map { container in
-            SharedContainerInfo(
-                id: container.id.rawValue,
-                name: container.name,
-                image: container.image,
-                status: container.status.rawValue,
-                statusColor: container.status.hexColor,
-            )
-        }
-
-        let data = SharedContainerData(
-            timestamp: .now,
-            containers: sharedContainers,
-            cpuPercent: cpuPercent,
-            memoryPercent: memoryPercent,
-            runningCount: containers.count(where: { $0.status == .running }),
-            stoppedCount: containers.count(where: { $0.status == .stopped }),
-            totalCount: containers.count,
-        )
-
-        saveContainerData(data)
-    }
-}
-
-// MARK: - Status Color Hex
-
-extension ContainerStatus {
-    var hexColor: String {
-        switch self {
-        case .running: "#34C759"
-        case .stopped: "#FF3B30"
-        case .paused: "#FF9500"
-        case .restarting: "#007AFF"
-        case .created: "#8E8E93"
-        case .dead: "#FF3B30"
-        case .unknown: "#8E8E93"
-        }
+    static func clearContainerData() {
+        sharedDefaults?.removeObject(forKey: containerDataKey)
     }
 }

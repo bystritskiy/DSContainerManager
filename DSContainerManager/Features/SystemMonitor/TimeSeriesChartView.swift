@@ -46,14 +46,14 @@ struct TimeSeriesChartView: View {
             }
             .chartYScale(domain: 0 ... maxY)
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                    AxisValueLabel(format: .dateTime.hour().minute().second(), anchor: .top)
+                AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                    AxisValueLabel(format: .dateTime.hour().minute().second())
                     AxisGridLine()
                 }
             }
             .chartYAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) { value in
-                    AxisValueLabel(anchor: .trailing) {
+                    AxisValueLabel {
                         if let val = value.as(Double.self) {
                             Text("\(Int(val))\(unit)")
                                 .font(.caption2)

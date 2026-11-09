@@ -73,6 +73,7 @@ struct AppFeature {
     @Dependency(\.keychainClient) var keychain
     @Dependency(\.synologyClient) var api
     @Dependency(\.connectionStore) var connectionStore
+    @Dependency(\.widgetData) var widgetData
 
     nonisolated var body: some ReducerOf<Self> {
         Scope(state: \.connectionList, action: \.connectionList) {
@@ -114,6 +115,10 @@ struct AppFeature {
                 state.selectedTab = tab
                 return .none
 
+            case .dashboard(.delegate(.showAllContainers)):
+                state.selectedTab = .containers
+                return .none
+
             case .showConnectionSheet:
                 state.showingConnectionSheet = true
                 return .none
@@ -151,6 +156,9 @@ struct AppFeature {
                     .run { _ in
                         try? keychain.deleteSavedSession()
                     },
+                    .run { _ in
+                        widgetData.clear()
+                    },
                 ] + containerActionCancels + projectActionCancels
                 state.activeConnection = nil
                 state.authSession = nil
@@ -174,6 +182,21 @@ struct AppFeature {
 
             case .connectionList:
                 return .none
+
+            case .dashboard(.dataLoaded(.success)):
+                // Publish a snapshot for the home-screen widget; demo data must not replace real data.
+                guard let profile = state.activeConnection, state.authSession != DemoMode.authSession else {
+                    return .none
+                }
+                let snapshot = SharedContainerData(
+                    nasName: profile.name,
+                    containers: state.dashboard.containers,
+                    cpuPercent: state.dashboard.cpuPercent,
+                    memoryPercent: state.dashboard.memoryPercent,
+                )
+                return .run { _ in
+                    widgetData.update(snapshot)
+                }
 
             case .dashboard:
                 return .none

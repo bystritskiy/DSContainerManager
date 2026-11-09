@@ -7,11 +7,15 @@ import Foundation
 @DependencyClient
 struct SynologyAPIClient {
     /// Auth
+    ///
+    /// When `otpCode` is set, DSM is asked to trust this device and returns its token as
+    /// `AuthSession.deviceId`. Passing that token back as `deviceId` skips the 2FA prompt.
     var login: @Sendable (
         _ baseURL: URL,
         _ username: String,
         _ password: String,
         _ otpCode: String?,
+        _ deviceId: String?,
     ) async throws -> AuthSession
 
     var logout: @Sendable (
