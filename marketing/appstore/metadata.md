@@ -126,6 +126,20 @@ dashboard, containers, details, logs, resources, projects, monitor.
 Upload order suggestion: dashboard → containers → details → logs → resources →
 projects → monitor.
 
+## Creative assets (product page header + search results)
+
+App Store "Creative Assets" (live in App Store Connect since 2026-10-05): a
+21:9 header at the top of the product page (iOS 27+) and a 3:2 image in search
+results. Rendered by `npm --prefix marketing/appstore run render:creative`
+(`creative.html` + `render-creative.mjs`) into `screenshots/appstore/creative/`:
+
+- `header-3840x1646.png` — copy inside Apple's centered 1646×661 safe area.
+- `search-3840x2560.png` — copy inside the centered 2168×1030 safe area.
+
+Upload as **PNG**: App Store Connect rejected the `.jpg` with "invalid file
+extension" even though the spec lists it. No alpha channel allowed. Attached to
+version 1.1 under Product Page Information → Header and Search Results.
+
 ## Build configuration (already in the project)
 
 These live in `DSContainerManager/Info.plist`, merged with the Xcode-generated

@@ -2,7 +2,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "render": "node render.mjs"
+    "render": "node render.mjs",
+    "render:creative": "node render-creative.mjs"
   },
   "devDependencies": {
     "playwright": "^1.54.0"
