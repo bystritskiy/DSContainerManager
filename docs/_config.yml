@@ -1,0 +1,4 @@
+# GitHub Pages runs Jekyll, which skips dot-directories by default.
+# .well-known holds apple-app-site-association for iOS password AutoFill.
+include:
+  - .well-known
