@@ -10,6 +10,7 @@
 		43F4C14A2FF54CAC00674B71 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 43F4C1492FF54CAC00674B71 /* AppIcon.icon */; };
 		8443215A2F58662A0053598C /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 844321592F58662A0053598C /* ComposableArchitecture */; };
 		A10000000000000000000001 /* SnapshottingTests in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000002 /* SnapshottingTests */; };
+		B2000000000000000000000F /* DSContainerWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* DSContainerWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -20,12 +21,34 @@
 			remoteGlobalIDString = 844321422F5861A30053598C;
 			remoteInfo = DSContainerManager;
 		};
+		B2000000000000000000000C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8443213B2F5861A30053598C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B20000000000000000000008;
+			remoteInfo = DSContainerWidgets;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B2000000000000000000000E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B2000000000000000000000F /* DSContainerWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		43F4C1492FF54CAC00674B71 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		844321432F5861A30053598C /* DSContainerManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DSContainerManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000003 /* DSContainerManagerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DSContainerManagerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B20000000000000000000001 /* DSContainerWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DSContainerWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -37,6 +60,21 @@
 			);
 			target = 844321422F5861A30053598C /* DSContainerManager */;
 		};
+		B20000000000000000000003 /* Exceptions for "DSContainerWidgets" folder in "DSContainerWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				DSContainerWidgets.entitlements,
+				Info.plist,
+			);
+			target = B20000000000000000000008 /* DSContainerWidgets */;
+		};
+		B20000000000000000000004 /* Exceptions for "DSContainerManager" folder in "DSContainerWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Core/Clients/WidgetSupport/SharedContainerData.swift,
+			);
+			target = B20000000000000000000008 /* DSContainerWidgets */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -44,6 +82,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				A10000000000000000000020 /* Exceptions for "DSContainerManager" folder in "DSContainerManager" target */,
+				B20000000000000000000004 /* Exceptions for "DSContainerManager" folder in "DSContainerWidgets" target */,
 			);
 			path = DSContainerManager;
 			sourceTree = "<group>";
@@ -51,6 +90,14 @@
 		A10000000000000000000004 /* DSContainerManagerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = DSContainerManagerTests;
+			sourceTree = "<group>";
+		};
+		B20000000000000000000002 /* DSContainerWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B20000000000000000000003 /* Exceptions for "DSContainerWidgets" folder in "DSContainerWidgets" target */,
+			);
+			path = DSContainerWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -72,6 +119,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B20000000000000000000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -81,6 +135,7 @@
 				43F4C1492FF54CAC00674B71 /* AppIcon.icon */,
 				844321452F5861A30053598C /* DSContainerManager */,
 				A10000000000000000000004 /* DSContainerManagerTests */,
+				B20000000000000000000002 /* DSContainerWidgets */,
 				844321442F5861A30053598C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +145,7 @@
 			children = (
 				844321432F5861A30053598C /* DSContainerManager.app */,
 				A10000000000000000000003 /* DSContainerManagerTests.xctest */,
+				B20000000000000000000001 /* DSContainerWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -104,10 +160,12 @@
 				8443213F2F5861A30053598C /* Sources */,
 				844321402F5861A30053598C /* Frameworks */,
 				844321412F5861A30053598C /* Resources */,
+				B2000000000000000000000E /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B2000000000000000000000D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				844321452F5861A30053598C /* DSContainerManager */,
@@ -144,6 +202,26 @@
 			productReference = A10000000000000000000003 /* DSContainerManagerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		B20000000000000000000008 /* DSContainerWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B2000000000000000000000B /* Build configuration list for PBXNativeTarget "DSContainerWidgets" */;
+			buildPhases = (
+				B20000000000000000000005 /* Sources */,
+				B20000000000000000000006 /* Frameworks */,
+				B20000000000000000000007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B20000000000000000000002 /* DSContainerWidgets */,
+			);
+			name = DSContainerWidgets;
+			productName = DSContainerWidgets;
+			productReference = B20000000000000000000001 /* DSContainerWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -160,6 +238,9 @@
 					A10000000000000000000008 = {
 						CreatedOnToolsVersion = 26.3;
 						TestTargetID = 844321422F5861A30053598C;
+					};
+					B20000000000000000000008 = {
+						CreatedOnToolsVersion = 27.2;
 					};
 				};
 			};
@@ -183,6 +264,7 @@
 			targets = (
 				844321422F5861A30053598C /* DSContainerManager */,
 				A10000000000000000000008 /* DSContainerManagerTests */,
+				B20000000000000000000008 /* DSContainerWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -197,6 +279,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A10000000000000000000007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B20000000000000000000007 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -220,6 +309,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B20000000000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -227,6 +323,11 @@
 			isa = PBXTargetDependency;
 			target = 844321422F5861A30053598C /* DSContainerManager */;
 			targetProxy = A1000000000000000000000C /* PBXContainerItemProxy */;
+		};
+		B2000000000000000000000D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B20000000000000000000008 /* DSContainerWidgets */;
+			targetProxy = B2000000000000000000000C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -507,6 +608,66 @@
 			};
 			name = Release;
 		};
+		B20000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DSContainerWidgets/DSContainerWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = F7AZ625QQ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DSContainerWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DSContainer;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bystritski.DSContainerManager.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B2000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DSContainerWidgets/DSContainerWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = F7AZ625QQ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DSContainerWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DSContainer;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bystritski.DSContainerManager.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -533,6 +694,15 @@
 			buildConfigurations = (
 				A10000000000000000000009 /* Debug */,
 				A1000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B2000000000000000000000B /* Build configuration list for PBXNativeTarget "DSContainerWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B20000000000000000000009 /* Debug */,
+				B2000000000000000000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
