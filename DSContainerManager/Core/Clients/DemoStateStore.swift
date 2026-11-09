@@ -1,5 +1,4 @@
 import Foundation
-import Tagged
 
 /// Mutable in-memory state backing demo mode so container and project actions
 /// produce visible changes instead of being no-ops.

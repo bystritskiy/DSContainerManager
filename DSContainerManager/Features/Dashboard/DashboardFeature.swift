@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import Tagged
 
 @Reducer
 struct DashboardFeature {

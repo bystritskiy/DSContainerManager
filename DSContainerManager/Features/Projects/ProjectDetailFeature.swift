@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import Foundation
-import Tagged
 
 enum ProjectDetailTab: String, CaseIterable {
     case services = "Services"

@@ -1,6 +1,5 @@
 import Foundation
 import SwiftData
-import Tagged
 
 // MARK: - NAS Connection (persisted via SwiftData)
 
