@@ -133,7 +133,9 @@ App Store "Creative Assets" (live in App Store Connect since 2026-10-05): a
 results. Rendered by `npm --prefix marketing/appstore run render:creative`
 (`creative.html` + `render-creative.mjs`) into `screenshots/appstore/creative/`:
 
-- `header-3840x1646.png` — copy inside Apple's centered 1646×661 safe area.
+- `header-3840x1646.png` — icon, name and one large line, no phones. The
+  iPhone page shows ~70% of the width and puts Back/Share over the top corners,
+  so the copy is wider than Apple's 1646×661 template but stays in its height band.
 - `search-3840x2560.png` — copy inside the centered 2168×1030 safe area.
 
 Upload as **PNG**: App Store Connect rejected the `.jpg` with "invalid file

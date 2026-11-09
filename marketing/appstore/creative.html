@@ -162,7 +162,8 @@
       title.innerHTML = data.title;
       title.style.fontSize = "1.18em";
       const sub = document.getElementById("sub");
-      sub.textContent = data.sub;
+      sub.textContent = data.sub ?? "";
+      sub.style.display = data.sub ? "block" : "none";
       sub.style.fontSize = "0.44em";
 
       const phones = document.getElementById("phones");

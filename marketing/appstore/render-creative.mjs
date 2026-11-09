@@ -22,14 +22,15 @@ const assets = [
     id: "header-3840x1646",
     width: 3840,
     height: 1646,
-    safe: { w: 1646, h: 661, x: (3840 - 1646) / 2, y: (1646 - 661) / 2 },
-    scale: 108,
-    phones: [
-      { src: shot("containers"), x: 520, y: 330, h: 1500, rotate: -10, opacity: 0.85 },
-      { src: shot("dashboard"), x: 940, y: 180, h: 1600, rotate: -4 },
-      { src: shot("monitor"), x: 2900, y: 180, h: 1600, rotate: 4 },
-      { src: shot("projects"), x: 3320, y: 330, h: 1500, rotate: 10, opacity: 0.85 },
-    ],
+    // Wider than Apple's 1646×661 template: the iPhone product page shows roughly the
+    // middle 70% of the width (checked in App Store Connect's device preview), and a
+    // larger line reads better there. Height stays within the template's band.
+    safe: { w: 2500, h: 661, x: (3840 - 2500) / 2, y: (1646 - 661) / 2 },
+    // The header is small on iPhone and its top corners sit under the Back and
+    // Share buttons, so it carries only the brand and one large line — no phones.
+    scale: 190,
+    sub: null,
+    phones: [],
   },
   {
     id: "search-3840x2560",
@@ -54,7 +55,7 @@ try {
   for (const asset of assets) {
     const page = await browser.newPage({ viewport: { width: asset.width, height: asset.height }, deviceScaleFactor: 1 });
     await page.goto(templateUrl);
-    await page.evaluate((data) => window.renderCreative(data), { ...asset, title, sub, icon });
+    await page.evaluate((data) => window.renderCreative(data), { title, sub, icon, ...asset });
     await page.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0));
     await page.evaluate(() => document.fonts.ready);
     // App Store Connect rejects .jpg here despite the spec, and images must not carry
