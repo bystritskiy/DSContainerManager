@@ -40,49 +40,56 @@ struct SystemMonitorView: View {
                 }
             }
 
-            // Current values
-            if let util = store.currentUtilization {
-                currentValuesSection(util)
-            }
-
-            // CPU Chart
-            if !store.cpuHistory.isEmpty {
-                TimeSeriesChartView(
-                    title: "CPU Usage",
-                    data: store.cpuHistory,
-                    valuePath: \.cpuPercent,
-                    color: .blue,
-                    unit: "%",
-                )
-            }
-
-            // Memory Chart
-            if !store.memoryHistory.isEmpty {
-                TimeSeriesChartView(
-                    title: "Memory Usage",
-                    data: store.memoryHistory,
-                    valuePath: \.memoryPercent,
-                    color: .green,
-                    unit: "%",
-                )
-            }
-
-            // Network Chart
-            if !store.networkHistory.isEmpty {
-                networkChart
-            }
-
-            // Storage
-            if let storage = store.storageInfo {
-                storageSection(storage)
-            }
-
-            // Disk I/O
-            if let disk = store.currentUtilization?.disk {
-                diskSection(disk)
+            AdaptiveCardGrid {
+                cards
             }
         }
         .padding()
+    }
+
+    @ViewBuilder
+    private var cards: some View {
+        // Current values
+        if let util = store.currentUtilization {
+            currentValuesSection(util)
+        }
+
+        // CPU Chart
+        if !store.cpuHistory.isEmpty {
+            TimeSeriesChartView(
+                title: "CPU Usage",
+                data: store.cpuHistory,
+                valuePath: \.cpuPercent,
+                color: .blue,
+                unit: "%",
+            )
+        }
+
+        // Memory Chart
+        if !store.memoryHistory.isEmpty {
+            TimeSeriesChartView(
+                title: "Memory Usage",
+                data: store.memoryHistory,
+                valuePath: \.memoryPercent,
+                color: .green,
+                unit: "%",
+            )
+        }
+
+        // Network Chart
+        if !store.networkHistory.isEmpty {
+            networkChart
+        }
+
+        // Storage
+        if let storage = store.storageInfo {
+            storageSection(storage)
+        }
+
+        // Disk I/O
+        if let disk = store.currentUtilization?.disk {
+            diskSection(disk)
+        }
     }
 
     private func currentValuesSection(_ util: SystemUtilization) -> some View {
@@ -233,6 +240,20 @@ struct SystemMonitorView: View {
     SystemMonitorView(
         store: Store(initialState: SystemMonitorFeature.State()) {
             SystemMonitorFeature()
+        },
+    )
+}
+
+#Preview("Duo inner display", traits: .fixedLayout(width: 951, height: 669)) {
+    SystemMonitorView(
+        store: Store(initialState: SystemMonitorFeature.State(
+            baseURL: URL(string: "https://demo-nas.local:5001"),
+            authSession: DemoMode.authSession,
+        )) {
+            SystemMonitorFeature()
+        } withDependencies: {
+            $0.synologyClient = .mock
+            $0.continuousClock = ContinuousClock()
         },
     )
 }

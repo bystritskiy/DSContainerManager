@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
-// MARK: - Tab View (iPhone Compact)
+// MARK: - Tab View (iPhone; adapts to a sidebar on wide displays)
 
 struct MainTabView: View {
     @Bindable var store: StoreOf<AppFeature>
@@ -36,11 +36,20 @@ struct MainTabView: View {
                 SettingsView(store: store)
             }
         }
+        .tabViewStyle(.sidebarAdaptable)
         .sensoryFeedback(.selection, trigger: store.selectedTab)
     }
 }
 
 #Preview {
+    MainTabView(
+        store: Store(initialState: AppFeature.State()) {
+            AppFeature()
+        },
+    )
+}
+
+#Preview("Duo inner display", traits: .fixedLayout(width: 951, height: 669)) {
     MainTabView(
         store: Store(initialState: AppFeature.State()) {
             AppFeature()

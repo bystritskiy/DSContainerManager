@@ -33,7 +33,7 @@ struct DashboardView: View {
     }
 
     private var dashboardContent: some View {
-        VStack(spacing: 16) {
+        AdaptiveCardGrid {
             // System Gauges
             systemGaugesSection
 
@@ -185,7 +185,7 @@ struct DashboardView: View {
     }
 
     private var loadingContent: some View {
-        VStack(spacing: 16) {
+        AdaptiveCardGrid {
             ForEach(0 ..< 4) { _ in
                 SkeletonView(height: 80)
             }
@@ -208,6 +208,23 @@ struct DashboardView: View {
     DashboardView(
         store: Store(initialState: DashboardFeature.State()) {
             DashboardFeature()
+        },
+    )
+}
+
+#Preview("Duo inner display", traits: .fixedLayout(width: 951, height: 669)) {
+    DashboardView(
+        store: Store(initialState: DashboardFeature.State(
+            baseURL: URL(string: "https://demo-nas.local:5001"),
+            authSession: DemoMode.authSession,
+            systemUtilization: .mock,
+            storageInfo: .mock,
+            containers: DockerContainer.mockList,
+        )) {
+            DashboardFeature()
+        } withDependencies: {
+            $0.synologyClient = .mock
+            $0.continuousClock = ContinuousClock()
         },
     )
 }
