@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		43F4C14A2FF54CAC00674B71 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 43F4C1492FF54CAC00674B71 /* AppIcon.icon */; };
 		844321532F5865FE0053598C /* Tagged in Frameworks */ = {isa = PBXBuildFile; productRef = 844321522F5865FE0053598C /* Tagged */; };
-		844321552F5865FE0053598C /* TaggedMoney in Frameworks */ = {isa = PBXBuildFile; productRef = 844321542F5865FE0053598C /* TaggedMoney */; };
-		844321572F5865FE0053598C /* TaggedTime in Frameworks */ = {isa = PBXBuildFile; productRef = 844321562F5865FE0053598C /* TaggedTime */; };
 		8443215A2F58662A0053598C /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 844321592F58662A0053598C /* ComposableArchitecture */; };
 		A10000000000000000000001 /* SnapshottingTests in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000002 /* SnapshottingTests */; };
 /* End PBXBuildFile section */
@@ -63,9 +61,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				844321532F5865FE0053598C /* Tagged in Frameworks */,
-				844321552F5865FE0053598C /* TaggedMoney in Frameworks */,
 				8443215A2F58662A0053598C /* ComposableArchitecture in Frameworks */,
-				844321572F5865FE0053598C /* TaggedTime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,8 +116,6 @@
 			name = DSContainerManager;
 			packageProductDependencies = (
 				844321522F5865FE0053598C /* Tagged */,
-				844321542F5865FE0053598C /* TaggedMoney */,
-				844321562F5865FE0053598C /* TaggedTime */,
 				844321592F58662A0053598C /* ComposableArchitecture */,
 			);
 			productName = DSContainerManager;
@@ -578,16 +572,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */;
 			productName = Tagged;
-		};
-		844321542F5865FE0053598C /* TaggedMoney */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */;
-			productName = TaggedMoney;
-		};
-		844321562F5865FE0053598C /* TaggedTime */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 844321512F5865FE0053598C /* XCRemoteSwiftPackageReference "swift-tagged" */;
-			productName = TaggedTime;
 		};
 		844321592F58662A0053598C /* ComposableArchitecture */ = {
 			isa = XCSwiftPackageProductDependency;
