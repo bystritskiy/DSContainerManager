@@ -90,8 +90,10 @@ struct MemoryInfo: Codable, Equatable {
     let cached: Int
     let buffer: Int
 
+    /// Memory held by processes. DSM's `avail_real` excludes reclaimable cache and buffers,
+    /// so they are subtracted too — matching `real_usage` instead of reading as nearly full.
     var usedReal: Int {
-        totalReal - availReal
+        max(0, totalReal - availReal - cached - buffer)
     }
 
     var usagePercent: Double {

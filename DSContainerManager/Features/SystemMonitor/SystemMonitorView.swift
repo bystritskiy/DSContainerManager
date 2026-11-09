@@ -147,13 +147,13 @@ struct SystemMonitorView: View {
                 "Upload": Color.green,
             ])
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                    AxisValueLabel(format: .dateTime.hour().minute().second(), anchor: .top)
+                AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                    AxisValueLabel(format: .dateTime.hour().minute().second())
                 }
             }
             .chartYAxis {
                 AxisMarks { _ in
-                    AxisValueLabel(anchor: .trailing)
+                    AxisValueLabel()
                     AxisGridLine()
                 }
             }

@@ -34,7 +34,8 @@ struct ContainerListView: View {
                 ToolbarItem(placement: .primaryAction) {
                     sortMenu
                 }
-                ToolbarItem(placement: .secondaryAction) {
+                // Primary, not secondary: secondary items collapse into the "…" overflow menu.
+                ToolbarItem(placement: .primaryAction) {
                     filterMenu
                 }
             }
@@ -171,8 +172,13 @@ struct ContainerListView: View {
                 }
             }
         } label: {
-            Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
-                .labelStyle(.iconOnly)
+            Label(
+                "Filter",
+                systemImage: store.statusFilter == nil
+                    ? "line.3.horizontal.decrease.circle"
+                    : "line.3.horizontal.decrease.circle.fill",
+            )
+            .labelStyle(.iconOnly)
         }
     }
 }

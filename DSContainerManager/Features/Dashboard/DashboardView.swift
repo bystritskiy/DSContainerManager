@@ -45,9 +45,9 @@ struct DashboardView: View {
                 storageSection(storageInfo)
             }
 
-            // Top Containers
+            // Running containers preview
             if !store.containers.isEmpty {
-                topContainersSection
+                runningContainersSection
             }
         }
         .padding()
@@ -159,26 +159,50 @@ struct DashboardView: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private var topContainersSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Containers")
+    private var runningContainersSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Running")
                 .font(.headline)
 
-            ForEach(store.containers) { container in
-                HStack {
+            if store.runningPreview.isEmpty {
+                Text("No containers are running.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            ForEach(store.runningPreview) { container in
+                HStack(spacing: 8) {
                     Circle()
                         .fill(container.status.color)
                         .frame(width: 8, height: 8)
                     Text(container.name)
                         .font(.subheadline)
-                    Spacer()
+                        .lineLimit(1)
+                    Spacer(minLength: 8)
                     Text(container.image.components(separatedBy: "/").last ?? container.image)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                    StatusBadgeView(containerStatus: container.status)
+                        .truncationMode(.middle)
                 }
             }
+
+            Divider()
+
+            Button {
+                store.send(.showAllContainersTapped)
+            } label: {
+                HStack {
+                    Text("All \(store.totalCount) containers")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                }
+                .font(.subheadline)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.tint)
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))

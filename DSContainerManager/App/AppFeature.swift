@@ -115,6 +115,10 @@ struct AppFeature {
                 return .none
 
             case .showConnectionSheet:
+            case .dashboard(.delegate(.showAllContainers)):
+                state.selectedTab = .containers
+                return .none
+
                 state.showingConnectionSheet = true
                 return .none
 
