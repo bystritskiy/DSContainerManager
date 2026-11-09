@@ -4,7 +4,7 @@ import Foundation
 
 extension SynologyAPIClient {
     static let mock = SynologyAPIClient(
-        login: { _, _, _, _ in
+        login: { _, _, _, _, _ in
             DemoMode.authSession
         },
         logout: { _, _ in },

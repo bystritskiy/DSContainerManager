@@ -126,6 +126,21 @@ extension KeychainClient {
     func deletePassword(forConnection id: UUID) throws {
         try delete("connection-password-\(id.uuidString)")
     }
+
+    /// DSM "trusted device" token (`did`), returned after a 2FA login. Sending it back
+    /// as `device_id` lets later logins to the same NAS skip the verification code.
+    func saveDeviceToken(_ token: String, forConnection id: UUID) throws {
+        try save(Data(token.utf8), "connection-device-token-\(id.uuidString)")
+    }
+
+    func loadDeviceToken(forConnection id: UUID) throws -> String? {
+        guard let data = try load("connection-device-token-\(id.uuidString)") else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    func deleteDeviceToken(forConnection id: UUID) throws {
+        try delete("connection-device-token-\(id.uuidString)")
+    }
 }
 
 // MARK: - Session Persistence

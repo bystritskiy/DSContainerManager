@@ -93,6 +93,7 @@ struct ConnectionFeature {
             case let .deleteConnection(id):
                 return .run { send in
                     try keychain.deletePassword(forConnection: id)
+                    try keychain.deleteDeviceToken(forConnection: id)
                     try await store.delete(id)
                     let result = await Result { try await store.fetchAll() }
                     await send(.connectionsLoaded(result))
@@ -105,6 +106,7 @@ struct ConnectionFeature {
                 state.loginInProgressId = profile.id
                 state.error = nil
                 let password = (try? keychain.loadPassword(forConnection: profile.id)) ?? ""
+                let deviceToken = try? keychain.loadDeviceToken(forConnection: profile.id)
                 guard let baseURL = profile.baseURL else {
                     state.error = "Invalid URL for \(profile.name)"
                     state.loginInProgressId = nil
@@ -112,14 +114,19 @@ struct ConnectionFeature {
                 }
                 return .run { send in
                     let result = await Result {
-                        try await api.login(baseURL, profile.username, password, nil)
+                        try await api.login(baseURL, profile.username, password, nil, deviceToken)
                     }
                     await send(.loginResult(result, profile))
                 }
 
             case let .loginResult(.success(session), profile):
                 state.loginInProgressId = nil
-                return .send(.delegate(.connectionEstablished(profile, session)))
+                return .run { send in
+                    if let deviceToken = session.deviceId {
+                        try? keychain.saveDeviceToken(deviceToken, forConnection: profile.id)
+                    }
+                    await send(.delegate(.connectionEstablished(profile, session)))
+                }
 
             case let .loginResult(.failure(error), profile):
                 state.loginInProgressId = nil
@@ -160,7 +167,7 @@ struct ConnectionFeature {
                 }
                 return .run { send in
                     let result = await Result {
-                        try await api.login(baseURL, profile.username, password, otpCode)
+                        try await api.login(baseURL, profile.username, password, otpCode, nil)
                     }
                     await send(.loginResult(result, profile))
                 }
