@@ -165,8 +165,12 @@ actor DemoStateStore {
 
     private static func projectStatus(for statuses: [ContainerStatus]) -> ProjectStatus {
         guard !statuses.isEmpty else { return .unknown }
-        if statuses.allSatisfy({ $0 == .running }) { return .running }
-        if statuses.contains(.running) { return .partiallyRunning }
+        if statuses.allSatisfy({ $0 == .running }) {
+            return .running
+        }
+        if statuses.contains(.running) {
+            return .partiallyRunning
+        }
         return .stopped
     }
 }
