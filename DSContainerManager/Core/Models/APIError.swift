@@ -3,6 +3,9 @@ import Foundation
 enum SynologyAPIError: Error, Equatable, LocalizedError {
     case invalidURL
     case networkError(String)
+    /// iOS reports a denied Local Network permission as "not connected to the internet",
+    /// so this case carries actionable guidance instead of that misleading system text.
+    case networkUnreachable
     case invalidCredentials
     case accountDisabled
     case permissionDenied
@@ -44,6 +47,11 @@ enum SynologyAPIError: Error, Equatable, LocalizedError {
             "Invalid server URL"
         case let .networkError(message):
             "Network error: \(message)"
+        case .networkUnreachable:
+            """
+            Can't reach your NAS. Check that DSContainer is allowed in Settings › Privacy & Security › \
+            Local Network, and that this iPhone is on the same network as the NAS.
+            """
         case .invalidCredentials:
             "Invalid username or password"
         case .accountDisabled:

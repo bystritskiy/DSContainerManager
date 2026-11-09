@@ -296,6 +296,8 @@ private func performRequest(session: URLSession, request: URLRequest) async thro
     let (data, response): (Data, URLResponse)
     do {
         (data, response) = try await session.data(for: request)
+    } catch let urlError as URLError where urlError.code == .notConnectedToInternet {
+        throw SynologyAPIError.networkUnreachable
     } catch let urlError as URLError {
         throw SynologyAPIError.networkError(urlError.localizedDescription)
     } catch {
