@@ -2,6 +2,26 @@
 
 Everything to paste into App Store Connect when creating the app record.
 
+## What's New — 1.1 (4000 chars max)
+
+Home-screen widget
+• New small and medium widgets show how many containers are running, NAS CPU and memory, and your running containers at a glance.
+
+Sign in once
+• After you enter a two-factor code, DSContainer asks DSM to trust this iPhone, so later sign-ins skip the code. You can revoke it any time in DSM under Personal › Security.
+
+Easier connections
+• Touch and hold a connection to edit or delete it.
+• A clear message when iOS blocks Local Network access, instead of "The Internet connection appears to be offline".
+
+Fixes and polish
+• Memory usage in System Monitor no longer counts cache as used.
+• Container details show the image name instead of a digest.
+• Secret-looking environment variables are hidden until you tap them.
+• A shorter dashboard with your running containers and a link to the full list.
+• Status dots in the container list, a visible status filter, and cleaner charts.
+• Better layout on wide and foldable screens.
+
 ## App Information
 
 | Field | Value |
@@ -138,8 +158,11 @@ Apple after upload.
    when it offers to. Keep automatic signing on.
 3. The app record must exist in App Store Connect **before** the upload
    (bundle ID `com.bystritski.DSContainerManager` is already registered).
-4. After processing (~10–30 min), attach the build to the 1.0 version, fill in
+4. After processing (~10–30 min), attach the build to the version, fill in
    the fields above, and submit.
+
+Xcode 27.2 (27B48) is a released Xcode and is accepted by App Store Connect;
+never archive with a beta (build numbers ending in a letter).
 
 Bump `CURRENT_PROJECT_VERSION` for every re-upload — build 1 is burned once
 uploaded, even if the submission is rejected.
