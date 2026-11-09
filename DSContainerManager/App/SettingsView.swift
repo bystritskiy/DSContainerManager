@@ -33,12 +33,17 @@ struct SettingsView: View {
                 }
 
                 Section("About") {
-                    LabeledContent("Version", value: "1.0.0")
-                    LabeledContent("Build", value: "1")
+                    // Read from the bundle so these never drift from MARKETING_VERSION / CURRENT_PROJECT_VERSION.
+                    LabeledContent("Version", value: Self.bundleValue("CFBundleShortVersionString"))
+                    LabeledContent("Build", value: Self.bundleValue("CFBundleVersion"))
                 }
             }
             .navigationTitle("Settings")
         }
+    }
+
+    private static func bundleValue(_ key: String) -> String {
+        Bundle.main.object(forInfoDictionaryKey: key) as? String ?? "—"
     }
 }
 

@@ -2,6 +2,26 @@
 
 Everything to paste into App Store Connect when creating the app record.
 
+## What's New — 1.1 (4000 chars max)
+
+Home-screen widget
+• New small and medium widgets show how many containers are running, NAS CPU and memory, and your running containers at a glance.
+
+Sign in once
+• After you enter a two-factor code, DSContainer asks DSM to trust this iPhone, so later sign-ins skip the code. You can revoke it any time in DSM under Personal › Security.
+
+Easier connections
+• Touch and hold a connection to edit or delete it.
+• A clear message when iOS blocks Local Network access, instead of "The Internet connection appears to be offline".
+
+Fixes and polish
+• Memory usage in System Monitor no longer counts cache as used.
+• Container details show the image name instead of a digest.
+• Secret-looking environment variables are hidden until you tap them.
+• A shorter dashboard with your running containers and a link to the full list.
+• Status dots in the container list, a visible status filter, and cleaner charts.
+• Better layout on wide and foldable screens.
+
 ## App Information
 
 | Field | Value |
@@ -106,6 +126,22 @@ dashboard, containers, details, logs, resources, projects, monitor.
 Upload order suggestion: dashboard → containers → details → logs → resources →
 projects → monitor.
 
+## Creative assets (product page header + search results)
+
+App Store "Creative Assets" (live in App Store Connect since 2026-10-05): a
+21:9 header at the top of the product page (iOS 27+) and a 3:2 image in search
+results. Rendered by `npm --prefix marketing/appstore run render:creative`
+(`creative.html` + `render-creative.mjs`) into `screenshots/appstore/creative/`:
+
+- `header-3840x1646.png` — icon, name and one large line, no phones. The
+  iPhone page shows ~70% of the width and puts Back/Share over the top corners,
+  so the copy is wider than Apple's 1646×661 template but stays in its height band.
+- `search-3840x2560.png` — copy inside the centered 2168×1030 safe area.
+
+Upload as **PNG**: App Store Connect rejected the `.jpg` with "invalid file
+extension" even though the spec lists it. No alpha channel allowed. Attached to
+version 1.1 under Product Page Information → Header and Search Results.
+
 ## Build configuration (already in the project)
 
 These live in `DSContainerManager/Info.plist`, merged with the Xcode-generated
@@ -138,8 +174,11 @@ Apple after upload.
    when it offers to. Keep automatic signing on.
 3. The app record must exist in App Store Connect **before** the upload
    (bundle ID `com.bystritski.DSContainerManager` is already registered).
-4. After processing (~10–30 min), attach the build to the 1.0 version, fill in
+4. After processing (~10–30 min), attach the build to the version, fill in
    the fields above, and submit.
+
+Xcode 27.2 (27B48) is a released Xcode and is accepted by App Store Connect;
+never archive with a beta (build numbers ending in a letter).
 
 Bump `CURRENT_PROJECT_VERSION` for every re-upload — build 1 is burned once
 uploaded, even if the submission is rejected.
