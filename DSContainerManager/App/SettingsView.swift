@@ -4,7 +4,8 @@ import SwiftUI
 // MARK: - Settings View
 
 struct SettingsView: View {
-    let store: StoreOf<AppFeature>
+    @Bindable var store: StoreOf<AppFeature>
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack {
@@ -26,6 +27,23 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle("Stopped Containers", isOn: $store.containerAlertsEnabled.sending(\.containerAlertsToggled))
+                } header: {
+                    Text("Notifications")
+                } footer: {
+                    if store.notificationsDenied {
+                        Button("Allow notifications in Settings") {
+                            if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                                openURL(url)
+                            }
+                        }
+                        .font(.footnote)
+                    } else {
+                        Text("Checked in the background when iOS allows, so alerts can be a few minutes late.")
+                    }
+                }
+
+                Section {
                     Button("Disconnect", role: .destructive) {
                         store.send(.disconnect)
                     }
@@ -34,12 +52,30 @@ struct SettingsView: View {
 
                 Section("About") {
                     // Read from the bundle so these never drift from MARKETING_VERSION / CURRENT_PROJECT_VERSION.
-                    LabeledContent("Version", value: Self.bundleValue("CFBundleShortVersionString"))
-                    LabeledContent("Build", value: Self.bundleValue("CFBundleVersion"))
+                    LabeledContent("Version", value: Self.versionString)
+                    Link(destination: Self.issuesURL) {
+                        Label("Report a Problem", systemImage: "exclamationmark.bubble")
+                    }
+                    Link(destination: Self.reviewURL) {
+                        Label("Rate DSContainer", systemImage: "star")
+                    }
+                    Link(destination: Self.privacyURL) {
+                        Label("Privacy Policy", systemImage: "hand.raised")
+                    }
                 }
             }
             .navigationTitle("Settings")
         }
+    }
+
+    private static let issuesURL = URL(string: "https://github.com/bystritskiy/DSContainerManager/issues")!
+    private static let reviewURL = URL(string: "https://apps.apple.com/app/id6786813488?action=write-review")!
+    private static let privacyURL = URL(string: "https://dscontainer.app/privacy.html")!
+
+    private static var versionString: String {
+        let version = bundleValue("CFBundleShortVersionString")
+        let build = bundleValue("CFBundleVersion")
+        return "\(version) (\(build))"
     }
 
     private static func bundleValue(_ key: String) -> String {

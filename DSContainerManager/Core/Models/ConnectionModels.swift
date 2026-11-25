@@ -71,6 +71,20 @@ struct ConnectionProfile: Equatable, Identifiable, Codable {
     var connectionID: ConnectionID {
         ConnectionID(rawValue: id)
     }
+
+    func withLastConnected(_ date: Date) -> ConnectionProfile {
+        ConnectionProfile(
+            id: id,
+            name: name,
+            host: host,
+            port: port,
+            useHTTPS: useHTTPS,
+            username: username,
+            lastConnected: date,
+            isDefault: isDefault,
+            trustSelfSignedCert: trustSelfSignedCert,
+        )
+    }
 }
 
 extension NASConnection {

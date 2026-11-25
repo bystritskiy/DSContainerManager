@@ -49,6 +49,7 @@ extension ConnectionStore: DependencyKey {
                     connection.port = profile.port
                     connection.useHTTPS = profile.useHTTPS
                     connection.username = profile.username
+                    connection.lastConnected = profile.lastConnected
                     connection.isDefault = profile.isDefault
                     connection.trustSelfSignedCert = profile.trustSelfSignedCert
                 } else {

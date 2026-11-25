@@ -39,17 +39,20 @@ enum KeychainError: Error, LocalizedError {
 extension KeychainClient: DependencyKey {
     static let liveValue = KeychainClient(
         save: { data, key in
-            let query: [String: Any] = [
+            let itemQuery: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
                 kSecAttrAccount as String: key,
                 kSecAttrService as String: "com.dscontainermanager",
-                kSecValueData as String: data,
             ]
 
             // Delete existing item first
-            SecItemDelete(query as CFDictionary)
+            SecItemDelete(itemQuery as CFDictionary)
 
-            let status = SecItemAdd(query as CFDictionary, nil)
+            var addQuery = itemQuery
+            addQuery[kSecValueData as String] = data
+            // Readable after the first unlock, so the background check can sign in while the phone is locked.
+            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            let status = SecItemAdd(addQuery as CFDictionary, nil)
             guard status == errSecSuccess else {
                 throw KeychainError.saveFailed(status)
             }

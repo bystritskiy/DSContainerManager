@@ -16,6 +16,12 @@ struct AppFeature {
         var systemMonitor = SystemMonitorFeature.State()
         var showingConnectionSheet = false
         var hasAttemptedSessionRestore = false
+        var isRenewingSession = false
+        var lastSessionRenewal: Date?
+        var containerAlertsEnabled = false
+        var notificationsDenied = false
+        /// A container to open once the list has loaded (from a tapped notification).
+        var pendingContainerName: String?
 
         var isConnected: Bool {
             activeConnection != nil && authSession != nil
@@ -65,8 +71,16 @@ struct AppFeature {
         case showConnectionSheet
         case hideConnectionSheet
         case disconnect
+        case sessionRestoreStarted(UUID)
         case sessionRestored(ConnectionProfile, AuthSession)
         case sessionValidationFailed
+        case sessionRestoreFailed(String)
+        case sessionExpired
+        case sessionRenewed(AuthSession)
+        case sessionRenewalFailed
+        case containerAlertsToggled(Bool)
+        case containerAlertsAuthorization(Bool)
+        case notificationOpened(containerName: String)
     }
 
     @Dependency(\.backgroundMonitor) var backgroundMonitor
@@ -74,6 +88,7 @@ struct AppFeature {
     @Dependency(\.synologyClient) var api
     @Dependency(\.connectionStore) var connectionStore
     @Dependency(\.widgetData) var widgetData
+    @Dependency(\.date.now) var now
 
     nonisolated var body: some ReducerOf<Self> {
         Scope(state: \.connectionList, action: \.connectionList) {
@@ -97,27 +112,129 @@ struct AppFeature {
             case .onAppear:
                 guard !state.hasAttemptedSessionRestore else { return .none }
                 state.hasAttemptedSessionRestore = true
+                state.containerAlertsEnabled = backgroundMonitor.alertsEnabled()
                 return .merge(
                     .send(.connectionList(.loadConnections)),
                     restoreSavedSession(),
                 )
 
+            case let .sessionRestoreStarted(connectionId):
+                state.connectionList.loginInProgressId = connectionId
+                return .none
+
             case let .sessionRestored(profile, session):
+                state.connectionList.loginInProgressId = nil
                 return applyConnection(state: &state, profile: profile, session: session)
 
             case .sessionValidationFailed:
                 // Saved session was invalid/expired, clear it and show login
+                state.connectionList.loginInProgressId = nil
                 return .run { _ in
                     try? keychain.deleteSavedSession()
                 }
+
+            case let .sessionRestoreFailed(message):
+                // The NAS is unreachable right now; keep the saved session for the next launch.
+                state.connectionList.loginInProgressId = nil
+                state.connectionList.error = message
+                return .none
+
+            case .sessionExpired:
+                guard !state.isRenewingSession,
+                      let profile = state.activeConnection,
+                      let baseURL = profile.baseURL,
+                      state.authSession != DemoMode.authSession
+                else { return .none }
+                // A fresh session rejected again right away won't be fixed by another sign-in; stop the loop.
+                if let last = state.lastSessionRenewal, now.timeIntervalSince(last) < 60 {
+                    return .send(.sessionRenewalFailed)
+                }
+                state.isRenewingSession = true
+                return .run { send in
+                    if let session = await signInAgain(profile: profile, baseURL: baseURL) {
+                        await send(.sessionRenewed(session))
+                    } else {
+                        await send(.sessionRenewalFailed)
+                    }
+                }
+
+            case let .sessionRenewed(session):
+                state.isRenewingSession = false
+                state.lastSessionRenewal = now
+                guard state.isConnected else { return .none }
+                state.authSession = session
+                state.dashboard.authSession = session
+                state.containerList.authSession = session
+                state.containerList.detail?.authSession = session
+                state.projectList.authSession = session
+                state.projectList.detail?.authSession = session
+                state.systemMonitor.authSession = session
+                var effects: [Effect<Action>] = [
+                    .send(.dashboard(.refresh)),
+                    .send(.containerList(.refresh)),
+                    .send(.projectList(.refresh)),
+                    .send(.systemMonitor(.refresh)),
+                ]
+                if state.containerList.detail != nil {
+                    effects.append(.send(.containerList(.detail(.presented(.refreshDetail)))))
+                }
+                if state.projectList.detail != nil {
+                    effects.append(.send(.projectList(.detail(.presented(.refreshProject)))))
+                }
+                return .merge(effects)
+
+            case .sessionRenewalFailed:
+                state.isRenewingSession = false
+                guard state.isConnected else { return .none }
+                let effect = disconnect(state: &state)
+                state.connectionList.error = "Your session has ended. Sign in again."
+                return effect
 
             case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
 
+            case let .containerAlertsToggled(isOn):
+                state.containerAlertsEnabled = isOn
+                state.notificationsDenied = false
+                guard isOn else {
+                    return .run { _ in
+                        backgroundMonitor.setAlertsEnabled(false)
+                    }
+                }
+                return .run { send in
+                    await send(.containerAlertsAuthorization(backgroundMonitor.requestNotificationPermission()))
+                }
+
+            case let .containerAlertsAuthorization(granted):
+                state.containerAlertsEnabled = granted
+                state.notificationsDenied = !granted
+                return .run { _ in
+                    backgroundMonitor.setAlertsEnabled(granted)
+                }
+
+            case let .notificationOpened(containerName):
+                state.pendingContainerName = containerName
+                presentPendingContainerIfNeeded(state: &state)
+                return .none
+
             case .dashboard(.delegate(.showAllContainers)):
                 state.selectedTab = .containers
+                state.containerList.statusFilter = nil
+                state.containerList.searchText = ""
+                state.containerList.detail = nil
                 return .none
+
+            case let .dashboard(.delegate(.showContainers(status))):
+                state.selectedTab = .containers
+                state.containerList.statusFilter = status
+                state.containerList.searchText = ""
+                state.containerList.detail = nil
+                return .none
+
+            case let .dashboard(.delegate(.showContainer(container))):
+                state.selectedTab = .containers
+                return .send(.containerList(.containerTapped(container)))
 
             case .showConnectionSheet:
                 state.showingConnectionSheet = true
@@ -128,55 +245,17 @@ struct AppFeature {
                 return .none
 
             case .disconnect:
-                let containerActionCancels = state.containerList.pendingActionIDs.map {
-                    Effect<Action>.cancel(id: ContainerListFeature.CancelID.action($0))
-                }
-                let projectActionCancels = state.projectList.pendingActionIDs.map {
-                    Effect<Action>.cancel(id: ProjectListFeature.CancelID.action($0))
-                }
-                let effects: [Effect<Action>] = [
-                    .send(.dashboard(.stopPolling)),
-                    .send(.containerList(.stopPolling)),
-                    .send(.systemMonitor(.stopPolling)),
-                    .cancel(id: DashboardFeature.CancelID.load),
-                    .cancel(id: DashboardFeature.CancelID.polling),
-                    .cancel(id: ContainerListFeature.CancelID.load),
-                    .cancel(id: ContainerListFeature.CancelID.polling),
-                    .cancel(id: ContainerDetailFeature.CancelID.detail),
-                    .cancel(id: ContainerDetailFeature.CancelID.logs),
-                    .cancel(id: ContainerDetailFeature.CancelID.resources),
-                    .cancel(id: ContainerDetailFeature.CancelID.action),
-                    .cancel(id: ContainerDetailFeature.CancelID.resourcePolling),
-                    .cancel(id: ProjectListFeature.CancelID.load),
-                    .cancel(id: ProjectDetailFeature.CancelID.load),
-                    .cancel(id: ProjectDetailFeature.CancelID.action),
-                    .cancel(id: SystemMonitorFeature.CancelID.utilizationLoad),
-                    .cancel(id: SystemMonitorFeature.CancelID.storageLoad),
-                    .cancel(id: SystemMonitorFeature.CancelID.polling),
-                    .run { _ in
-                        try? keychain.deleteSavedSession()
-                    },
-                    .run { _ in
-                        widgetData.clear()
-                    },
-                ] + containerActionCancels + projectActionCancels
-                state.activeConnection = nil
-                state.authSession = nil
-                state.dashboard = DashboardFeature.State()
-                state.containerList = ContainerListFeature.State()
-                state.projectList = ProjectListFeature.State()
-                state.systemMonitor = SystemMonitorFeature.State()
-                backgroundMonitor.cancelHealthCheck()
-                // Clear saved session from Keychain
-                return .merge(effects)
+                return disconnect(state: &state)
 
             case let .connectionList(.delegate(.connectionEstablished(profile, session))):
                 // Save session to Keychain for next launch
                 let connectionId = profile.id
+                let profile = profile.withLastConnected(now)
                 return .merge(
                     applyConnection(state: &state, profile: profile, session: session),
                     .run { _ in
                         try? keychain.saveSession(session, forConnection: connectionId)
+                        try? await connectionStore.save(profile)
                     },
                 )
 
@@ -198,11 +277,25 @@ struct AppFeature {
                     widgetData.update(snapshot)
                 }
 
+            case let .dashboard(.dataLoaded(.failure(error))),
+                 let .containerList(.containersLoaded(.failure(error))),
+                 let .containerList(.actionResult(_, .failure(error))),
+                 let .containerList(.detail(.presented(.detailLoaded(.failure(error))))),
+                 let .containerList(.detail(.presented(.actionResult(.failure(error))))),
+                 let .projectList(.projectsLoaded(.failure(error))),
+                 let .projectList(.actionResult(_, .failure(error))),
+                 let .projectList(.detail(.presented(.projectLoaded(.failure(error))))),
+                 let .projectList(.detail(.presented(.actionResult(.failure(error))))),
+                 let .systemMonitor(.utilizationLoaded(.failure(error))):
+                guard (error as? SynologyAPIError)?.isSessionError == true else { return .none }
+                return .send(.sessionExpired)
+
             case .dashboard:
                 return .none
 
             case .containerList(.containersLoaded(.success)):
                 presentDemoContainerDetailIfNeeded(state: &state)
+                presentPendingContainerIfNeeded(state: &state)
                 return .none
 
             case .containerList:
@@ -213,127 +306,6 @@ struct AppFeature {
 
             case .systemMonitor:
                 return .none
-            }
-        }
-    }
-
-    // MARK: - Helpers
-
-    /// Applies a connection + session to all child features and starts loading data
-    private func applyConnection(state: inout State, profile: ConnectionProfile, session: AuthSession) -> Effect<Action> {
-        state.activeConnection = profile
-        state.authSession = session
-        state.showingConnectionSheet = false
-        state.selectedTab = .dashboard
-        if DemoMode.isEnabled, let screen = DemoMode.initialScreen {
-            switch screen {
-            case "containers", "container-info", "container-logs", "container-resources":
-                state.selectedTab = .containers
-            case "projects":
-                state.selectedTab = .projects
-            case "monitor":
-                state.selectedTab = .monitor
-            case "settings":
-                state.selectedTab = .settings
-            default:
-                break
-            }
-        }
-
-        let baseURL = profile.baseURL
-        state.dashboard.baseURL = baseURL
-        state.dashboard.authSession = session
-        state.containerList.baseURL = baseURL
-        state.containerList.authSession = session
-        state.projectList.baseURL = baseURL
-        state.projectList.authSession = session
-        state.systemMonitor.baseURL = baseURL
-        state.systemMonitor.authSession = session
-
-        var effects: [Effect<Action>] = [
-            .send(.dashboard(.onAppear)),
-            .send(.containerList(.onAppear)),
-            .send(.projectList(.onAppear)),
-        ]
-
-        if !DemoMode.isEnabled {
-            effects.append(.run { _ in
-                _ = await backgroundMonitor.requestNotificationPermission()
-                backgroundMonitor.scheduleHealthCheck()
-            })
-        }
-
-        return .merge(effects)
-    }
-
-    /// In demo mode, auto-presents a container detail screen when `--demo-screen container-*` is passed,
-    /// so screenshot automation can reach detail tabs without UI taps.
-    private func presentDemoContainerDetailIfNeeded(state: inout State) {
-        guard DemoMode.isEnabled,
-              let screen = DemoMode.initialScreen,
-              screen.hasPrefix("container-"),
-              state.containerList.detail == nil,
-              let container = state.containerList.containers.first(where: { $0.name == "plex" })
-              ?? state.containerList.containers.first
-        else { return }
-
-        var detail = ContainerDetailFeature.State(container: container)
-        detail.baseURL = state.containerList.baseURL
-        detail.authSession = state.containerList.authSession
-        switch screen {
-        case "container-logs":
-            detail.selectedTab = .logs
-        case "container-resources":
-            detail.selectedTab = .resources
-        default:
-            detail.selectedTab = .info
-        }
-        state.containerList.detail = detail
-    }
-
-    /// Tries to restore a previously saved session from Keychain.
-    /// Validates the session is still alive by making a lightweight API call.
-    private func restoreSavedSession() -> Effect<Action> {
-        .run { send in
-            #if DEBUG
-                print("[AppFeature] Attempting to restore saved session...")
-            #endif
-
-            guard let saved = try? keychain.loadSavedSession() else {
-                #if DEBUG
-                    print("[AppFeature] No saved session found in Keychain")
-                #endif
-                return
-            }
-
-            #if DEBUG
-                print("[AppFeature] Found saved session for connection: \(saved.connectionId)")
-            #endif
-
-            // Find the matching connection profile
-            let connections = try await connectionStore.fetchAll()
-            guard let profile = connections.first(where: { $0.id == saved.connectionId }),
-                  let baseURL = profile.baseURL
-            else {
-                #if DEBUG
-                    print("[AppFeature] Connection profile not found for saved session")
-                #endif
-                await send(.sessionValidationFailed)
-                return
-            }
-
-            // Validate session with a lightweight API call
-            do {
-                _ = try await api.getSystemUtilization(baseURL, saved.session)
-                #if DEBUG
-                    print("[AppFeature] Session is valid, restoring connection to \(profile.name)")
-                #endif
-                await send(.sessionRestored(profile, saved.session))
-            } catch {
-                #if DEBUG
-                    print("[AppFeature] Saved session expired or invalid: \(error)")
-                #endif
-                await send(.sessionValidationFailed)
             }
         }
     }
