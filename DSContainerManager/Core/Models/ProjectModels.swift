@@ -58,9 +58,12 @@ struct ComposeProject: Codable, Equatable, Identifiable {
 
         path = (try? container.decode(String.self, forKey: .path)) ?? ""
         sharePath = (try? container.decode(String.self, forKey: .sharePath)) ?? ""
-        containerIds = (try? container.decode([String].self, forKey: .containerIds)) ?? []
+        containerIds = (try? container.decode([String].self, forKey: .containerIds))
+            ?? (try? container.decode([String].self, forKey: .containerIdsCamel))
+            ?? []
         services = (try? container.decode([ProjectService].self, forKey: .services)) ?? []
-        composeContent = try? container.decode(String.self, forKey: .composeContent)
+        composeContent = (try? container.decode(String.self, forKey: .composeContent))
+            ?? (try? container.decode(String.self, forKey: .content))
         version = (try? container.decode(Int.self, forKey: .version)) ?? 0
     }
 
@@ -71,9 +74,24 @@ struct ComposeProject: Codable, Equatable, Identifiable {
         case path
         case sharePath = "share_path"
         case containerIds = "container_ids"
+        case containerIdsCamel = "containerIds"
         case services
         case composeContent = "compose_content"
+        case content
         case version
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(status, forKey: .status)
+        try container.encode(path, forKey: .path)
+        try container.encode(sharePath, forKey: .sharePath)
+        try container.encode(containerIds, forKey: .containerIds)
+        try container.encode(services, forKey: .services)
+        try container.encodeIfPresent(composeContent, forKey: .composeContent)
+        try container.encode(version, forKey: .version)
     }
 
     var serviceCount: Int {
@@ -82,6 +100,22 @@ struct ComposeProject: Codable, Equatable, Identifiable {
 
     var containerCount: Int {
         containerIds.count
+    }
+
+    /// Fills in what `other` (a fresher, possibly partial response) knows, keeping the
+    /// current values where it is silent, so a sparse detail payload never blanks the screen.
+    func merging(_ other: ComposeProject) -> ComposeProject {
+        ComposeProject(
+            id: id,
+            name: other.name.isEmpty ? name : other.name,
+            status: other.status == .unknown ? status : other.status,
+            path: other.path.isEmpty ? path : other.path,
+            sharePath: other.sharePath.isEmpty ? sharePath : other.sharePath,
+            containerIds: other.containerIds.isEmpty ? containerIds : other.containerIds,
+            services: other.services.isEmpty ? services : other.services,
+            composeContent: other.composeContent ?? composeContent,
+            version: other.version == 0 ? version : other.version,
+        )
     }
 }
 

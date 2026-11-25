@@ -6,6 +6,8 @@ enum SynologyAPIError: Error, Equatable, LocalizedError {
     /// iOS reports a denied Local Network permission as "not connected to the internet",
     /// so this case carries actionable guidance instead of that misleading system text.
     case networkUnreachable
+    /// The address doesn't answer: wrong host or port, HTTPS mismatch, or the NAS is off.
+    case hostUnreachable
     case invalidCredentials
     case accountDisabled
     case permissionDenied
@@ -36,8 +38,11 @@ enum SynologyAPIError: Error, Equatable, LocalizedError {
             .sessionExpired
         case 107:
             .sessionInterrupted
+        case 119:
+            // "SID not found": DSM dropped the session (timeout, reboot, or sign-out elsewhere).
+            .sessionExpired
         default:
-            .apiError(code: code, message: "Synology API error code \(code)")
+            .apiError(code: code, message: "")
         }
     }
 
@@ -52,6 +57,8 @@ enum SynologyAPIError: Error, Equatable, LocalizedError {
             Can't reach your NAS. Check that DSContainer is allowed in Settings › Privacy & Security › \
             Local Network, and that this iPhone is on the same network as the NAS.
             """
+        case .hostUnreachable:
+            "The NAS didn't respond. Check the address, port, and HTTPS setting."
         case .invalidCredentials:
             "Invalid username or password"
         case .accountDisabled:
@@ -67,13 +74,22 @@ enum SynologyAPIError: Error, Equatable, LocalizedError {
         case .otpFailed:
             "Invalid two-factor authentication code"
         case let .apiError(code, message):
-            "API error \(code): \(message)"
+            message.isEmpty ? "DSM couldn't complete the request (error \(code))" : message
         case let .decodingError(message):
             "Data error: \(message)"
         case let .unknownError(message):
             "Unknown error: \(message)"
         case .noActiveSession:
             "No active session — please log in"
+        }
+    }
+
+    var isNetworkError: Bool {
+        switch self {
+        case .networkError, .networkUnreachable, .hostUnreachable:
+            true
+        default:
+            false
         }
     }
 
