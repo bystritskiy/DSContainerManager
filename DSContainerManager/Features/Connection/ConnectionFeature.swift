@@ -9,6 +9,8 @@ struct ConnectionFeature {
         var isLoading = false
         var error: String?
         var loginInProgressId: UUID?
+        /// The connection whose sign-in just failed, so Retry signs in again rather than reloading the list.
+        var failedConnection: ConnectionProfile?
         @Presents var connectionForm: ConnectionFormFeature.State?
         var otpPrompt: OTPPromptState?
 
@@ -27,6 +29,7 @@ struct ConnectionFeature {
         case deleteConnection(UUID)
         case deleteResult(Result<Void, Error>)
         case connectTapped(ConnectionProfile)
+        case retryTapped
         case loginResult(Result<AuthSession, Error>, ConnectionProfile)
         case connectionForm(PresentationAction<ConnectionFormFeature.Action>)
         case dismissOTPPrompt
@@ -60,6 +63,7 @@ struct ConnectionFeature {
 
             case let .connectionsLoaded(.failure(error)):
                 state.error = error.localizedDescription
+                state.failedConnection = nil
                 state.isLoading = false
                 return .none
 
@@ -70,7 +74,7 @@ struct ConnectionFeature {
                     host: "",
                     port: 5000,
                     useHTTPS: false,
-                    username: "admin",
+                    username: "",
                     password: "",
                     trustSelfSignedCert: false,
                 )
@@ -87,6 +91,8 @@ struct ConnectionFeature {
                     username: profile.username,
                     password: password,
                     trustSelfSignedCert: profile.trustSelfSignedCert,
+                    lastConnected: profile.lastConnected,
+                    isDefault: profile.isDefault,
                 )
                 return .none
 
@@ -102,9 +108,16 @@ struct ConnectionFeature {
             case .deleteResult:
                 return .none
 
+            case .retryTapped:
+                guard let profile = state.failedConnection else {
+                    return .send(.loadConnections)
+                }
+                return .send(.connectTapped(profile))
+
             case let .connectTapped(profile):
                 state.loginInProgressId = profile.id
                 state.error = nil
+                state.failedConnection = nil
                 let password = (try? keychain.loadPassword(forConnection: profile.id)) ?? ""
                 let deviceToken = try? keychain.loadDeviceToken(forConnection: profile.id)
                 guard let baseURL = profile.baseURL else {
@@ -138,16 +151,22 @@ struct ConnectionFeature {
                     )
                 } else {
                     state.error = error.localizedDescription
+                    state.failedConnection = profile
                 }
                 return .none
 
             case let .connectionForm(.presented(.delegate(.saved(profile, password)))):
                 state.connectionForm = nil
+                let isNew = !state.connections.contains { $0.id == profile.id }
                 return .run { send in
                     try keychain.savePassword(password, forConnection: profile.id)
                     try await store.save(profile)
                     let result = await Result { try await store.fetchAll() }
                     await send(.connectionsLoaded(result))
+                    // A new NAS was added to be used: sign in right away instead of making people tap it.
+                    if isNew {
+                        await send(.connectTapped(profile))
+                    }
                 }
 
             case .connectionForm(.presented(.delegate(.cancelled))):
@@ -200,6 +219,8 @@ struct ConnectionFormFeature {
         var username: String
         var password: String
         var trustSelfSignedCert: Bool
+        var lastConnected: Date?
+        var isDefault = false
 
         enum Mode: Equatable {
             case add
@@ -214,7 +235,11 @@ struct ConnectionFormFeature {
         }
 
         var isValid: Bool {
-            !name.isEmpty && !host.isEmpty && !username.isEmpty && port > 0 && port <= 65535
+            !trimmedHost.isEmpty && !username.isEmpty && port > 0 && port <= 65535
+        }
+
+        private var trimmedHost: String {
+            host.trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         var title: String {
@@ -229,22 +254,26 @@ struct ConnectionFormFeature {
             case .add: UUID()
             case let .edit(existingId): existingId
             }
+            let address = HostAddress(parsing: host)
+            let useHTTPS = address.useHTTPS ?? useHTTPS
+            let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             return ConnectionProfile(
                 id: id,
-                name: name,
-                host: host,
-                port: port,
+                name: trimmedName.isEmpty ? address.host : trimmedName,
+                host: address.host,
+                port: address.port ?? port,
                 useHTTPS: useHTTPS,
-                username: username,
-                lastConnected: nil,
-                isDefault: false,
-                trustSelfSignedCert: trustSelfSignedCert,
+                username: username.trimmingCharacters(in: .whitespacesAndNewlines),
+                lastConnected: lastConnected,
+                isDefault: isDefault,
+                trustSelfSignedCert: useHTTPS && trustSelfSignedCert,
             )
         }
     }
 
     enum Action: BindableAction {
         case binding(BindingAction<State>)
+        case hostEditingEnded
         case saveButtonTapped
         case cancelButtonTapped
         case delegate(Delegate)
@@ -259,7 +288,26 @@ struct ConnectionFormFeature {
         BindingReducer()
         Reduce { state, action in
             switch action {
+            case .binding(\.useHTTPS):
+                // Follow DSM's defaults (5000 for HTTP, 5001 for HTTPS) unless a custom port was set.
+                if state.useHTTPS, state.port == 5000 {
+                    state.port = 5001
+                } else if !state.useHTTPS, state.port == 5001 {
+                    state.port = 5000
+                }
+                return .none
             case .binding:
+                return .none
+            case .hostEditingEnded:
+                // A pasted DSM address ("https://nas.local:5001/") is split into its fields, visibly.
+                let address = HostAddress(parsing: state.host)
+                state.host = address.host
+                if let port = address.port {
+                    state.port = port
+                }
+                if let useHTTPS = address.useHTTPS {
+                    state.useHTTPS = useHTTPS
+                }
                 return .none
             case .saveButtonTapped:
                 let profile = state.toProfile()
@@ -270,6 +318,37 @@ struct ConnectionFormFeature {
             case .delegate:
                 return .none
             }
+        }
+    }
+}
+
+// MARK: - Host Address Parsing
+
+/// Accepts a bare host ("192.168.1.10") as well as what people paste from the DSM
+/// address bar ("https://nas.local:5001/"), so the scheme and port end up in their own fields.
+struct HostAddress: Equatable {
+    var host: String
+    var port: Int?
+    var useHTTPS: Bool?
+
+    init(parsing input: String) {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasScheme = trimmed.contains("://")
+        // Bracket-less IPv6 literals can't carry a port; leave them untouched.
+        let looksLikeIPv6 = !hasScheme && trimmed.filter { $0 == ":" }.count > 1
+        guard !trimmed.isEmpty, !looksLikeIPv6,
+              let components = URLComponents(string: hasScheme ? trimmed : "placeholder://\(trimmed)"),
+              let parsedHost = components.host, !parsedHost.isEmpty
+        else {
+            host = trimmed
+            return
+        }
+        host = parsedHost
+        port = components.port
+        switch components.scheme?.lowercased() {
+        case "https": useHTTPS = true
+        case "http": useHTTPS = false
+        default: useHTTPS = nil
         }
     }
 }

@@ -26,10 +26,13 @@ struct ConnectionRowView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 8) {
-                    Label(profile.username, systemImage: "person")
+                // Inline glyphs: Labels in a row get wide icon gaps that read as separate columns.
+                Group {
+                    let user = Image(systemName: "person")
                     if profile.useHTTPS {
-                        Label("HTTPS", systemImage: "lock.fill")
+                        Text("\(user) \(profile.username)   \(Image(systemName: "lock.fill")) HTTPS")
+                    } else {
+                        Text("\(user) \(profile.username)")
                     }
                 }
                 .font(.caption)

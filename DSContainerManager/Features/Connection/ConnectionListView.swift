@@ -5,6 +5,7 @@ struct ConnectionListView: View {
     @Bindable var store: StoreOf<ConnectionFeature>
     @Environment(\.startDemoMode) private var startDemoMode
     @State private var otpCode: String = ""
+    @State private var pendingDeletion: ConnectionProfile?
 
     var body: some View {
         NavigationStack {
@@ -22,7 +23,7 @@ struct ConnectionListView: View {
                     List {
                         if let error = store.error {
                             ErrorBannerView(error) {
-                                store.send(.loadConnections)
+                                store.send(.retryTapped)
                             }
                             .listRowInsets(EdgeInsets())
                             .listRowBackground(Color.clear)
@@ -41,7 +42,7 @@ struct ConnectionListView: View {
                             .disabled(store.loginInProgressId != nil)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
-                                    store.send(.deleteConnection(profile.id))
+                                    pendingDeletion = profile
                                 } label: {
                                     Label("Delete", systemImage: "trash")
                                 }
@@ -62,7 +63,7 @@ struct ConnectionListView: View {
                                 }
 
                                 Button(role: .destructive) {
-                                    store.send(.deleteConnection(profile.id))
+                                    pendingDeletion = profile
                                 } label: {
                                     Label("Delete", systemImage: "trash")
                                 }
@@ -102,6 +103,25 @@ struct ConnectionListView: View {
                         Image(systemName: "plus")
                     }
                 }
+            }
+            .confirmationDialog(
+                "Delete \(pendingDeletion?.name ?? "")?",
+                isPresented: Binding(
+                    get: { pendingDeletion != nil },
+                    set: {
+                        if !$0 {
+                            pendingDeletion = nil
+                        }
+                    },
+                ),
+                titleVisibility: .visible,
+                presenting: pendingDeletion,
+            ) { profile in
+                Button("Delete", role: .destructive) {
+                    store.send(.deleteConnection(profile.id))
+                }
+            } message: { _ in
+                Text("The saved password is removed too.")
             }
             .sheet(item: $store.scope(state: \.connectionForm, action: \.connectionForm)) { formStore in
                 NavigationStack {
