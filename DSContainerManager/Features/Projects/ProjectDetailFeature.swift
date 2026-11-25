@@ -16,6 +16,7 @@ struct ProjectDetailFeature {
         var baseURL: URL?
         var authSession: AuthSession?
         var isPerformingAction = false
+        var pendingAction: ProjectAction?
         var error: String?
         var selectedTab: ProjectDetailTab = .services
 
@@ -26,6 +27,7 @@ struct ProjectDetailFeature {
     }
 
     enum Action {
+        case onAppear
         case refreshProject
         case tabSelected(ProjectDetailTab)
         case actionTapped(ProjectAction)
@@ -41,10 +43,15 @@ struct ProjectDetailFeature {
     enum CancelID { case load, action }
 
     @Dependency(\.synologyClient) var api
+    @Dependency(\.continuousClock) var clock
 
     nonisolated var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .onAppear:
+                // The list endpoint can omit services and the compose file; fetch the full project.
+                return .send(.refreshProject)
+
             case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
@@ -60,10 +67,13 @@ struct ProjectDetailFeature {
                     return .none
                 }
                 state.isPerformingAction = true
+                state.pendingAction = projectAction
                 state.error = nil
                 let projectId = state.project.id.rawValue
                 return .run { [baseURL, session] send in
                     try await api.performProjectAction(baseURL, session, projectId, projectAction)
+                    // Give DSM a moment to update the container states before reading them back.
+                    try await clock.sleep(for: .seconds(1))
                     await send(.refreshProject)
                 } catch: { error, send in
                     await send(.actionResult(.failure(error)))
@@ -71,22 +81,27 @@ struct ProjectDetailFeature {
                 .cancellable(id: CancelID.action, cancelInFlight: true)
 
             case let .projectLoaded(.success(project)):
-                state.project = project
+                // A sparse detail payload must not blank out what the list already showed.
+                state.project = state.project.merging(project)
                 state.isPerformingAction = false
+                state.pendingAction = nil
                 state.error = nil
-                return .send(.delegate(.projectUpdated(project)))
+                return .send(.delegate(.projectUpdated(state.project)))
 
             case let .projectLoaded(.failure(error)):
                 state.isPerformingAction = false
+                state.pendingAction = nil
                 state.error = error.localizedDescription
                 return .none
 
             case .actionResult(.success):
                 state.isPerformingAction = false
+                state.pendingAction = nil
                 return .none
 
             case let .actionResult(.failure(error)):
                 state.isPerformingAction = false
+                state.pendingAction = nil
                 state.error = error.localizedDescription
                 return .none
 
