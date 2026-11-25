@@ -200,6 +200,23 @@ struct DockerContainer: Codable, Equatable, Identifiable {
             }
             return "\(privatePort)/\(type)"
         }
+
+        /// Ports that are almost never a web page (SSH, DNS, mail, databases, MQTT).
+        private static let nonWebPorts: Set<Int> = [
+            21, 22, 23, 25, 53, 110, 143, 465, 587, 993, 995, 1883, 3306, 5432, 6379, 27017,
+        ]
+
+        /// Where a browser reaches this port on the NAS: TCP ports published on the host only.
+        func webURL(host: String) -> URL? {
+            guard let publicPort, publicPort > 0, type.lowercased() == "tcp",
+                  !Self.nonWebPorts.contains(privatePort), !Self.nonWebPorts.contains(publicPort)
+            else { return nil }
+            var components = URLComponents()
+            components.scheme = [443, 8443].contains(privatePort) || [443, 8443].contains(publicPort) ? "https" : "http"
+            components.host = host
+            components.port = publicPort
+            return components.url
+        }
     }
 }
 

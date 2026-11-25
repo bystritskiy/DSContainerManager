@@ -82,34 +82,43 @@ struct ContainerListView: View {
             }
 
             ForEach(store.filteredContainers) { container in
+                let isPending = store.pendingActionIDs.contains(container.id.rawValue)
+                let actions = ContainerQuickAction.available(for: container.status)
+
                 Button {
                     store.send(.containerTapped(container))
                 } label: {
-                    ContainerRowView(container: container)
+                    ContainerRowView(container: container, isPending: isPending)
                 }
                 .buttonStyle(FluidPressButtonStyle())
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    if container.status == .running {
-                        Button {
-                            store.send(.swipeAction(container, .stop))
-                        } label: {
-                            Label("Stop", systemImage: "stop.fill")
+                    if !isPending {
+                        ForEach(actions) { item in
+                            Button {
+                                store.send(.swipeAction(container, item.action))
+                            } label: {
+                                Label(item.title, systemImage: item.systemImage)
+                            }
+                            .tint(item.tint)
                         }
-                        .tint(.red)
+                    }
+                }
+                // Swipe actions alone aren't discoverable; long-press offers the same options.
+                .contextMenu {
+                    if !isPending {
+                        ForEach(actions) { item in
+                            Button {
+                                store.send(.swipeAction(container, item.action))
+                            } label: {
+                                Label(item.title, systemImage: item.systemImage)
+                            }
+                        }
+                    }
 
-                        Button {
-                            store.send(.swipeAction(container, .restart))
-                        } label: {
-                            Label("Restart", systemImage: "arrow.clockwise")
-                        }
-                        .tint(.orange)
-                    } else {
-                        Button {
-                            store.send(.swipeAction(container, .start))
-                        } label: {
-                            Label("Start", systemImage: "play.fill")
-                        }
-                        .tint(.green)
+                    Button {
+                        UIPasteboard.general.string = container.name
+                    } label: {
+                        Label("Copy Name", systemImage: "doc.on.doc")
                     }
                 }
             }

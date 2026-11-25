@@ -96,6 +96,7 @@ struct ContainerDetailView: View {
 
             Section("General") {
                 LabeledContent("Image", value: store.container.image)
+                    .copyable(store.container.image)
                 LabeledContent("Status", value: store.container.status.displayName)
                 LabeledContent("Created", value: store.container.created.mediumDateTimeString)
             }
@@ -103,8 +104,7 @@ struct ContainerDetailView: View {
             if !store.container.ports.isEmpty {
                 Section("Ports") {
                     ForEach(store.container.ports, id: \.self) { port in
-                        Text(port.displayString)
-                            .font(.body.monospaced())
+                        portRow(port)
                     }
                 }
             }
@@ -123,6 +123,7 @@ struct ContainerDetailView: View {
                                     .font(.caption2)
                                     .foregroundStyle(.tertiary)
                             }
+                            .copyable(volume.source)
                         }
                     }
                 }
@@ -161,13 +162,41 @@ struct ContainerDetailView: View {
                 }
             }
         }
+        .refreshable {
+            await store.send(.refreshDetail).finish()
+        }
+    }
+
+    /// Published TCP ports link straight to the service's web page on the NAS.
+    @ViewBuilder
+    private func portRow(_ port: DockerContainer.PortMapping) -> some View {
+        if let host = store.baseURL?.host(), let url = port.webURL(host: host) {
+            Link(destination: url) {
+                HStack {
+                    Text(port.displayString)
+                        .font(.body.monospaced())
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "safari")
+                        .foregroundStyle(.tint)
+                }
+            }
+            .accessibilityHint("Opens \(url.absoluteString) in Safari")
+            .copyable(url.absoluteString)
+        } else {
+            Text(port.displayString)
+                .font(.body.monospaced())
+        }
     }
 
     // MARK: - Logs Tab
 
     private var logsTab: some View {
         VStack(spacing: 0) {
-            if store.logs.isEmpty {
+            if !store.hasLoadedLogs {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if store.logs.isEmpty {
                 EmptyStateView(
                     icon: "text.alignleft",
                     title: "No Logs",
@@ -183,7 +212,16 @@ struct ContainerDetailView: View {
                     }
                     .listStyle(.plain)
                     .font(.caption.monospaced())
+                    .refreshable {
+                        await store.send(.refreshLogs).finish()
+                    }
                     .onAppear {
+                        if let lastLog = store.filteredLogs.last {
+                            proxy.scrollTo(lastLog.id, anchor: .bottom)
+                        }
+                    }
+                    .onChange(of: store.logs.last?.id) {
+                        // New lines arrived (refresh, or after Start/Restart): follow the tail.
                         if let lastLog = store.filteredLogs.last {
                             proxy.scrollTo(lastLog.id, anchor: .bottom)
                         }
@@ -206,32 +244,36 @@ struct ContainerDetailView: View {
 
             Text(log.text)
                 .foregroundStyle(log.stream == .stderr ? .red : .primary)
+                .textSelection(.enabled)
         }
         .padding(.vertical, 1)
     }
+}
 
-    // MARK: - Resources Tab
+// MARK: - Resources and Actions Tabs
 
+extension ContainerDetailView {
     private var resourcesTab: some View {
         ScrollView {
             VStack(spacing: 16) {
                 if let resources = store.currentResources {
                     // Current values
-                    CircularGaugeGroupView(items: [
-                        .init(title: "CPU", value: resources.cpuPercent, color: .blue),
-                        .init(title: "Memory", value: resources.memoryPercent, color: .green),
-                    ])
+                    VStack(spacing: 16) {
+                        CircularGaugeGroupView(items: [
+                            .init(title: "CPU", value: resources.cpuPercent, color: .blue),
+                            .init(title: "Memory", value: resources.memoryPercent, color: .green),
+                        ])
+
+                        Divider()
+
+                        LabeledContent("Memory") {
+                            Text(memorySummary(resources))
+                                .monospacedDigit()
+                        }
+                        .font(.subheadline)
+                    }
                     .padding()
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-
-                    // Memory details
-                    HStack {
-                        LabeledContent("Used", value: resources.memoryUsage.formattedBytes)
-                        Spacer()
-                        LabeledContent("Limit", value: resources.memoryLimit.formattedBytes)
-                    }
-                    .font(.caption)
-                    .padding(.horizontal)
                 }
 
                 // CPU chart
@@ -257,6 +299,12 @@ struct ContainerDetailView: View {
         }
     }
 
+    private func memorySummary(_ resources: ContainerResources) -> String {
+        let used = resources.memoryUsage.formattedBytes
+        guard resources.memoryLimit > 0 else { return used }
+        return "\(used) of \(resources.memoryLimit.formattedBytes)"
+    }
+
     private func chartSection(title: String, color: Color, value: @escaping (ResourceSnapshot) -> Double) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -274,6 +322,16 @@ struct ContainerDetailView: View {
                     y: .value(title, value(snapshot)),
                 )
                 .foregroundStyle(color.opacity(0.1))
+
+                // Mark the latest reading; with a single sample it's the only thing a line chart can draw.
+                if snapshot.id == store.resourceHistory.last?.id {
+                    PointMark(
+                        x: .value("Time", snapshot.timestamp),
+                        y: .value(title, value(snapshot)),
+                    )
+                    .foregroundStyle(color)
+                    .symbolSize(30)
+                }
             }
             .chartYScale(domain: 0 ... 100)
             .chartXAxis {
@@ -301,20 +359,27 @@ struct ContainerDetailView: View {
                 ErrorBannerView(error)
             }
 
+            let status = store.container.status
+
             Section("Container Actions") {
-                actionButton(title: "Start", icon: "play.fill", color: .green, action: .start,
-                             enabled: store.container.status != .running)
+                if status == .paused {
+                    // Docker can't start a paused container; it has to be unpaused.
+                    actionButton(title: "Resume", icon: "play.fill", color: .green, action: .unpause, enabled: true)
+                } else {
+                    actionButton(title: "Start", icon: "play.fill", color: .green, action: .start,
+                                 enabled: !status.isActive)
+                }
                 actionButton(title: "Stop", icon: "stop.fill", color: .red, action: .stop,
-                             enabled: store.container.status == .running)
+                             enabled: status.isActive)
                 actionButton(title: "Restart", icon: "arrow.clockwise", color: .orange, action: .restart,
-                             enabled: store.container.status == .running)
+                             enabled: status == .running)
                 actionButton(title: "Pause", icon: "pause.fill", color: .yellow, action: .pause,
-                             enabled: store.container.status == .running)
+                             enabled: status == .running)
             }
 
             Section("Danger Zone") {
                 actionButton(title: "Kill", icon: "xmark.circle.fill", color: .red, action: .kill,
-                             enabled: store.container.status == .running)
+                             enabled: status.isActive)
             }
         }
     }
@@ -334,7 +399,7 @@ struct ContainerDetailView: View {
                     .frame(width: 24)
                 Text(title)
                 Spacer()
-                if store.isPerformingAction {
+                if store.pendingAction == action {
                     ProgressView()
                 }
             }
@@ -428,5 +493,20 @@ private struct EnvironmentVariableRow: View {
                 ContainerDetailFeature()
             },
         )
+    }
+}
+
+// MARK: - Copy
+
+private extension View {
+    /// Long-press to copy a value people often need elsewhere (image names, paths, URLs).
+    func copyable(_ value: String) -> some View {
+        contextMenu {
+            Button {
+                UIPasteboard.general.string = value
+            } label: {
+                Label("Copy", systemImage: "doc.on.doc")
+            }
+        }
     }
 }

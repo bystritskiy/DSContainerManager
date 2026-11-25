@@ -37,7 +37,12 @@ struct ContainerListFeature {
             case .name:
                 result.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
             case .status:
-                result.sort { $0.status.rawValue < $1.status.rawValue }
+                result.sort {
+                    if $0.status.sortRank != $1.status.sortRank {
+                        return $0.status.sortRank < $1.status.sortRank
+                    }
+                    return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                }
             case .created:
                 result.sort { $0.created > $1.created }
             }
@@ -120,7 +125,7 @@ struct ContainerListFeature {
                 return .run { send in
                     try await api.performContainerAction(baseURL, session, container.name, action)
                     // Refresh the list after action
-                    try await Task.sleep(for: .seconds(1))
+                    try await clock.sleep(for: .seconds(1))
                     await send(.refresh)
                     await send(.actionResult(actionID, .success(())))
                 } catch: { error, send in
