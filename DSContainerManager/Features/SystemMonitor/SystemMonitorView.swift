@@ -122,24 +122,47 @@ struct SystemMonitorView: View {
 
     private var networkChart: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Network")
-                .font(.headline)
+            HStack(alignment: .firstTextBaseline) {
+                Text("Network")
+                    .font(.headline)
+                Spacer()
+                if let latest = store.networkHistory.last {
+                    HStack(spacing: 10) {
+                        Label(Self.rate(latest.networkRx), systemImage: "arrow.down")
+                        Label(Self.rate(latest.networkTx), systemImage: "arrow.up")
+                    }
+                    .labelStyle(.titleAndIcon)
+                    .font(.subheadline)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                }
+            }
 
             Chart {
+                // Separate series, or Charts joins download and upload into one zigzag line.
                 ForEach(store.networkHistory) { snapshot in
                     LineMark(
                         x: .value("Time", snapshot.timestamp),
-                        y: .value("RX", snapshot.networkRx),
+                        y: .value("Bytes per second", snapshot.networkRx),
+                        series: .value("Direction", "Download"),
                     )
-                    .foregroundStyle(.blue)
-                    .symbol(.circle)
-
+                    .foregroundStyle(by: .value("Direction", "Download"))
+                    .interpolationMethod(.catmullRom)
+                }
+                ForEach(store.networkHistory) { snapshot in
                     LineMark(
                         x: .value("Time", snapshot.timestamp),
-                        y: .value("TX", snapshot.networkTx),
+                        y: .value("Bytes per second", snapshot.networkTx),
+                        series: .value("Direction", "Upload"),
                     )
-                    .foregroundStyle(.green)
-                    .symbol(.triangle)
+                    .foregroundStyle(by: .value("Direction", "Upload"))
+                    .interpolationMethod(.catmullRom)
+                }
+                if store.networkHistory.count == 1, let only = store.networkHistory.first {
+                    PointMark(x: .value("Time", only.timestamp), y: .value("Bytes per second", only.networkRx))
+                        .foregroundStyle(by: .value("Direction", "Download"))
+                    PointMark(x: .value("Time", only.timestamp), y: .value("Bytes per second", only.networkTx))
+                        .foregroundStyle(by: .value("Direction", "Upload"))
                 }
             }
             .chartForegroundStyleScale([
@@ -149,11 +172,17 @@ struct SystemMonitorView: View {
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 3)) { _ in
                     AxisValueLabel(format: .dateTime.hour().minute().second())
+                    AxisGridLine()
                 }
             }
             .chartYAxis {
-                AxisMarks { _ in
-                    AxisValueLabel()
+                AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                    AxisValueLabel {
+                        if let bytes = value.as(Int64.self) {
+                            Text(Self.rate(bytes))
+                                .font(.caption2)
+                        }
+                    }
                     AxisGridLine()
                 }
             }
@@ -161,6 +190,10 @@ struct SystemMonitorView: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private static func rate(_ bytesPerSecond: Int64) -> String {
+        "\(bytesPerSecond.formattedBytes)/s"
     }
 
     private func storageSection(_ info: StorageInfo) -> some View {
@@ -189,9 +222,12 @@ struct SystemMonitorView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                        Label(volume.status, systemImage: volume.status == "normal" ? "checkmark.circle" : "exclamationmark.triangle")
-                            .font(.caption)
-                            .foregroundStyle(volume.status == "normal" ? .green : .yellow)
+                        Label(
+                            volume.status.capitalized,
+                            systemImage: volume.status == "normal" ? "checkmark.circle" : "exclamationmark.triangle",
+                        )
+                        .font(.caption)
+                        .foregroundStyle(volume.status == "normal" ? .green : .orange)
 
                         Spacer()
                     }

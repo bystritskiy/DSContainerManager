@@ -2,7 +2,11 @@ import Foundation
 
 extension Int64 {
     var formattedBytes: String {
-        ByteCountFormatter.string(fromByteCount: self, countStyle: .binary)
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .binary
+        // "0 bytes" rather than "Zero KB", which reads oddly next to numbers (chart axes, rates).
+        formatter.allowsNonnumericFormatting = false
+        return formatter.string(fromByteCount: self)
     }
 
     var formattedBytesShort: String {
