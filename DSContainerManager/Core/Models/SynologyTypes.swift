@@ -73,6 +73,24 @@ enum ContainerStatus: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Running first, then states that need a look, then the idle ones.
+    var sortRank: Int {
+        switch self {
+        case .running: 0
+        case .restarting: 1
+        case .paused: 2
+        case .dead: 3
+        case .created: 4
+        case .stopped: 5
+        case .unknown: 6
+        }
+    }
+
+    /// Has a process that Stop or Kill can end.
+    var isActive: Bool {
+        self == .running || self == .paused || self == .restarting
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(String.self).lowercased()

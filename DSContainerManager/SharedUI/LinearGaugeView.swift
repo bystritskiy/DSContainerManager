@@ -73,7 +73,7 @@ struct LinearGaugeView: View {
     }
 
     private var gaugeValue: some View {
-        Text(String(format: "%.1f%%", fraction * 100))
+        Text(fraction.formatted(.percent.precision(.fractionLength(1))))
             .font(.subheadline)
             .monospacedDigit()
             .foregroundStyle(.secondary)

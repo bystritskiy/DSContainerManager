@@ -16,7 +16,7 @@ struct TimeSeriesChartView: View {
                     .font(.headline)
                 Spacer()
                 if let latest = data.last {
-                    Text(String(format: "%.1f%@", latest[keyPath: valuePath], unit))
+                    Text(Self.format(latest[keyPath: valuePath], unit: unit))
                         .font(.subheadline)
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
@@ -43,6 +43,16 @@ struct TimeSeriesChartView: View {
                     ),
                 )
                 .interpolationMethod(.catmullRom)
+
+                // Mark the latest reading; with a single sample it's the only thing a line chart can draw.
+                if snapshot.id == data.last?.id {
+                    PointMark(
+                        x: .value("Time", snapshot.timestamp),
+                        y: .value(title, snapshot[keyPath: valuePath]),
+                    )
+                    .foregroundStyle(color)
+                    .symbolSize(30)
+                }
             }
             .chartYScale(domain: 0 ... maxY)
             .chartXAxis {
@@ -66,6 +76,13 @@ struct TimeSeriesChartView: View {
         }
         .padding()
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private static func format(_ value: Double, unit: String) -> String {
+        if unit == "%" {
+            return (value / 100).formatted(.percent.precision(.fractionLength(1)))
+        }
+        return value.formatted(.number.precision(.fractionLength(1))) + unit
     }
 }
 

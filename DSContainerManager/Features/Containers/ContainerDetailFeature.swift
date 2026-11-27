@@ -25,11 +25,13 @@ struct ContainerDetailFeature {
 
         var detail: ContainerDetail?
         var logs: [ContainerLog] = []
+        var hasLoadedLogs = false
         var resourceHistory: [ResourceSnapshot] = []
         var currentResources: ContainerResources?
         var selectedTab: ContainerDetailTab = .info
         var isLoading = false
         var isPerformingAction = false
+        var pendingAction: ContainerAction?
         var error: String?
         var logSearchText: String = ""
 
@@ -43,6 +45,7 @@ struct ContainerDetailFeature {
         case binding(BindingAction<State>)
         case onAppear
         case refreshDetail
+        case refreshLogs
         case tabSelected(ContainerDetailTab)
         case detailLoaded(Result<ContainerDetail, Error>)
         case logsLoaded(Result<[ContainerLog], Error>)
@@ -82,6 +85,8 @@ struct ContainerDetailFeature {
                 return .merge(
                     fetchDetail(baseURL: baseURL, session: session, name: name),
                     fetchLogs(baseURL: baseURL, session: session, name: name),
+                    // Load resources now; the poll's first tick is 5 seconds away.
+                    fetchResources(baseURL: baseURL, session: session),
                     .send(.startResourcePolling),
                 )
 
@@ -90,6 +95,12 @@ struct ContainerDetailFeature {
                     return .none
                 }
                 return fetchDetail(baseURL: baseURL, session: session, name: state.container.name)
+
+            case .refreshLogs:
+                guard let baseURL = state.baseURL, let session = state.authSession else {
+                    return .none
+                }
+                return fetchLogs(baseURL: baseURL, session: session, name: state.container.name)
 
             case let .tabSelected(tab):
                 state.selectedTab = tab
@@ -101,19 +112,24 @@ struct ContainerDetailFeature {
                 state.container = container
                 state.isLoading = false
                 state.isPerformingAction = false
+                state.pendingAction = nil
+                state.error = nil
                 return .send(.delegate(.containerUpdated(container)))
 
             case let .detailLoaded(.failure(error)):
                 state.error = error.localizedDescription
                 state.isLoading = false
                 state.isPerformingAction = false
+                state.pendingAction = nil
                 return .none
 
             case let .logsLoaded(.success(logs)):
                 state.logs = logs
+                state.hasLoadedLogs = true
                 return .none
 
             case let .logsLoaded(.failure(error)):
+                state.hasLoadedLogs = true
                 state.error = "Failed to load logs: \(error.localizedDescription)"
                 #if DEBUG
                     print("[ContainerDetailFeature] Failed to load logs for \(state.container.name): \(error.localizedDescription)")
@@ -145,11 +161,14 @@ struct ContainerDetailFeature {
                     return .none
                 }
                 state.isPerformingAction = true
+                state.pendingAction = action
                 state.error = nil
                 let name = state.container.name
                 return .run { [baseURL, session] send in
                     try await api.performContainerAction(baseURL, session, name, action)
                     await send(.refreshDetail)
+                    // Starting or stopping writes to the log; show it without a manual refresh.
+                    await send(.refreshLogs)
                 } catch: { error, send in
                     await send(.actionResult(.failure(error)))
                 }
@@ -157,10 +176,12 @@ struct ContainerDetailFeature {
 
             case .actionResult(.success):
                 state.isPerformingAction = false
+                state.pendingAction = nil
                 return .none
 
             case let .actionResult(.failure(error)):
                 state.isPerformingAction = false
+                state.pendingAction = nil
                 state.error = error.localizedDescription
                 return .none
 

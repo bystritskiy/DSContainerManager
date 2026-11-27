@@ -2,6 +2,10 @@ import Foundation
 
 extension Date {
     var relativeString: String {
+        // Clock skew between the NAS and the phone can put "now" a moment in the future ("in 0s").
+        if abs(timeIntervalSinceNow) < 60 {
+            return "just now"
+        }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: self, relativeTo: .now)

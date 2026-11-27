@@ -7,6 +7,7 @@ struct DashboardFeature {
     struct State: Equatable {
         var baseURL: URL?
         var authSession: AuthSession?
+        var nasName: String?
         var systemUtilization: SystemUtilization?
         var storageInfo: StorageInfo?
         var containers: [DockerContainer] = []
@@ -47,16 +48,21 @@ struct DashboardFeature {
         case stopPolling
         case pollTick
         case showAllContainersTapped
+        case containerCountTapped(ContainerStatus?)
+        case containerTapped(DockerContainer)
         case delegate(Delegate)
 
         enum Delegate: Equatable {
             case showAllContainers
+            case showContainers(ContainerStatus?)
+            case showContainer(DockerContainer)
         }
     }
 
+    /// `nil` fields failed to load; the previous values stay on screen for those.
     struct DashboardData: Equatable {
         var utilization: SystemUtilization?
-        var containers: [DockerContainer] = []
+        var containers: [DockerContainer]?
         var storage: StorageInfo?
     }
 
@@ -92,7 +98,9 @@ struct DashboardFeature {
                 if let util = data.utilization {
                     state.systemUtilization = util
                 }
-                state.containers = data.containers
+                if let containers = data.containers {
+                    state.containers = containers
+                }
                 if let storage = data.storage {
                     state.storageInfo = storage
                 }
@@ -124,6 +132,12 @@ struct DashboardFeature {
             case .showAllContainersTapped:
                 return .send(.delegate(.showAllContainers))
 
+            case let .containerCountTapped(status):
+                return .send(.delegate(.showContainers(status)))
+
+            case let .containerTapped(container):
+                return .send(.delegate(.showContainer(container)))
+
             case .delegate:
                 return .none
             }
@@ -132,28 +146,32 @@ struct DashboardFeature {
 
     private func fetchData(baseURL: URL, session: AuthSession) -> Effect<Action> {
         .run { send in
-            var dashData = DashboardData()
-
             // Fetch each independently so one failure doesn't block others
-            do {
-                dashData.utilization = try await api.getSystemUtilization(baseURL, session)
-            } catch {
-                print("[Dashboard] Failed to load utilization: \(error)")
-            }
+            async let utilization = Result { try await api.getSystemUtilization(baseURL, session) }
+            async let containers = Result { try await api.listContainers(baseURL, session) }
+            async let storage = Result { try await api.getStorageInfo(baseURL, session) }
+            let results = await (utilization, containers, storage)
 
-            do {
-                dashData.containers = try await api.listContainers(baseURL, session)
-            } catch {
-                print("[Dashboard] Failed to load containers: \(error)")
-            }
+            let dashData = DashboardData(
+                utilization: try? results.0.get(),
+                containers: try? results.1.get(),
+                storage: try? results.2.get(),
+            )
 
-            do {
-                dashData.storage = try await api.getStorageInfo(baseURL, session)
-            } catch {
-                print("[Dashboard] Failed to load storage: \(error)")
-            }
+            #if DEBUG
+                let outcomes = [results.0.map { _ in () }, results.1.map { _ in () }, results.2.map { _ in () }]
+                for case let .failure(error) in outcomes {
+                    print("[Dashboard] Failed to load: \(error)")
+                }
+            #endif
 
-            await send(.dataLoaded(.success(dashData)))
+            // Nothing came back (NAS offline, session gone): report it instead of showing stale numbers.
+            let nothingLoaded = dashData.utilization == nil && dashData.containers == nil && dashData.storage == nil
+            if nothingLoaded, case let .failure(error) = results.0 {
+                await send(.dataLoaded(.failure(error)))
+            } else {
+                await send(.dataLoaded(.success(dashData)))
+            }
         }
         .cancellable(id: CancelID.load, cancelInFlight: true)
     }

@@ -58,8 +58,10 @@ extension BackgroundMonitorClient {
         registerTasks: {},
         scheduleHealthCheck: {},
         cancelHealthCheck: {},
-        requestNotificationPermission: { false },
-        sendContainerNotification: { _, _, _ in },
+        // Never prompt from the demo; the Settings toggle just flips in place.
+        requestNotificationPermission: { true },
+        alertsEnabled: { false },
+        setAlertsEnabled: { _ in },
     )
 }
 

@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import Dependencies
 import SwiftUI
+import UserNotifications
 
 @main
 struct DSContainerManagerApp: App {
@@ -29,6 +30,10 @@ struct DSContainerManagerApp: App {
         @Dependency(\.backgroundMonitor) var backgroundMonitor
         backgroundMonitor.registerTasks()
         setupNotificationCategories()
+        UNUserNotificationCenter.current().delegate = NotificationResponder.shared
+        NotificationResponder.shared.openContainer = { name in
+            Self.store.send(.notificationOpened(containerName: name))
+        }
     }
 
     var body: some Scene {

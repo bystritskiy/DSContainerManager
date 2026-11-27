@@ -50,34 +50,63 @@ struct ProjectListView: View {
             }
 
             ForEach(store.projects) { project in
+                let isPending = store.pendingActionIDs.contains(project.id.rawValue)
+                let isActive = project.status == .running || project.status == .partiallyRunning
+
                 Button {
                     store.send(.projectTapped(project))
                 } label: {
-                    ProjectRowView(project: project)
+                    ProjectRowView(project: project, isPending: isPending)
                 }
                 .buttonStyle(FluidPressButtonStyle())
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    if project.status == .running || project.status == .partiallyRunning {
-                        Button {
-                            store.send(.projectAction(project, .stop))
-                        } label: {
-                            Label("Stop", systemImage: "stop.fill")
-                        }
-                        .tint(.red)
+                    if !isPending {
+                        if isActive {
+                            Button {
+                                store.send(.projectAction(project, .stop))
+                            } label: {
+                                Label("Stop", systemImage: "stop.fill")
+                            }
+                            .tint(.red)
 
-                        Button {
-                            store.send(.projectAction(project, .restart))
-                        } label: {
-                            Label("Restart", systemImage: "arrow.clockwise")
+                            Button {
+                                store.send(.projectAction(project, .restart))
+                            } label: {
+                                Label("Restart", systemImage: "arrow.clockwise")
+                            }
+                            .tint(.orange)
+                        } else {
+                            Button {
+                                store.send(.projectAction(project, .start))
+                            } label: {
+                                Label("Start", systemImage: "play.fill")
+                            }
+                            .tint(.green)
                         }
-                        .tint(.orange)
-                    } else {
-                        Button {
-                            store.send(.projectAction(project, .start))
-                        } label: {
-                            Label("Start", systemImage: "play.fill")
+                    }
+                }
+                // Swipe actions alone aren't discoverable; long-press offers the same options.
+                .contextMenu {
+                    if !isPending {
+                        if project.status != .running {
+                            Button {
+                                store.send(.projectAction(project, .start))
+                            } label: {
+                                Label("Start", systemImage: "play.fill")
+                            }
                         }
-                        .tint(.green)
+                        if isActive {
+                            Button {
+                                store.send(.projectAction(project, .restart))
+                            } label: {
+                                Label("Restart", systemImage: "arrow.clockwise")
+                            }
+                            Button(role: .destructive) {
+                                store.send(.projectAction(project, .stop))
+                            } label: {
+                                Label("Stop", systemImage: "stop.fill")
+                            }
+                        }
                     }
                 }
             }

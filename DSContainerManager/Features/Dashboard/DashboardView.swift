@@ -20,6 +20,7 @@ struct DashboardView: View {
                 }
             }
             .navigationTitle("Dashboard")
+            .navigationSubtitle(store.nasName ?? "")
             .refreshable {
                 store.send(.refresh)
             }
@@ -33,6 +34,20 @@ struct DashboardView: View {
     }
 
     private var dashboardContent: some View {
+        VStack(spacing: 16) {
+            // Data is on screen but the latest refresh failed: say so rather than showing stale numbers silently.
+            if let error = store.error {
+                ErrorBannerView(error) {
+                    store.send(.refresh)
+                }
+            }
+
+            cardGrid
+        }
+        .padding()
+    }
+
+    private var cardGrid: some View {
         AdaptiveCardGrid {
             // System Gauges
             systemGaugesSection
@@ -50,7 +65,6 @@ struct DashboardView: View {
                 runningContainersSection
             }
         }
-        .padding()
     }
 
     private var systemGaugesSection: some View {
@@ -102,12 +116,13 @@ struct DashboardView: View {
                 : AnyLayout(HStackLayout(spacing: 24))
 
             layout {
-                containerStat(count: store.runningCount, label: "Running", color: .green)
-                containerStat(count: store.stoppedCount, label: "Stopped", color: .red)
+                containerStat(count: store.runningCount, label: "Running", color: .green, filter: .running)
+                containerStat(count: store.stoppedCount, label: "Stopped", color: .red, filter: .stopped)
                 containerStat(
                     count: store.totalCount - store.runningCount - store.stoppedCount,
                     label: "Other",
                     color: .yellow,
+                    filter: nil,
                 )
             }
         }
@@ -126,18 +141,28 @@ struct DashboardView: View {
             .foregroundStyle(.secondary)
     }
 
-    private func containerStat(count: Int, label: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            Text("\(count)")
-                .font(.title)
-                .fontWeight(.bold)
-                .monospacedDigit()
-                .foregroundStyle(color)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+    private func containerStat(count: Int, label: String, color: Color, filter: ContainerStatus?) -> some View {
+        Button {
+            store.send(.containerCountTapped(filter))
+        } label: {
+            VStack(spacing: 4) {
+                Text("\(count)")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .monospacedDigit()
+                    // A zero isn't news; keep the status color for counts that need attention.
+                    .foregroundStyle(count == 0 ? AnyShapeStyle(.tertiary) : AnyShapeStyle(color))
+                    .contentTransition(.numericText(value: Double(count)))
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(.rect)
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(count) \(label)")
+        .accessibilityHint("Shows these containers")
     }
 
     private func storageSection(_ info: StorageInfo) -> some View {
@@ -171,20 +196,27 @@ struct DashboardView: View {
             }
 
             ForEach(store.runningPreview) { container in
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(container.status.color)
-                        .frame(width: 8, height: 8)
-                    Text(container.name)
-                        .font(.subheadline)
-                        .lineLimit(1)
-                    Spacer(minLength: 8)
-                    Text(container.image.components(separatedBy: "/").last ?? container.image)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                Button {
+                    store.send(.containerTapped(container))
+                } label: {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(container.status.color)
+                            .frame(width: 8, height: 8)
+                        Text(container.name)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(container.image.components(separatedBy: "/").last ?? container.image)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
             }
 
             Divider()

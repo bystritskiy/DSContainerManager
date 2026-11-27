@@ -4,6 +4,11 @@ import SwiftUI
 struct ProjectDetailView: View {
     @Bindable var store: StoreOf<ProjectDetailFeature>
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showingStopConfirmation = false
+
+    private var isActive: Bool {
+        store.project.status == .running || store.project.status == .partiallyRunning
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,25 +43,63 @@ struct ProjectDetailView: View {
         .navigationTitle(store.project.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                if store.project.status == .running || store.project.status == .partiallyRunning {
-                    Button {
-                        store.send(.actionTapped(.stop))
-                    } label: {
-                        Label("Stop Project", systemImage: "stop.fill")
-                            .labelStyle(.iconOnly)
-                    }
-                    .tint(.red)
+            ToolbarItem(placement: .primaryAction) {
+                if store.isPerformingAction {
+                    ProgressView()
                 } else {
-                    Button {
-                        store.send(.actionTapped(.start))
-                    } label: {
-                        Label("Start Project", systemImage: "play.fill")
-                            .labelStyle(.iconOnly)
-                    }
-                    .tint(.green)
+                    actionsMenu
                 }
             }
+            if store.selectedTab == .compose, let content = store.project.composeContent {
+                ToolbarItem(placement: .primaryAction) {
+                    ShareLink(item: content) {
+                        Label("Share Compose File", systemImage: "square.and.arrow.up")
+                            .labelStyle(.iconOnly)
+                    }
+                }
+            }
+        }
+        .confirmationDialog(
+            "Stop \(store.project.name)?",
+            isPresented: $showingStopConfirmation,
+            titleVisibility: .visible,
+        ) {
+            Button("Stop Project", role: .destructive) {
+                store.send(.actionTapped(.stop))
+            }
+        } message: {
+            Text("All of its containers will stop.")
+        }
+        .onAppear {
+            store.send(.onAppear)
+        }
+    }
+
+    private var actionsMenu: some View {
+        Menu {
+            if isActive {
+                Button {
+                    store.send(.actionTapped(.restart))
+                } label: {
+                    Label("Restart", systemImage: "arrow.clockwise")
+                }
+                Button(role: .destructive) {
+                    showingStopConfirmation = true
+                } label: {
+                    Label("Stop", systemImage: "stop.fill")
+                }
+            }
+            if store.project.status != .running {
+                // A partially running project can be started to bring up the rest.
+                Button {
+                    store.send(.actionTapped(.start))
+                } label: {
+                    Label("Start", systemImage: "play.fill")
+                }
+            }
+        } label: {
+            Label("Actions", systemImage: "ellipsis")
+                .labelStyle(.iconOnly)
         }
     }
 
@@ -70,9 +113,11 @@ struct ProjectDetailView: View {
 
             ForEach(store.project.services) { service in
                 HStack(spacing: 12) {
-                    Image(systemName: service.status?.iconName ?? "questionmark.circle")
-                        .foregroundStyle(service.status?.color ?? .gray)
-                        .frame(width: 24)
+                    // Status dot: play/stop glyphs here read as start/stop buttons.
+                    Circle()
+                        .fill(service.status?.color ?? .gray)
+                        .frame(width: 10, height: 10)
+                        .frame(width: 16)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(service.displayName)
@@ -103,6 +148,9 @@ struct ProjectDetailView: View {
                 )
             }
         }
+        .refreshable {
+            await store.send(.refreshProject).finish()
+        }
     }
 
     // MARK: - Compose Tab
@@ -110,9 +158,11 @@ struct ProjectDetailView: View {
     @ViewBuilder
     private var composeTab: some View {
         if let content = store.project.composeContent {
-            ScrollView {
+            // Scroll sideways instead of wrapping, so YAML indentation stays readable.
+            ScrollView([.vertical, .horizontal]) {
                 Text(content)
-                    .font(.system(.body, design: .monospaced))
+                    .font(.system(.footnote, design: .monospaced))
+                    .fixedSize()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .textSelection(.enabled)
@@ -131,17 +181,23 @@ struct ProjectDetailView: View {
 
     private var infoTab: some View {
         List {
-            Section("Project") {
-                LabeledContent("Name", value: store.project.name)
+            Section {
                 LabeledContent("Status", value: store.project.status.displayName)
-                LabeledContent("Path", value: store.project.path)
-                LabeledContent("Share Path", value: store.project.sharePath)
-                LabeledContent("Version", value: "\(store.project.version)")
-            }
-
-            Section("Containers") {
-                ForEach(store.project.containerIds, id: \.self) { containerId in
-                    Label(containerId, systemImage: "shippingbox")
+                if !store.project.path.isEmpty {
+                    LabeledContent("Path", value: store.project.path)
+                        .contextMenu {
+                            Button {
+                                UIPasteboard.general.string = store.project.path
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                            }
+                        }
+                }
+                if !store.project.sharePath.isEmpty {
+                    LabeledContent("Shared Folder", value: store.project.sharePath)
+                }
+                if store.project.containerCount > 0 {
+                    LabeledContent("Containers", value: "\(store.project.containerCount)")
                 }
             }
         }

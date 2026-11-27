@@ -119,7 +119,8 @@ extension SynologyAPIClient: DependencyKey {
                 }
                 let params = authenticatedParams(authSession, api: apiParams)
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
-                _ = try await performRequest(session: session, url: url)
+                let data = try await performRequest(session: session, url: url)
+                try ensureSuccess(data)
             },
 
             getContainerLogs: { baseURL, authSession, containerName, offset, limit in
@@ -223,7 +224,8 @@ extension SynologyAPIClient: DependencyKey {
                     "id": projectId,
                 ])
                 let url = buildURL(baseURL: baseURL, path: "webapi/entry.cgi", params: params)
-                _ = try await performRequest(session: session, url: url)
+                let data = try await performRequest(session: session, url: url)
+                try ensureSuccess(data)
             },
 
             getSystemUtilization: { baseURL, authSession in
@@ -292,12 +294,19 @@ private func performRequest(session: URLSession, url: URL) async throws -> Data 
     return try await performRequest(session: session, request: request)
 }
 
+/// The address doesn't answer at all, as opposed to answering with an error.
+private let unreachableHostCodes: Set<URLError.Code> = [
+    .timedOut, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed,
+]
+
 private func performRequest(session: URLSession, request: URLRequest) async throws -> Data {
     let (data, response): (Data, URLResponse)
     do {
         (data, response) = try await session.data(for: request)
     } catch let urlError as URLError where urlError.code == .notConnectedToInternet {
         throw SynologyAPIError.networkUnreachable
+    } catch let urlError as URLError where unreachableHostCodes.contains(urlError.code) {
+        throw SynologyAPIError.hostUnreachable
     } catch let urlError as URLError {
         throw SynologyAPIError.networkError(urlError.localizedDescription)
     } catch {
@@ -351,6 +360,21 @@ private func decodeResponse<T: Decodable & Sendable>(_: T.Type, from data: Data)
     }
 
     return responseData
+}
+
+/// Action endpoints answer HTTP 200 even when DSM refuses (`{"success": false, "error": {...}}`),
+/// so the body has to be checked before reporting success.
+private func ensureSuccess(_ data: Data) throws {
+    struct Status: Decodable {
+        let success: Bool
+        let error: SynologyErrorPayload?
+    }
+
+    guard let status = try? JSONDecoder().decode(Status.self, from: data), !status.success else { return }
+    if let errorPayload = status.error {
+        throw SynologyAPIError.fromErrorCode(errorPayload.code)
+    }
+    throw SynologyAPIError.unknownError("Request failed without error details")
 }
 
 // MARK: - Log Response Decoding
@@ -471,7 +495,7 @@ private func decodeLogResponse(from data: Data, containerName _: String) throws 
         return []
     }
 
-    return logData.entries.enumerated().compactMap { index, entry in
+    let logs = logData.entries.enumerated().compactMap { index, entry -> ContainerLog? in
         guard !entry.text.isEmpty else { return nil }
         return ContainerLog(
             id: UUID(),
@@ -481,6 +505,11 @@ private func decodeLogResponse(from data: Data, containerName _: String) throws 
             offset: (logData.offset ?? 0) + index,
         )
     }
+    // Requested newest-first (to get the latest lines); show them oldest-first, like a terminal.
+    if let first = logs.first, let last = logs.last, first.timestamp > last.timestamp {
+        return logs.reversed()
+    }
+    return logs
 }
 
 private func parseLogLine(_ line: String) -> (Date, ContainerLog.LogStream, String) {
